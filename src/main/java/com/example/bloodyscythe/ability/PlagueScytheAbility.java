@@ -1,5 +1,6 @@
 package com.example.bloodyscythe.ability;
 
+import com.example.bloodyscythe.config.BloodyScytheConfig;
 import com.example.bloodyscythe.config.BloodyScytheConfigLoader;
 import com.example.bloodyscythe.item.PlagueScytheItem;
 import com.example.bloodyscythe.network.PlagueHudS2CPacket;
@@ -24,14 +25,13 @@ public class PlagueScytheAbility {
         ItemStack stack = player.getStackInHand(hand);
         Item item = stack.getItem();
 
-        int cooldown = Math.max(1, BloodyScytheConfigLoader.CONFIG.plagueActiveCooldownTicks);
+        BloodyScytheConfig config = BloodyScytheConfigLoader.getConfig();
+
+        int cooldown = Math.max(1, config.plagueActiveCooldownTicks);
         if (player.getItemCooldownManager().isCoolingDown(item)) return;
 
         // ✅ Цена активации (общая для всех кос): берём из bloodHarvestDurabilityCost
-        int cost = 100;
-        if (BloodyScytheConfigLoader.CONFIG != null) {
-            cost = Math.max(0, BloodyScytheConfigLoader.CONFIG.bloodHarvestDurabilityCost);
-        }
+        int cost = Math.max(0, config.bloodHarvestDurabilityCost);
 
         if (cost > 0) {
             int remaining = stack.getMaxDamage() - stack.getDamage();
@@ -46,7 +46,7 @@ public class PlagueScytheAbility {
         player.getItemCooldownManager().set(item, cooldown);
         PlagueHudS2CPacket.sendTicks(player, ticks);
 
-        double radius = BloodyScytheConfigLoader.CONFIG.plagueActiveRadius;
+        double radius = config.plagueActiveRadius;
         Box box = player.getBoundingBox().expand(radius);
 
         List<ServerPlayerEntity> targets =
@@ -56,9 +56,9 @@ public class PlagueScytheAbility {
                         p -> isEnemyPlayer(player, p)
                 );
 
-        int debuffTicks = Math.max(1, BloodyScytheConfigLoader.CONFIG.plagueActiveDebuffTicks);
-        int slowAmp = Math.max(0, BloodyScytheConfigLoader.CONFIG.plagueActiveSlownessAmplifier);
-        int weakAmp = Math.max(0, BloodyScytheConfigLoader.CONFIG.plagueActiveWeaknessAmplifier);
+        int debuffTicks = Math.max(1, config.plagueActiveDebuffTicks);
+        int slowAmp = Math.max(0, config.plagueActiveSlownessAmplifier);
+        int weakAmp = Math.max(0, config.plagueActiveWeaknessAmplifier);
 
         for (ServerPlayerEntity target : targets) {
             target.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, debuffTicks, 0));
@@ -70,10 +70,11 @@ public class PlagueScytheAbility {
     public static void tick(ServerPlayerEntity player) {
         if (!PlagueScytheTracker.isActive(player)) return;
 
-        int tickRate = Math.max(1, BloodyScytheConfigLoader.CONFIG.plagueActiveTickRate);
+        BloodyScytheConfig config = BloodyScytheConfigLoader.getConfig();
+        int tickRate = Math.max(1, config.plagueActiveTickRate);
         if (player.age % tickRate != 0) return;
 
-        double radius = BloodyScytheConfigLoader.CONFIG.plagueActiveRadius;
+        double radius = config.plagueActiveRadius;
         Box box = player.getBoundingBox().expand(radius);
 
         List<ServerPlayerEntity> targets =
@@ -83,7 +84,7 @@ public class PlagueScytheAbility {
                         p -> isEnemyPlayer(player, p)
                 );
 
-        double damage = Math.max(0.0, BloodyScytheConfigLoader.CONFIG.plagueActiveDamage);
+        double damage = Math.max(0.0, config.plagueActiveDamage);
         if (damage <= 0.0) return;
 
         for (ServerPlayerEntity target : targets) {
@@ -108,9 +109,7 @@ public class PlagueScytheAbility {
         if (missingFrac > 1.0f) missingFrac = 1.0f;
 
         double cap = 2.0;
-        if (BloodyScytheConfigLoader.CONFIG != null) {
-            cap = Math.max(1.0, BloodyScytheConfigLoader.CONFIG.plagueMissingHealthMultiplierCap);
-        }
+        cap = Math.max(1.0, BloodyScytheConfigLoader.getConfig().plagueMissingHealthMultiplierCap);
 
         // линейно от 1.0 до cap
         return (float) (1.0 + missingFrac * (cap - 1.0));

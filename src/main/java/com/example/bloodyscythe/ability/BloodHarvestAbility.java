@@ -1,5 +1,6 @@
 package com.example.bloodyscythe.ability;
 
+import com.example.bloodyscythe.config.BloodyScytheConfig;
 import com.example.bloodyscythe.config.BloodyScytheConfigLoader;
 import com.example.bloodyscythe.item.BloodScytheItem;
 import com.example.bloodyscythe.network.BloodHarvestHudS2CPacket;
@@ -29,10 +30,8 @@ public class BloodHarvestAbility {
         Item item = stack.getItem();
 
         // ✅ Цена активации (общая для всех кос): берём из bloodHarvestDurabilityCost
-        int cost = 100;
-        if (BloodyScytheConfigLoader.CONFIG != null) {
-            cost = Math.max(0, BloodyScytheConfigLoader.CONFIG.bloodHarvestDurabilityCost);
-        }
+        BloodyScytheConfig config = BloodyScytheConfigLoader.getConfig();
+        int cost = Math.max(0, config.bloodHarvestDurabilityCost);
 
         if (cost > 0) {
             int remaining = stack.getMaxDamage() - stack.getDamage();
@@ -50,10 +49,8 @@ public class BloodHarvestAbility {
         double radius = 10.0;
         int cooldown = 20 * 60;
 
-        if (BloodyScytheConfigLoader.CONFIG != null) {
-            radius = BloodyScytheConfigLoader.CONFIG.bloodHarvestRadius;
-            cooldown = BloodyScytheConfigLoader.CONFIG.bloodHarvestCooldownTicks;
-        }
+        radius = config.bloodHarvestRadius;
+        cooldown = Math.max(0, config.bloodHarvestCooldownTicks);
 
         Box box = player.getBoundingBox().expand(radius);
         List<ServerPlayerEntity> targets =
@@ -83,14 +80,12 @@ public class BloodHarvestAbility {
         int slowAmp = 1;
         int weakAmp = 1;
 
-        if (BloodyScytheConfigLoader.CONFIG != null) {
-            slowTicks = Math.max(1, BloodyScytheConfigLoader.CONFIG.bloodHarvestSlownessTicks);
-            blindTicks = Math.max(1, BloodyScytheConfigLoader.CONFIG.bloodHarvestBlindnessTicks);
-            weakTicks = Math.max(1, BloodyScytheConfigLoader.CONFIG.bloodHarvestWeaknessTicks);
-            glowTicks = Math.max(1, BloodyScytheConfigLoader.CONFIG.bloodHarvestGlowingTicks);
-            slowAmp = Math.max(0, BloodyScytheConfigLoader.CONFIG.bloodHarvestSlownessAmplifier);
-            weakAmp = Math.max(0, BloodyScytheConfigLoader.CONFIG.bloodHarvestWeaknessAmplifier);
-        }
+        slowTicks = Math.max(1, config.bloodHarvestSlownessTicks);
+        blindTicks = Math.max(1, config.bloodHarvestBlindnessTicks);
+        weakTicks = Math.max(1, config.bloodHarvestWeaknessTicks);
+        glowTicks = Math.max(1, config.bloodHarvestGlowingTicks);
+        slowAmp = Math.max(0, config.bloodHarvestSlownessAmplifier);
+        weakAmp = Math.max(0, config.bloodHarvestWeaknessAmplifier);
 
         for (ServerPlayerEntity target : targets) {
             target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, slowTicks, slowAmp));

@@ -1,5 +1,6 @@
 package com.example.bloodyscythe.ability;
 
+import com.example.bloodyscythe.config.BloodyScytheConfig;
 import com.example.bloodyscythe.config.BloodyScytheConfigLoader;
 import com.example.bloodyscythe.item.WitheringScytheItem;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -24,12 +25,11 @@ public class WitheringScytheAura {
         int slowAdd = 40;
         int threshold = 20;
 
-        if (BloodyScytheConfigLoader.CONFIG != null) {
-            radius = BloodyScytheConfigLoader.CONFIG.witheringAuraRadius;
-            witherAdd = Math.max(1, BloodyScytheConfigLoader.CONFIG.witheringAuraWitherTicks);
-            slowAdd = Math.max(1, BloodyScytheConfigLoader.CONFIG.witheringAuraSlownessTicks);
-            threshold = Math.max(1, BloodyScytheConfigLoader.CONFIG.witheringAuraRefreshThresholdTicks);
-        }
+        BloodyScytheConfig config = BloodyScytheConfigLoader.getConfig();
+        radius = config.witheringAuraRadius;
+        witherAdd = Math.max(1, config.witheringAuraWitherTicks);
+        slowAdd = Math.max(1, config.witheringAuraSlownessTicks);
+        threshold = Math.max(1, config.witheringAuraRefreshThresholdTicks);
 
         Box box = player.getBoundingBox().expand(radius);
         List<ServerPlayerEntity> targets =
