@@ -1,0 +1,60 @@
+package com.example.bloodyscythe.ability;
+
+import com.example.bloodyscythe.config.BloodyScytheConfigLoader;
+import com.example.bloodyscythe.item.PlagueScytheItem;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.math.Box;
+
+import java.util.List;
+
+public class PlagueScytheAura {
+
+    public static void apply(ServerPlayerEntity player) {
+
+        boolean hasScytheInHand =
+                player.getMainHandStack().getItem() instanceof PlagueScytheItem
+                        || player.getOffHandStack().getItem() instanceof PlagueScytheItem;
+
+        if (!hasScytheInHand) return;
+
+        double radius = 6.0;
+        int addTicks = 60;
+        int thresholdTicks = 20;
+
+        if (BloodyScytheConfigLoader.CONFIG != null) {
+            radius = BloodyScytheConfigLoader.CONFIG.plagueAuraRadius;
+            addTicks = Math.max(1, BloodyScytheConfigLoader.CONFIG.plagueAuraEffectTicks);
+            thresholdTicks = Math.max(1, BloodyScytheConfigLoader.CONFIG.plagueAuraRefreshThresholdTicks);
+        }
+
+        float healthRatio = player.getHealth() / player.getMaxHealth();
+        int amplifier = healthRatio <= 0.25f ? 2 : healthRatio <= 0.5f ? 1 : 0;
+
+        Box box = player.getBoundingBox().expand(radius);
+
+        List<ServerPlayerEntity> targets = player.getWorld().getEntitiesByClass(
+                ServerPlayerEntity.class,
+                box,
+                p -> p != player && p.isAlive() && !p.isSpectator() && !player.isTeammate(p)
+        );
+
+        for (ServerPlayerEntity target : targets) {
+
+            StatusEffectInstance current = target.getStatusEffect(StatusEffects.POISON);
+
+            if (current == null) {
+                target.addStatusEffect(new StatusEffectInstance(StatusEffects.POISON, addTicks, amplifier, false, true));
+                continue;
+            }
+
+            if (current.getDuration() <= thresholdTicks) {
+                int newDuration = current.getDuration() + addTicks;
+                int newAmplifier = Math.max(current.getAmplifier(), amplifier);
+
+                target.addStatusEffect(new StatusEffectInstance(StatusEffects.POISON, newDuration, newAmplifier, false, true));
+            }
+        }
+    }
+}

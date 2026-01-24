@@ -1,0 +1,32 @@
+{
+  "parent": "bloodyscythe:root",
+  "display": {
+    "icon": {
+      "item": "bloodyscythe:bloody_essence"
+    },
+    "title": {
+      "translate": "advancement.bloodyscythe.bloody_essence.title"
+    },
+    "description": {
+      "translate": "advancement.bloodyscythe.bloody_essence.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "get_essence": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "bloodyscythe:bloody_essence"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

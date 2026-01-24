@@ -1,0 +1,35 @@
+package com.example.bloodyscythe.network;
+
+import com.example.bloodyscythe.BleedingMod;
+import net.minecraft.util.Identifier;
+
+public final class ModPackets {
+
+    private ModPackets() {}
+
+    /* ===================== C2S ===================== */
+
+    public static final Identifier SCYTHE_ABILITY_C2S =
+            new Identifier(BleedingMod.MOD_ID, "scythe_ability");
+
+    /* ===================== S2C ===================== */
+
+    public static final Identifier BLOOD_HARVEST_START_S2C =
+            new Identifier(BleedingMod.MOD_ID, "blood_harvest_start");
+
+    public static final Identifier BLOOD_HARVEST_STOP_S2C =
+            new Identifier(BleedingMod.MOD_ID, "blood_harvest_stop");
+
+    public static final Identifier PLAGUE_START_S2C =
+            new Identifier(BleedingMod.MOD_ID, "plague_start");
+
+    public static final Identifier PLAGUE_STOP_S2C =
+            new Identifier(BleedingMod.MOD_ID, "plague_stop");
+
+    // ✅ Withering Scythe HUD
+    public static final Identifier WITHERING_START_S2C =
+            new Identifier(BleedingMod.MOD_ID, "withering_start");
+
+    public static final Identifier WITHERING_STOP_S2C =
+            new Identifier(BleedingMod.MOD_ID, "withering_stop");
+}

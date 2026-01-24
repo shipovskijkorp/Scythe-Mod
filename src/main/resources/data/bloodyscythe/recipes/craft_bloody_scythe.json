@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "bloodyscythe:scythes",
+  "pattern": [
+    "NN ",
+    "P E",
+    "P  "
+  ],
+  "key": {
+    "N": { "item": "minecraft:netherite_ingot" },
+    "P": { "item": "minecraft:stick" },
+    "E": { "item": "bloodyscythe:bloody_essence" }
+  },
+  "result": {
+    "item": "bloodyscythe:bloody_scythe"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "parent": "bloodyscythe:root",
+  "display": {
+    "icon": {
+      "item": "bloodyscythe:withering_scythe"
+    },
+    "title": {
+      "translate": "advancement.bloodyscythe.craft_withering.title"
+    },
+    "description": {
+      "translate": "advancement.bloodyscythe.craft_withering.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "craft": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "bloodyscythe:craft_withering_scythe"
+      }
+    }
+  }
+}

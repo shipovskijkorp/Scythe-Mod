@@ -1,0 +1,13 @@
+{
+  "parent": "bloodyscythe:bloody_kills_5",
+  "display": {
+    "icon": { "item": "bloodyscythe:bloody_scythe" },
+    "title": { "translate": "advancement.bloodyscythe.bloody_kills_10.title" },
+    "description": { "translate": "advancement.bloodyscythe.bloody_kills_10.desc" },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": { "done": { "trigger": "minecraft:impossible" } }
+}

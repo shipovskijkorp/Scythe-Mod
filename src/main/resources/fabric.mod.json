@@ -1,0 +1,38 @@
+{
+	"schemaVersion": 1,
+	"id": "bloodyscythe",
+	"version": "${version}",
+	"name": "BloodyScythe",
+	"description": "BloodyScythe mod",
+	"authors": [
+		"Shipovskijkorp",
+		"Sun_Aloe"
+	],
+	"contact": {
+		"homepage": "",
+		"sources": ""
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/bloodyscythe/icon.png",
+	"environment": "*",
+
+	"entrypoints": {
+		"main": [
+			"com.example.bloodyscythe.BleedingMod"
+		],
+		"client": [
+			"com.example.bloodyscythe.client.BleedingModClient"
+		]
+	},
+
+	"mixins": [
+		"bloodyscythe.mixins.json"
+	],
+
+	"depends": {
+		"fabricloader": ">=0.18.4",
+		"minecraft": "~1.20.1",
+		"java": ">=17",
+		"fabric-api": "*"
+	}
+}

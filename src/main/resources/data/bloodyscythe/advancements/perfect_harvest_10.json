@@ -1,0 +1,15 @@
+{
+  "parent": "bloodyscythe:perfect_harvest_5",
+  "display": {
+    "icon": { "item": "bloodyscythe:bloody_scythe" },
+    "title": { "translate": "advancement.bloodyscythe.perfect_harvest_10.title" },
+    "description": { "translate": "advancement.bloodyscythe.perfect_harvest_10.desc" },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": { "trigger": "minecraft:impossible" }
+  }
+}
