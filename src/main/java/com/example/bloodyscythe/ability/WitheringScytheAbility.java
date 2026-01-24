@@ -1,6 +1,7 @@
 package com.example.bloodyscythe.ability;
 
 import com.example.bloodyscythe.BleedingMod;
+import com.example.bloodyscythe.config.BloodyScytheConfig;
 import com.example.bloodyscythe.config.BloodyScytheConfigLoader;
 import com.example.bloodyscythe.item.WitheringScytheItem;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -27,14 +28,13 @@ public class WitheringScytheAbility {
         ItemStack stack = player.getStackInHand(hand);
         Item item = stack.getItem();
 
-        int cooldown = Math.max(0, BloodyScytheConfigLoader.CONFIG.witheringActiveCooldownTicks);
+        BloodyScytheConfig config = BloodyScytheConfigLoader.getConfig();
+
+        int cooldown = Math.max(0, config.witheringActiveCooldownTicks);
         if (cooldown > 0 && player.getItemCooldownManager().isCoolingDown(item)) return;
 
         // ✅ Цена активации (общая для всех кос): берём из bloodHarvestDurabilityCost
-        int cost = 100;
-        if (BloodyScytheConfigLoader.CONFIG != null) {
-            cost = Math.max(0, BloodyScytheConfigLoader.CONFIG.bloodHarvestDurabilityCost);
-        }
+        int cost = Math.max(0, config.bloodHarvestDurabilityCost);
 
         if (cost > 0) {
             int remaining = stack.getMaxDamage() - stack.getDamage();
@@ -45,13 +45,13 @@ public class WitheringScytheAbility {
             stack.damage(cost, player, p -> p.sendToolBreakStatus(hand));
         }
 
-        double range = BloodyScytheConfigLoader.CONFIG.witheringActiveRadius;
+        double range = config.witheringActiveRadius;
         ServerPlayerEntity target = findTargetPlayer(player, range);
 
         if (target != null) {
-            int debuffTicks = Math.max(1, BloodyScytheConfigLoader.CONFIG.witheringDebuffTicks);
-            int slowAmp = Math.max(0, BloodyScytheConfigLoader.CONFIG.witheringDebuffSlownessAmplifier);
-            int witherAmp = Math.max(0, BloodyScytheConfigLoader.CONFIG.witheringDebuffWitherAmplifier);
+            int debuffTicks = Math.max(1, config.witheringDebuffTicks);
+            int slowAmp = Math.max(0, config.witheringDebuffSlownessAmplifier);
+            int witherAmp = Math.max(0, config.witheringDebuffWitherAmplifier);
 
             target.addStatusEffect(new StatusEffectInstance(
                     BleedingMod.NO_JUMP,
@@ -76,10 +76,11 @@ public class WitheringScytheAbility {
     public static void tick(ServerPlayerEntity player) {
         if (!WitheringScytheTracker.isActive(player)) return;
 
-        int rate = Math.max(1, BloodyScytheConfigLoader.CONFIG.witheringActiveTickRate);
+        BloodyScytheConfig config = BloodyScytheConfigLoader.getConfig();
+        int rate = Math.max(1, config.witheringActiveTickRate);
         if (player.age % rate != 0) return;
 
-        double radius = BloodyScytheConfigLoader.CONFIG.witheringActiveRadius;
+        double radius = config.witheringActiveRadius;
         Box box = player.getBoundingBox().expand(radius);
 
         List<ServerPlayerEntity> targets =
@@ -89,7 +90,7 @@ public class WitheringScytheAbility {
                         p -> isEnemyPlayer(player, p)
                 );
 
-        double damage = Math.max(0.0, BloodyScytheConfigLoader.CONFIG.witheringActiveDamage);
+        double damage = Math.max(0.0, config.witheringActiveDamage);
         if (damage <= 0.0) return;
 
         for (ServerPlayerEntity target : targets) {

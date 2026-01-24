@@ -1,5 +1,6 @@
 package com.example.bloodyscythe.ability;
 
+import com.example.bloodyscythe.config.BloodyScytheConfig;
 import com.example.bloodyscythe.config.BloodyScytheConfigLoader;
 import com.example.bloodyscythe.item.PlagueScytheItem;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -23,13 +24,13 @@ public class PlagueScytheAura {
         int addTicks = 60;
         int thresholdTicks = 20;
 
-        if (BloodyScytheConfigLoader.CONFIG != null) {
-            radius = BloodyScytheConfigLoader.CONFIG.plagueAuraRadius;
-            addTicks = Math.max(1, BloodyScytheConfigLoader.CONFIG.plagueAuraEffectTicks);
-            thresholdTicks = Math.max(1, BloodyScytheConfigLoader.CONFIG.plagueAuraRefreshThresholdTicks);
-        }
+        BloodyScytheConfig config = BloodyScytheConfigLoader.getConfig();
+        radius = config.plagueAuraRadius;
+        addTicks = Math.max(1, config.plagueAuraEffectTicks);
+        thresholdTicks = Math.max(1, config.plagueAuraRefreshThresholdTicks);
 
-        float healthRatio = player.getHealth() / player.getMaxHealth();
+        float maxHealth = player.getMaxHealth();
+        float healthRatio = maxHealth <= 0.0f ? 0.0f : (player.getHealth() / maxHealth);
         int amplifier = healthRatio <= 0.25f ? 2 : healthRatio <= 0.5f ? 1 : 0;
 
         Box box = player.getBoundingBox().expand(radius);
