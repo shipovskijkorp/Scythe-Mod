@@ -11,7 +11,7 @@ import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.SwordItem;
-import net.minecraft.item.ToolMaterial;
+import net.minecraft.item.ToolMaterials;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -22,10 +22,10 @@ import java.util.List;
 
 public class PlagueScytheItem extends SwordItem {
 
-    private static final float BASE_WEAPON_DAMAGE = 8.0f;
+    private static final float BASE_WEAPON_DAMAGE = 9.0f;
 
-    public PlagueScytheItem(ToolMaterial material, Settings settings) {
-        super(material, 8, -3.2f, settings);
+    public PlagueScytheItem(Settings settings) {
+        super(ToolMaterials.NETHERITE, 4, -2.8F, settings);
     }
 
     @Environment(EnvType.CLIENT)
@@ -126,27 +126,18 @@ public class PlagueScytheItem extends SwordItem {
 
     @Override
     public boolean postHit(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-
-        // Важно: дополнительный урон наносим только на сервере
         if (attacker.getWorld().isClient) {
             return super.postHit(stack, target, attacker);
         }
 
         if (attacker instanceof ServerPlayerEntity player) {
-
             float multiplier = PlagueScytheAbility.getDamageMultiplier(player);
 
-            // защита от странных значений
             if (multiplier > 1.0f) {
-                multiplier = Math.min(multiplier, 2.0f); // кап +100% (как в описании)
+                multiplier = Math.min(multiplier, 2.0f);
 
                 float extraDamage = (multiplier - 1.0f) * BASE_WEAPON_DAMAGE;
-
-                // Урон с “атакующим”, чтобы киллы/триггеры нормально засчитывались
-                target.damage(
-                        player.getDamageSources().indirectMagic(player, player),
-                        extraDamage
-                );
+                target.damage(player.getDamageSources().indirectMagic(player, player), extraDamage);
             }
         }
 

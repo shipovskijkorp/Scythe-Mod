@@ -12,30 +12,24 @@ public class PlagueHudRenderer {
     }
 
     private static void render(DrawContext context, float tickDelta) {
-        if (!PlagueHudState.isActive()) return;
+        if (!PlagueHudState.isActive() || !HeldScytheHudUtil.isHoldingPlagueScythe()) {
+            return;
+        }
 
         MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player == null) return;
+        if (client.player == null) {
+            return;
+        }
 
-        Text text = Text.translatable(
-                "hud.bloodyscythe.plague",
-                PlagueHudState.getSecondsLeft()
-        );
+        Text text = Text.translatable("hud.bloodyscythe.plague", PlagueHudState.getSecondsLeft());
 
         int sw = client.getWindow().getScaledWidth();
         int sh = client.getWindow().getScaledHeight();
 
         int w = client.textRenderer.getWidth(text);
         int x = (sw - w) / 2;
-        int y = sh / 2 + 42;
+        int y = sh / 2 + 30;
 
-        context.drawText(
-                client.textRenderer,
-                text,
-                x,
-                y,
-                0x3AA13A,
-                true
-        );
+        context.drawText(client.textRenderer, text, x, y, 0x3AA13A, true);
     }
 }

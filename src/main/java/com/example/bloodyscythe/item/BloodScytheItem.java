@@ -13,6 +13,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.SwordItem;
+import net.minecraft.item.ToolMaterials;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.world.World;
@@ -23,7 +24,7 @@ import java.util.List;
 public class BloodScytheItem extends SwordItem {
 
     public BloodScytheItem(Settings settings) {
-        super(ScytheMaterial.INSTANCE, 8, -3.1F, settings);
+        super(ToolMaterials.NETHERITE, 4, -2.8F, settings);
     }
 
     @Environment(EnvType.CLIENT)
@@ -105,7 +106,6 @@ public class BloodScytheItem extends SwordItem {
                 Formatting.GRAY
         );
 
-        // дебаффы на цели
         TooltipUtil.addWrapped(
                 tooltip,
                 Text.translatable("tooltip.bloodyscythe.stat.slowness_sec", TooltipUtil.fmtSecondsValue(cfg.bloodHarvestSlownessTicks)),
@@ -130,8 +130,6 @@ public class BloodScytheItem extends SwordItem {
 
     @Override
     public boolean postHit(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-
-        // эффекты только на сервере
         if (attacker.getWorld().isClient) {
             return super.postHit(stack, target, attacker);
         }

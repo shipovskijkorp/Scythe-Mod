@@ -12,21 +12,24 @@ public class WitheringHudRenderer {
     }
 
     private static void render(DrawContext context, float tickDelta) {
-        if (!WitheringHudState.isActive()) return;
+        if (!WitheringHudState.isActive() || !HeldScytheHudUtil.isHoldingWitheringScythe()) {
+            return;
+        }
 
         MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player == null) {
+            return;
+        }
+
         Text text = Text.translatable("hud.bloodyscythe.withering", WitheringHudState.getSecondsLeft());
 
-        int x = client.getWindow().getScaledWidth() / 2 - 60;
-        int y = client.getWindow().getScaledHeight() / 2 + 45;
+        int sw = client.getWindow().getScaledWidth();
+        int sh = client.getWindow().getScaledHeight();
 
-        context.drawText(
-                client.textRenderer,
-                text,
-                x,
-                y,
-                0x6B6B6B,
-                true
-        );
+        int w = client.textRenderer.getWidth(text);
+        int x = (sw - w) / 2;
+        int y = sh / 2 + 30;
+
+        context.drawText(client.textRenderer, text, x, y, 0x6B6B6B, true);
     }
 }

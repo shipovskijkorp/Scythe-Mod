@@ -19,7 +19,6 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.ToolMaterials;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.server.MinecraftServer;
@@ -34,9 +33,9 @@ public class BleedingMod implements ModInitializer {
 	public static final String MOD_ID = "bloodyscythe";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-	public static final Item BLOODY_SCYTHE = new BloodScytheItem(new Item.Settings().maxCount(1));
-	public static final Item PLAGUE_SCYTHE = new PlagueScytheItem(ToolMaterials.NETHERITE, new Item.Settings().maxCount(1));
-	public static final Item WITHERING_SCYTHE = new WitheringScytheItem(new Item.Settings().maxCount(1));
+	public static final Item BLOODY_SCYTHE = new BloodScytheItem(new Item.Settings().maxCount(1).fireproof());
+	public static final Item PLAGUE_SCYTHE = new PlagueScytheItem(new Item.Settings().maxCount(1).fireproof());
+	public static final Item WITHERING_SCYTHE = new WitheringScytheItem(new Item.Settings().maxCount(1).fireproof());
 
 	// ✅ новый предмет
 	public static final Item BLOODY_ESSENCE = new Item(new Item.Settings());

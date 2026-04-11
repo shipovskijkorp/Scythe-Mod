@@ -12,6 +12,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.SwordItem;
+import net.minecraft.item.ToolMaterials;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -23,7 +24,7 @@ import java.util.List;
 public class WitheringScytheItem extends SwordItem {
 
     public WitheringScytheItem(Settings settings) {
-        super(ScytheMaterial.INSTANCE, 8, -3.2f, settings);
+        super(ToolMaterials.NETHERITE, 4, -2.8F, settings);
     }
 
     @Environment(EnvType.CLIENT)
@@ -134,12 +135,10 @@ public class WitheringScytheItem extends SwordItem {
 
     @Override
     public boolean postHit(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-
         if (!(attacker instanceof ServerPlayerEntity player)) {
             return super.postHit(stack, target, attacker);
         }
 
-        // ✅ спец-урон игнорит тиммейтов
         if (target instanceof ServerPlayerEntity victim && player.isTeammate(victim)) {
             return super.postHit(stack, target, attacker);
         }
@@ -161,7 +160,9 @@ public class WitheringScytheItem extends SwordItem {
         }
 
         ignoreArmorFraction = Math.max(0.0, Math.min(1.0, ignoreArmorFraction));
-        if (baseDamageOnly <= 0.0 || ignoreArmorFraction <= 0.0) return super.postHit(stack, target, attacker);
+        if (baseDamageOnly <= 0.0 || ignoreArmorFraction <= 0.0) {
+            return super.postHit(stack, target, attacker);
+        }
 
         float armor = target.getArmor();
         float toughness = (float) target.getAttributeValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS);

@@ -29,6 +29,6 @@ public class PlagueHudState {
     }
 
     public static int getSecondsLeft() {
-        return ticksLeft / 20;
+        return (ticksLeft + 19) / 20;
     }
 }

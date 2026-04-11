@@ -12,10 +12,14 @@ public class BloodHarvestHudRenderer {
     }
 
     private static void render(DrawContext context, float tickDelta) {
-        if (!BloodHarvestHudState.isActive()) return;
+        if (!BloodHarvestHudState.isActive() || !HeldScytheHudUtil.isHoldingBloodyScythe()) {
+            return;
+        }
 
         MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player == null) return;
+        if (client.player == null) {
+            return;
+        }
 
         Text text = Text.translatable(
                 "hud.bloodyscythe.blood_harvest",
@@ -29,13 +33,6 @@ public class BloodHarvestHudRenderer {
         int x = (sw - w) / 2;
         int y = sh / 2 + 30;
 
-        context.drawText(
-                client.textRenderer,
-                text,
-                x,
-                y,
-                0xAA0000,
-                true
-        );
+        context.drawText(client.textRenderer, text, x, y, 0xAA0000, true);
     }
 }
