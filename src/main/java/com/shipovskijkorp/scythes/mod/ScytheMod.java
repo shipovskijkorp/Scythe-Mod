@@ -37,7 +37,6 @@ public class ScytheMod implements ModInitializer {
 	public static final Item PLAGUE_SCYTHE = new PlagueScytheItem(new Item.Settings().maxCount(1).fireproof());
 	public static final Item WITHERING_SCYTHE = new WitheringScytheItem(new Item.Settings().maxCount(1).fireproof());
 
-	// ✅ новый предмет
 	public static final Item BLOODY_ESSENCE = new Item(new Item.Settings());
 
 	public static final Identifier SCYTHE_ITEM_GROUP_ID = new Identifier(MOD_ID, "scythes");
