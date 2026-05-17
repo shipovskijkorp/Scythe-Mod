@@ -1,9 +1,9 @@
 {
 	"schemaVersion": 1,
-	"id": "bloodyscythe",
+	"id": "scythes",
 	"version": "${version}",
-	"name": "BloodyScythe",
-	"description": "BloodyScythe mod",
+	"name": "Scythe Mod",
+	"description": "Adds three powerful endgame scythes for PvP and survival: the Bloody Scythe with bleeding and Blood Harvest, the Plague Scythe with poison auras and missing-health scaling, and the Withering Scythe with wither effects and partial armor bypass. Includes custom abilities, HUD timers, advancements, recipes, Bloody Essence drops, configuration, and English/Russian localization.",
 	"authors": [
 		"Shipovskijkorp",
 		"Sun_Aloe"
@@ -12,23 +12,20 @@
 		"homepage": "",
 		"sources": ""
 	},
-	"license": "CC0-1.0",
-	"icon": "assets/bloodyscythe/icon.png",
+	"license": "All Rights Reserved",
+	"icon": "assets/scythes/icon.png",
 	"environment": "*",
-
 	"entrypoints": {
 		"main": [
-			"com.example.bloodyscythe.BleedingMod"
+			"com.shipovskijkorp.scythes.mod.ScytheMod"
 		],
 		"client": [
-			"com.example.bloodyscythe.client.BleedingModClient"
+			"com.shipovskijkorp.scythes.mod.client.ScytheModClient"
 		]
 	},
-
 	"mixins": [
-		"bloodyscythe.mixins.json"
+		"scythes.mixins.json"
 	],
-
 	"depends": {
 		"fabricloader": ">=0.18.4",
 		"minecraft": "~1.20.1",

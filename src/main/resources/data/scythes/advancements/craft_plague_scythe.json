@@ -1,0 +1,26 @@
+{
+  "parent": "scythes:root",
+  "display": {
+    "icon": {
+      "item": "scythes:plague_scythe"
+    },
+    "title": {
+      "translate": "advancement.scythes.craft_plague.title"
+    },
+    "description": {
+      "translate": "advancement.scythes.craft_plague.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "craft": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "scythes:craft_plague_scythe"
+      }
+    }
+  }
+}

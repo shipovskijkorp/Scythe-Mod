@@ -1,0 +1,15 @@
+{
+  "parent": "scythes:withering_kills_10",
+  "display": {
+    "icon": { "item": "scythes:withering_scythe" },
+    "title": { "translate": "advancement.scythes.withering_kills_20.title" },
+    "description": { "translate": "advancement.scythes.withering_kills_20.desc" },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": { "trigger": "minecraft:impossible" }
+  }
+}

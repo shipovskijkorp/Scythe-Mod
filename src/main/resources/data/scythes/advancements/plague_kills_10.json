@@ -1,0 +1,15 @@
+{
+  "parent": "scythes:plague_kills_5",
+  "display": {
+    "icon": { "item": "scythes:plague_scythe" },
+    "title": { "translate": "advancement.scythes.plague_kills_10.title" },
+    "description": { "translate": "advancement.scythes.plague_kills_10.desc" },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": { "trigger": "minecraft:impossible" }
+  }
+}

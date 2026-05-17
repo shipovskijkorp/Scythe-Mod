@@ -1,0 +1,15 @@
+{
+  "parent": "scythes:craft_plague_scythe",
+  "display": {
+    "icon": { "item": "scythes:plague_scythe" },
+    "title": { "translate": "advancement.scythes.plague_kills_1.title" },
+    "description": { "translate": "advancement.scythes.plague_kills_1.desc" },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": { "trigger": "minecraft:impossible" }
+  }
+}
