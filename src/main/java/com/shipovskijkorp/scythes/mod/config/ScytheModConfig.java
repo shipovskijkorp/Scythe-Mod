@@ -22,10 +22,10 @@ public class ScytheModConfig {
     public double bleedingDamagePerSecond = 1.5;
 
     /** Шанс вампиризма Кровавой косы при фактическом уроне ближней атакой (0..1). */
-    public double bloodVampirismChance = 0.10;
+    public double bloodVampirismChance = 0.20;
 
     /** Доля фактически нанесённого урона, которая возвращается здоровьем. */
-    public double bloodVampirismHealFraction = 0.20;
+    public double bloodVampirismHealFraction = 0.40;
 
     /** Минимальная задержка между успешными срабатываниями вампиризма (тики). */
     public int bloodVampirismCooldownTicks = 20;
@@ -34,29 +34,29 @@ public class ScytheModConfig {
 
     public double bloodHarvestRadius = 10.0;
     public int bloodHarvestCooldownTicks = 20 * 60;
-    public int bloodHarvestKillWindowTicks = 20 * 10;
+    public int bloodHarvestKillWindowTicks = 20 * 20;
 
     /** Общая стоимость прочности при активации способностей кос. */
     public int scytheAbilityDurabilityCost = 100;
 
 
     /** Длительность дебаффов на цели от Blood Harvest (тики). */
-    public int bloodHarvestSlownessTicks = 20 * 5;
-    public int bloodHarvestBlindnessTicks = 20 * 5;
-    public int bloodHarvestWeaknessTicks = 20 * 5;
-    public int bloodHarvestGlowingTicks = 20 * 10;
+    public int bloodHarvestSlownessTicks = 20 * 10;
+    public int bloodHarvestBlindnessTicks = 20 * 10;
+    public int bloodHarvestWeaknessTicks = 20 * 10;
+    public int bloodHarvestGlowingTicks = 20 * 20;
 
     public int bloodHarvestSlownessAmplifier = 1;
     public int bloodHarvestWeaknessAmplifier = 1;
 
     /** Баффы владельцу при успешном килле в окне (тики). */
-    public int bloodHarvestSuccessBuffTicks = 20 * 8;
+    public int bloodHarvestSuccessBuffTicks = 20 * 16;
     public int bloodHarvestSuccessSpeedAmplifier = 1;
     public int bloodHarvestSuccessStrengthAmplifier = 1;
     public int bloodHarvestSuccessRegenAmplifier = 1;
 
     /** Дебаффы владельцу при провале окна (тики). */
-    public int bloodHarvestFailureDebuffTicks = 20 * 5;
+    public int bloodHarvestFailureDebuffTicks = 150;
     public int bloodHarvestFailureSlownessAmplifier = 1;
     public int bloodHarvestFailureWeaknessAmplifier = 1;
 
