@@ -1,6 +1,7 @@
 package com.shipovskijkorp.scythes.mod.item;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.ability.DamageAttributionTracker;
 import com.shipovskijkorp.scythes.mod.client.TooltipUtil;
 import com.shipovskijkorp.scythes.mod.config.ScytheModConfig;
 import com.shipovskijkorp.scythes.mod.config.ScytheModConfigLoader;
@@ -14,6 +15,7 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.SwordItem;
 import net.minecraft.item.ToolMaterials;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.world.World;
@@ -73,6 +75,30 @@ public class BloodScytheItem extends SwordItem {
                     ),
                     Formatting.DARK_GRAY
             );
+            TooltipUtil.addWrapped(
+                    tooltip,
+                    Text.translatable(
+                            "tooltip.scythes.stat.vampirism_chance_percent",
+                            TooltipUtil.fmtPercentValue(cfg.bloodVampirismChance)
+                    ),
+                    Formatting.DARK_RED
+            );
+            TooltipUtil.addWrapped(
+                    tooltip,
+                    Text.translatable(
+                            "tooltip.scythes.stat.vampirism_heal_percent",
+                            TooltipUtil.fmtPercentValue(cfg.bloodVampirismHealFraction)
+                    ),
+                    Formatting.DARK_GRAY
+            );
+            TooltipUtil.addWrapped(
+                    tooltip,
+                    Text.translatable(
+                            "tooltip.scythes.stat.vampirism_cooldown_sec",
+                            TooltipUtil.fmtSecondsValue(cfg.bloodVampirismCooldownTicks)
+                    ),
+                    Formatting.DARK_GRAY
+            );
         }
 
         tooltip.add(Text.empty());
@@ -97,7 +123,7 @@ public class BloodScytheItem extends SwordItem {
         );
         TooltipUtil.addWrapped(
                 tooltip,
-                Text.translatable("tooltip.scythes.stat.durability_cost", String.valueOf(cfg.bloodHarvestDurabilityCost)),
+                Text.translatable("tooltip.scythes.stat.durability_cost", String.valueOf(cfg.scytheAbilityDurabilityCost)),
                 Formatting.GRAY
         );
         TooltipUtil.addWrapped(
@@ -167,6 +193,10 @@ public class BloodScytheItem extends SwordItem {
                 false,
                 true
         ));
+
+        if (attacker instanceof ServerPlayerEntity player) {
+            DamageAttributionTracker.recordBleeding(target, player, duration);
+        }
 
         return super.postHit(stack, target, attacker);
     }

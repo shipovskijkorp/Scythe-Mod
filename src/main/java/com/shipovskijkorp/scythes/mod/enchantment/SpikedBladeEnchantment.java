@@ -26,12 +26,4 @@ public class SpikedBladeEnchantment extends Enchantment {
         return stack.getItem() instanceof BloodScytheItem;
     }
 
-    /**
-     * ✅ Доп. страховка: даже если кто-то попытается наложить чар не туда,
-     * игра будет считать его несовместимым с предметом.
-     */
-    @Override
-    public boolean canAccept(Enchantment other) {
-        return super.canAccept(other);
-    }
 }

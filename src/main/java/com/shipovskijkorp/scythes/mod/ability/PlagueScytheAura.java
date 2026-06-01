@@ -3,6 +3,7 @@ package com.shipovskijkorp.scythes.mod.ability;
 import com.shipovskijkorp.scythes.mod.config.ScytheModConfig;
 import com.shipovskijkorp.scythes.mod.config.ScytheModConfigLoader;
 import com.shipovskijkorp.scythes.mod.item.PlagueScytheItem;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -35,13 +36,13 @@ public class PlagueScytheAura {
 
         Box box = player.getBoundingBox().expand(radius);
 
-        List<ServerPlayerEntity> targets = player.getWorld().getEntitiesByClass(
-                ServerPlayerEntity.class,
+        List<LivingEntity> targets = player.getWorld().getEntitiesByClass(
+                LivingEntity.class,
                 box,
-                p -> p != player && p.isAlive() && !p.isSpectator() && !player.isTeammate(p)
+                target -> ScytheTargeting.canHit(player, target)
         );
 
-        for (ServerPlayerEntity target : targets) {
+        for (LivingEntity target : targets) {
 
             StatusEffectInstance current = target.getStatusEffect(StatusEffects.POISON);
 

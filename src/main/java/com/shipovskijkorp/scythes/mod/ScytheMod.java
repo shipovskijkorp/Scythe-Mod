@@ -95,7 +95,7 @@ public class ScytheMod implements ModInitializer {
 		// ✅ общий килл-хендлер для 1/5/10/20 убийств косами
 		ScytheKillMilestoneHandler.register();
 
-		// ✅ дроп Bloody Essence (5% житель, 20% игрок)
+		// дроп Bloody Essence (шансы берутся из конфига)
 		BloodyEssenceDropHandler.register();
 
 		// ✅ чистим активки при DISCONNECT (не залипают UUID в Map)
@@ -103,6 +103,7 @@ public class ScytheMod implements ModInitializer {
 			ServerPlayerEntity player = handler.player;
 			server.execute(() -> {
 				BloodHarvestTracker.clear(player);
+				BloodScytheVampirism.clear(player);
 				PlagueScytheTracker.clear(player);
 				WitheringScytheTracker.clear(player);
 			});

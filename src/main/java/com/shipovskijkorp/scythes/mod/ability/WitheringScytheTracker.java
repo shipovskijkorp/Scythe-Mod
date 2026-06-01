@@ -31,6 +31,12 @@ public class WitheringScytheTracker {
         return ACTIVE.containsKey(player.getUuid());
     }
 
+    public static void stop(ServerPlayerEntity player) {
+        if (ACTIVE.remove(player.getUuid()) != null) {
+            WitheringHudS2CPacket.sendStop(player);
+        }
+    }
+
     /** ✅ СКОЛЬКО тиков осталось (нужно для HUD и синхры) */
     public static int getTicksLeft(ServerPlayerEntity player) {
         return ACTIVE.getOrDefault(player.getUuid(), 0);

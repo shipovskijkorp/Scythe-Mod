@@ -16,6 +16,12 @@ public class PlagueScytheTracker {
         ACTIVE.remove(player.getUuid());
     }
 
+    public static void stop(ServerPlayerEntity player) {
+        if (ACTIVE.remove(player.getUuid()) != null) {
+            PlagueHudS2CPacket.sendStop(player);
+        }
+    }
+
     /** Сколько тиков осталось (для HUD/синхры) */
     public static int getTicksLeft(ServerPlayerEntity player) {
         return ACTIVE.getOrDefault(player.getUuid(), 0);

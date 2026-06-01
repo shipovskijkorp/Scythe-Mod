@@ -21,14 +21,24 @@ public class ScytheModConfig {
     /** Урон в секунду (на amplifier=0). При изменении tickRate DPS сохраняется. */
     public double bleedingDamagePerSecond = 1.5;
 
+    /** Шанс вампиризма Кровавой косы при фактическом уроне ближней атакой (0..1). */
+    public double bloodVampirismChance = 0.10;
+
+    /** Доля фактически нанесённого урона, которая возвращается здоровьем. */
+    public double bloodVampirismHealFraction = 0.20;
+
+    /** Минимальная задержка между успешными срабатываниями вампиризма (тики). */
+    public int bloodVampirismCooldownTicks = 20;
+
     /* ===================== BLOOD HARVEST ===================== */
 
     public double bloodHarvestRadius = 10.0;
     public int bloodHarvestCooldownTicks = 20 * 60;
     public int bloodHarvestKillWindowTicks = 20 * 10;
 
-    /** Стоимость прочности при активации Blood Harvest. */
-    public int bloodHarvestDurabilityCost = 100;
+    /** Общая стоимость прочности при активации способностей кос. */
+    public int scytheAbilityDurabilityCost = 100;
+
 
     /** Длительность дебаффов на цели от Blood Harvest (тики). */
     public int bloodHarvestSlownessTicks = 20 * 5;
@@ -114,6 +124,12 @@ public class ScytheModConfig {
     public int witheringDebuffTicks = 40;
     public int witheringDebuffSlownessAmplifier = 1;
     public int witheringDebuffWitherAmplifier = 0;
+
+    /** Шанс дропа Bloody Essence с жителя (0..1). */
+    public double bloodyEssenceVillagerDropChance = 0.05;
+
+    /** Шанс дропа Bloody Essence с игрока (0..1). */
+    public double bloodyEssencePlayerDropChance = 0.20;
 
     /** Пост-удар во время активки: сколько "вернуть" от срезанного брони. */
     public double witheringArmorIgnoreFraction = 0.20;

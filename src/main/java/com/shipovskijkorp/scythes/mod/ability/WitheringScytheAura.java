@@ -3,6 +3,8 @@ package com.shipovskijkorp.scythes.mod.ability;
 import com.shipovskijkorp.scythes.mod.config.ScytheModConfig;
 import com.shipovskijkorp.scythes.mod.config.ScytheModConfigLoader;
 import com.shipovskijkorp.scythes.mod.item.WitheringScytheItem;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -20,51 +22,52 @@ public class WitheringScytheAura {
 
         if (!hasScytheInHand) return;
 
-        double radius = 5.0;
-        int witherAdd = 40;
-        int slowAdd = 40;
-        int threshold = 20;
-
         ScytheModConfig config = ScytheModConfigLoader.getConfig();
-        radius = config.witheringAuraRadius;
-        witherAdd = Math.max(1, config.witheringAuraWitherTicks);
-        slowAdd = Math.max(1, config.witheringAuraSlownessTicks);
-        threshold = Math.max(1, config.witheringAuraRefreshThresholdTicks);
+        double radius = config.witheringAuraRadius;
+        int witherAdd = Math.max(1, config.witheringAuraWitherTicks);
+        int slowAdd = Math.max(1, config.witheringAuraSlownessTicks);
+        int threshold = Math.max(1, config.witheringAuraRefreshThresholdTicks);
 
         Box box = player.getBoundingBox().expand(radius);
-        List<ServerPlayerEntity> targets =
+        List<LivingEntity> targets =
                 player.getWorld().getEntitiesByClass(
-                        ServerPlayerEntity.class,
+                        LivingEntity.class,
                         box,
-                        // ✅ иссушающая коса игнорит тиммейтов
-                        p -> p != player && p.isAlive() && !p.isSpectator() && !player.isTeammate(p)
+                        target -> ScytheTargeting.canHit(player, target)
                 );
 
-        for (ServerPlayerEntity target : targets) {
-            extendOrApply(target, StatusEffects.WITHER, witherAdd, 0, threshold);
+        for (LivingEntity target : targets) {
+            int witherDuration = extendOrApply(target, StatusEffects.WITHER, witherAdd, 0, threshold);
+            if (witherDuration > 0) {
+                DamageAttributionTracker.recordWithering(target, player, witherDuration);
+            }
             extendOrApply(target, StatusEffects.SLOWNESS, slowAdd, 0, threshold);
         }
     }
 
-    private static void extendOrApply(ServerPlayerEntity target,
-                                      net.minecraft.entity.effect.StatusEffect effect,
-                                      int addTicks,
-                                      int amplifier,
-                                      int thresholdTicks) {
+    private static int extendOrApply(LivingEntity target,
+                                     StatusEffect effect,
+                                     int addTicks,
+                                     int amplifier,
+                                     int thresholdTicks) {
 
         StatusEffectInstance cur = target.getStatusEffect(effect);
 
         if (cur == null) {
             target.addStatusEffect(new StatusEffectInstance(effect, addTicks, amplifier));
-            return;
+            return addTicks;
         }
 
         if (cur.getDuration() <= thresholdTicks) {
+            int newDuration = cur.getDuration() + addTicks;
             target.addStatusEffect(new StatusEffectInstance(
                     effect,
-                    cur.getDuration() + addTicks,
+                    newDuration,
                     Math.max(cur.getAmplifier(), amplifier)
             ));
+            return newDuration;
         }
+
+        return 0;
     }
 }

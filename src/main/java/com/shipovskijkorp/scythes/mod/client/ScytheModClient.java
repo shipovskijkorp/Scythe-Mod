@@ -80,7 +80,9 @@ public class ScytheModClient implements ClientModInitializer {
             WitheringHudState.tick();
 
             while (scytheAbilityKey.wasPressed()) {
-                ClientPlayNetworking.send(ModPackets.SCYTHE_ABILITY_C2S, PacketByteBufs.empty());
+                if (client.getNetworkHandler() != null && ClientPlayNetworking.canSend(ModPackets.SCYTHE_ABILITY_C2S)) {
+                    ClientPlayNetworking.send(ModPackets.SCYTHE_ABILITY_C2S, PacketByteBufs.empty());
+                }
             }
         });
     }

@@ -1,5 +1,6 @@
 package com.shipovskijkorp.scythes.mod.item;
 
+import com.shipovskijkorp.scythes.mod.ability.ScytheTargeting;
 import com.shipovskijkorp.scythes.mod.ability.WitheringScytheTracker;
 import com.shipovskijkorp.scythes.mod.client.TooltipUtil;
 import com.shipovskijkorp.scythes.mod.config.ScytheModConfig;
@@ -118,7 +119,7 @@ public class WitheringScytheItem extends SwordItem {
         );
         TooltipUtil.addWrapped(
                 tooltip,
-                Text.translatable("tooltip.scythes.stat.durability_cost", String.valueOf(cfg.bloodHarvestDurabilityCost)),
+                Text.translatable("tooltip.scythes.stat.durability_cost", String.valueOf(cfg.scytheAbilityDurabilityCost)),
                 Formatting.GRAY
         );
         TooltipUtil.addWrapped(
@@ -139,7 +140,7 @@ public class WitheringScytheItem extends SwordItem {
             return super.postHit(stack, target, attacker);
         }
 
-        if (target instanceof ServerPlayerEntity victim && player.isTeammate(victim)) {
+        if (!ScytheTargeting.canHit(player, target)) {
             return super.postHit(stack, target, attacker);
         }
 

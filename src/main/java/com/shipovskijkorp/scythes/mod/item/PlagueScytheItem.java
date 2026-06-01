@@ -1,5 +1,6 @@
 package com.shipovskijkorp.scythes.mod.item;
 
+import com.shipovskijkorp.scythes.mod.ability.ScytheTargeting;
 import com.shipovskijkorp.scythes.mod.ability.PlagueScytheAbility;
 import com.shipovskijkorp.scythes.mod.client.TooltipUtil;
 import com.shipovskijkorp.scythes.mod.config.ScytheModConfig;
@@ -123,7 +124,7 @@ public class PlagueScytheItem extends SwordItem {
         );
         TooltipUtil.addWrapped(
                 tooltip,
-                Text.translatable("tooltip.scythes.stat.durability_cost", String.valueOf(cfg.bloodHarvestDurabilityCost)),
+                Text.translatable("tooltip.scythes.stat.durability_cost", String.valueOf(cfg.scytheAbilityDurabilityCost)),
                 Formatting.GRAY
         );
     }
@@ -135,6 +136,10 @@ public class PlagueScytheItem extends SwordItem {
         }
 
         if (attacker instanceof ServerPlayerEntity player) {
+            if (!ScytheTargeting.canHit(player, target)) {
+                return super.postHit(stack, target, attacker);
+            }
+
             float multiplier = PlagueScytheAbility.getDamageMultiplier(player);
 
             if (multiplier > 1.0f) {

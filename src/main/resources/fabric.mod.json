@@ -13,7 +13,7 @@
 		"sources": ""
 	},
 	"license": "All Rights Reserved",
-	"icon": "assets/scythes/icon.jpg",
+	"icon": "assets/scythes/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [

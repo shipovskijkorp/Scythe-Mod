@@ -1,9 +1,11 @@
 package com.shipovskijkorp.scythes.mod.effect;
 
+import com.shipovskijkorp.scythes.mod.ability.DamageAttributionTracker;
 import com.shipovskijkorp.scythes.mod.config.ScytheModConfigLoader;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectCategory;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.world.World;
 
 public class BleedingEffect extends StatusEffect {
@@ -34,11 +36,15 @@ public class BleedingEffect extends StatusEffect {
             dps = Math.max(0.0, ScytheModConfigLoader.CONFIG.bleedingDamagePerSecond);
         }
 
-        // сохраняем DPS при любом tickRate
         float damagePerProc = (float) (dps * (tickRate / 20.0));
         float damage = damagePerProc * (amplifier + 1);
 
-        if (damage > 0.0f) {
+        if (damage <= 0.0f) return;
+
+        ServerPlayerEntity owner = DamageAttributionTracker.getBleedingOwner(entity);
+        if (owner != null) {
+            entity.damage(entity.getDamageSources().indirectMagic(owner, owner), damage);
+        } else {
             entity.damage(world.getDamageSources().magic(), damage);
         }
     }

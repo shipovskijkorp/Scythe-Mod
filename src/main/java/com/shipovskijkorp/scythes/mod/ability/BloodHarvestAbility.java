@@ -29,9 +29,9 @@ public class BloodHarvestAbility {
         ItemStack stack = player.getStackInHand(hand);
         Item item = stack.getItem();
 
-        // ✅ Цена активации (общая для всех кос): берём из bloodHarvestDurabilityCost
+        // Цена активации общая для способностей всех кос
         ScytheModConfig config = ScytheModConfigLoader.getConfig();
-        int cost = Math.max(0, config.bloodHarvestDurabilityCost);
+        int cost = Math.max(0, config.scytheAbilityDurabilityCost);
 
         if (cost > 0) {
             int remaining = stack.getMaxDamage() - stack.getDamage();

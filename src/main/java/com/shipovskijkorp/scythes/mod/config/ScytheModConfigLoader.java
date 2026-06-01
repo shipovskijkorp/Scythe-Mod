@@ -1,13 +1,14 @@
 package com.shipovskijkorp.scythes.mod.config;
 
-import com.shipovskijkorp.scythes.mod.ScytheMod;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.shipovskijkorp.scythes.mod.ScytheMod;
 import net.fabricmc.loader.api.FabricLoader;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class ScytheModConfigLoader {
 
@@ -23,39 +24,61 @@ public class ScytheModConfigLoader {
     }
 
     public static void load() {
-        File configFile = null;
+        Path configPath = null;
 
         try {
-            configFile = FabricLoader.getInstance()
+            configPath = FabricLoader.getInstance()
                     .getConfigDir()
-                    .resolve("scythes.json")
-                    .toFile();
+                    .resolve("scythes.json");
 
-            if (!configFile.exists()) {
+            if (!Files.exists(configPath)) {
                 CONFIG = new ScytheModConfig();
                 sanitize(CONFIG);
-                try (FileWriter writer = new FileWriter(configFile)) {
-                    GSON.toJson(CONFIG, writer);
-                }
-                ScytheMod.LOGGER.info("Created default config: {}", configFile.getName());
+                write(configPath, CONFIG);
+                ScytheMod.LOGGER.info("Created default config: {}", configPath.getFileName());
                 return;
             }
 
-            try (FileReader reader = new FileReader(configFile)) {
-                CONFIG = GSON.fromJson(reader, ScytheModConfig.class);
+            String rawJson = Files.readString(configPath, StandardCharsets.UTF_8);
+            JsonObject rawObject = null;
+            try {
+                rawObject = GSON.fromJson(rawJson, JsonObject.class);
+            } catch (Exception ignored) {
+                // The typed parse below will throw and fall into the outer catch with a useful log.
             }
 
+            CONFIG = GSON.fromJson(rawJson, ScytheModConfig.class);
             if (CONFIG == null) {
                 CONFIG = new ScytheModConfig();
             }
+
+            migrate(CONFIG, rawObject);
             sanitize(CONFIG);
+            write(configPath, CONFIG);
 
         } catch (Exception e) {
             CONFIG = new ScytheModConfig();
             sanitize(CONFIG);
             ScytheMod.LOGGER.error("Failed to load config (using defaults){}",
-                    configFile != null ? (": " + configFile.getName()) : "",
+                    configPath != null ? (": " + configPath.getFileName()) : "",
                     e);
+        }
+    }
+
+    private static void write(Path configPath, ScytheModConfig config) throws Exception {
+        Files.createDirectories(configPath.getParent());
+        Files.writeString(configPath, GSON.toJson(config), StandardCharsets.UTF_8);
+    }
+
+    private static void migrate(ScytheModConfig config, JsonObject rawObject) {
+        if (rawObject == null) return;
+
+        if (rawObject.has("bloodHarvestDurabilityCost") && !rawObject.has("scytheAbilityDurabilityCost")) {
+            try {
+                config.scytheAbilityDurabilityCost = rawObject.get("bloodHarvestDurabilityCost").getAsInt();
+            } catch (Exception ignored) {
+                // sanitize() will keep the default if the legacy value is invalid.
+            }
         }
     }
 
@@ -66,11 +89,14 @@ public class ScytheModConfigLoader {
 
         config.bleedingTickRate = clampMin(config.bleedingTickRate, 1);
         config.bleedingDamagePerSecond = clampMin(config.bleedingDamagePerSecond, 0.0);
+        config.bloodVampirismChance = clamp(config.bloodVampirismChance, 0.0, 1.0);
+        config.bloodVampirismHealFraction = clampMin(config.bloodVampirismHealFraction, 0.0);
+        config.bloodVampirismCooldownTicks = clampMin(config.bloodVampirismCooldownTicks, 0);
 
         config.bloodHarvestRadius = clampMin(config.bloodHarvestRadius, 0.0);
         config.bloodHarvestCooldownTicks = clampMin(config.bloodHarvestCooldownTicks, 0);
         config.bloodHarvestKillWindowTicks = clampMin(config.bloodHarvestKillWindowTicks, 1);
-        config.bloodHarvestDurabilityCost = clampMin(config.bloodHarvestDurabilityCost, 0);
+        config.scytheAbilityDurabilityCost = clampMin(config.scytheAbilityDurabilityCost, 0);
         config.bloodHarvestSlownessTicks = clampMin(config.bloodHarvestSlownessTicks, 1);
         config.bloodHarvestBlindnessTicks = clampMin(config.bloodHarvestBlindnessTicks, 1);
         config.bloodHarvestWeaknessTicks = clampMin(config.bloodHarvestWeaknessTicks, 1);
@@ -113,6 +139,8 @@ public class ScytheModConfigLoader {
         config.witheringDebuffTicks = clampMin(config.witheringDebuffTicks, 1);
         config.witheringDebuffSlownessAmplifier = clampMin(config.witheringDebuffSlownessAmplifier, 0);
         config.witheringDebuffWitherAmplifier = clampMin(config.witheringDebuffWitherAmplifier, 0);
+        config.bloodyEssenceVillagerDropChance = clamp(config.bloodyEssenceVillagerDropChance, 0.0, 1.0);
+        config.bloodyEssencePlayerDropChance = clamp(config.bloodyEssencePlayerDropChance, 0.0, 1.0);
         config.witheringArmorIgnoreFraction = clamp(config.witheringArmorIgnoreFraction, 0.0, 1.0);
         config.witheringArmorIgnoreBaseDamage = clampMin(config.witheringArmorIgnoreBaseDamage, 0.0);
     }

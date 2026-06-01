@@ -4,6 +4,7 @@ import com.shipovskijkorp.scythes.mod.config.ScytheModConfig;
 import com.shipovskijkorp.scythes.mod.config.ScytheModConfigLoader;
 import com.shipovskijkorp.scythes.mod.item.PlagueScytheItem;
 import com.shipovskijkorp.scythes.mod.network.PlagueHudS2CPacket;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.Item;
@@ -27,11 +28,10 @@ public class PlagueScytheAbility {
 
         ScytheModConfig config = ScytheModConfigLoader.getConfig();
 
-        int cooldown = Math.max(1, config.plagueActiveCooldownTicks);
-        if (player.getItemCooldownManager().isCoolingDown(item)) return;
+        int cooldown = Math.max(0, config.plagueActiveCooldownTicks);
+        if (cooldown > 0 && player.getItemCooldownManager().isCoolingDown(item)) return;
 
-        // ✅ Цена активации (общая для всех кос): берём из bloodHarvestDurabilityCost
-        int cost = Math.max(0, config.bloodHarvestDurabilityCost);
+        int cost = Math.max(0, config.scytheAbilityDurabilityCost);
 
         if (cost > 0) {
             int remaining = stack.getMaxDamage() - stack.getDamage();
@@ -43,24 +43,26 @@ public class PlagueScytheAbility {
         }
 
         int ticks = PlagueScytheTracker.start(player);
-        player.getItemCooldownManager().set(item, cooldown);
+        if (cooldown > 0) {
+            player.getItemCooldownManager().set(item, cooldown);
+        }
         PlagueHudS2CPacket.sendTicks(player, ticks);
 
         double radius = config.plagueActiveRadius;
         Box box = player.getBoundingBox().expand(radius);
 
-        List<ServerPlayerEntity> targets =
+        List<LivingEntity> targets =
                 player.getWorld().getEntitiesByClass(
-                        ServerPlayerEntity.class,
+                        LivingEntity.class,
                         box,
-                        p -> isEnemyPlayer(player, p)
+                        target -> ScytheTargeting.canHit(player, target)
                 );
 
         int debuffTicks = Math.max(1, config.plagueActiveDebuffTicks);
         int slowAmp = Math.max(0, config.plagueActiveSlownessAmplifier);
         int weakAmp = Math.max(0, config.plagueActiveWeaknessAmplifier);
 
-        for (ServerPlayerEntity target : targets) {
+        for (LivingEntity target : targets) {
             target.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, debuffTicks, 0));
             target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, debuffTicks, slowAmp));
             target.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, debuffTicks, weakAmp));
@@ -70,6 +72,11 @@ public class PlagueScytheAbility {
     public static void tick(ServerPlayerEntity player) {
         if (!PlagueScytheTracker.isActive(player)) return;
 
+        if (getHeldPlagueScytheHand(player) == null) {
+            PlagueScytheTracker.stop(player);
+            return;
+        }
+
         ScytheModConfig config = ScytheModConfigLoader.getConfig();
         int tickRate = Math.max(1, config.plagueActiveTickRate);
         if (player.age % tickRate != 0) return;
@@ -77,25 +84,25 @@ public class PlagueScytheAbility {
         double radius = config.plagueActiveRadius;
         Box box = player.getBoundingBox().expand(radius);
 
-        List<ServerPlayerEntity> targets =
+        List<LivingEntity> targets =
                 player.getWorld().getEntitiesByClass(
-                        ServerPlayerEntity.class,
+                        LivingEntity.class,
                         box,
-                        p -> isEnemyPlayer(player, p)
+                        target -> ScytheTargeting.canHit(player, target)
                 );
 
         double damage = Math.max(0.0, config.plagueActiveDamage);
         if (damage <= 0.0) return;
 
-        for (ServerPlayerEntity target : targets) {
+        for (LivingEntity target : targets) {
             target.damage(player.getDamageSources().indirectMagic(player, player), (float) damage);
         }
     }
 
     /**
-     * ✅ Возвращаем множитель урона от недостающего HP (для PlagueScytheItem).
-     *  - при полном HP → 1.0
-     *  - при 0 HP → cap (по умолчанию 2.0)
+     * Возвращаем множитель урона от недостающего HP (для PlagueScytheItem).
+     *  - при полном HP -> 1.0
+     *  - при 0 HP -> cap (по умолчанию 2.0)
      */
     public static float getDamageMultiplier(ServerPlayerEntity player) {
         float maxHp = player.getMaxHealth();
@@ -104,14 +111,10 @@ public class PlagueScytheAbility {
         float missing = maxHp - player.getHealth();
         float missingFrac = missing / maxHp;
 
-        // clamp 0..1
         if (missingFrac < 0.0f) missingFrac = 0.0f;
         if (missingFrac > 1.0f) missingFrac = 1.0f;
 
-        double cap = 2.0;
-        cap = Math.max(1.0, ScytheModConfigLoader.getConfig().plagueMissingHealthMultiplierCap);
-
-        // линейно от 1.0 до cap
+        double cap = Math.max(1.0, ScytheModConfigLoader.getConfig().plagueMissingHealthMultiplierCap);
         return (float) (1.0 + missingFrac * (cap - 1.0));
     }
 
@@ -119,11 +122,5 @@ public class PlagueScytheAbility {
         if (player.getMainHandStack().getItem() instanceof PlagueScytheItem) return Hand.MAIN_HAND;
         if (player.getOffHandStack().getItem() instanceof PlagueScytheItem) return Hand.OFF_HAND;
         return null;
-    }
-
-    private static boolean isEnemyPlayer(ServerPlayerEntity owner, ServerPlayerEntity other) {
-        if (other == owner) return false;
-        if (!other.isAlive() || other.isSpectator()) return false;
-        return !owner.isTeammate(other);
     }
 }
