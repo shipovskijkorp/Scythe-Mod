@@ -19,8 +19,6 @@ public class ScytheModClient implements ClientModInitializer {
 
         // HUD
         BloodHarvestHudRenderer.register();
-        PlagueHudRenderer.register();
-        WitheringHudRenderer.register();
 
         // S2C: Blood Harvest HUD
         ClientPlayNetworking.registerGlobalReceiver(
@@ -36,35 +34,7 @@ public class ScytheModClient implements ClientModInitializer {
                         client.execute(BloodHarvestHudState::stop)
         );
 
-        // S2C: Plague HUD
-        ClientPlayNetworking.registerGlobalReceiver(
-                ModPackets.PLAGUE_START_S2C,
-                (client, handler, buf, responseSender) -> {
-                    int ticks = buf.readInt();
-                    client.execute(() -> PlagueHudState.startOrUpdate(ticks));
-                }
-        );
-        ClientPlayNetworking.registerGlobalReceiver(
-                ModPackets.PLAGUE_STOP_S2C,
-                (client, handler, buf, responseSender) ->
-                        client.execute(PlagueHudState::stop)
-        );
-
-        // S2C: Withering HUD
-        ClientPlayNetworking.registerGlobalReceiver(
-                ModPackets.WITHERING_START_S2C,
-                (client, handler, buf, responseSender) -> {
-                    int ticks = buf.readInt();
-                    client.execute(() -> WitheringHudState.startOrUpdate(ticks));
-                }
-        );
-        ClientPlayNetworking.registerGlobalReceiver(
-                ModPackets.WITHERING_STOP_S2C,
-                (client, handler, buf, responseSender) ->
-                        client.execute(WitheringHudState::stop)
-        );
-
-        // ✅ Универсальная активка (R)
+        // ✅ Универсальная активка (R) теперь обрабатывает только Кровавую косу.
         scytheAbilityKey = KeyBindingHelper.registerKeyBinding(
                 new KeyBinding(
                         "key.scythes.scythe_ability",
@@ -76,8 +46,6 @@ public class ScytheModClient implements ClientModInitializer {
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             BloodHarvestHudState.tick();
-            PlagueHudState.tick();
-            WitheringHudState.tick();
 
             while (scytheAbilityKey.wasPressed()) {
                 if (client.getNetworkHandler() != null && ClientPlayNetworking.canSend(ModPackets.SCYTHE_ABILITY_C2S)) {

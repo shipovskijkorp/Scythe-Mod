@@ -111,38 +111,8 @@ public class ScytheModConfigLoader {
         config.bloodHarvestFailureSlownessAmplifier = clampMin(config.bloodHarvestFailureSlownessAmplifier, 0);
         config.bloodHarvestFailureWeaknessAmplifier = clampMin(config.bloodHarvestFailureWeaknessAmplifier, 0);
 
-        config.plagueAuraRadius = clampMin(config.plagueAuraRadius, 0.0);
-        config.plagueAuraTickRate = clampMin(config.plagueAuraTickRate, 1);
-        config.plagueAuraEffectTicks = clampMin(config.plagueAuraEffectTicks, 1);
-        config.plagueAuraRefreshThresholdTicks = clampMin(config.plagueAuraRefreshThresholdTicks, 1);
-        config.plagueActiveRadius = clampMin(config.plagueActiveRadius, 0.0);
-        config.plagueActiveTicks = clampMin(config.plagueActiveTicks, 1);
-        config.plagueActiveTickRate = clampMin(config.plagueActiveTickRate, 1);
-        config.plagueActiveDamage = clampMin(config.plagueActiveDamage, 0.0);
-        config.plagueActiveDebuffTicks = clampMin(config.plagueActiveDebuffTicks, 1);
-        config.plagueActiveSlownessAmplifier = clampMin(config.plagueActiveSlownessAmplifier, 0);
-        config.plagueActiveWeaknessAmplifier = clampMin(config.plagueActiveWeaknessAmplifier, 0);
-        config.plagueActiveCooldownTicks = clampMin(config.plagueActiveCooldownTicks, 0);
-        config.plagueMissingHealthBaseDamage = clampMin(config.plagueMissingHealthBaseDamage, 0.0);
-        config.plagueMissingHealthMultiplierCap = clampMin(config.plagueMissingHealthMultiplierCap, 1.0);
-
-        config.witheringAuraRadius = clampMin(config.witheringAuraRadius, 0.0);
-        config.witheringAuraTickRate = clampMin(config.witheringAuraTickRate, 1);
-        config.witheringAuraWitherTicks = clampMin(config.witheringAuraWitherTicks, 1);
-        config.witheringAuraSlownessTicks = clampMin(config.witheringAuraSlownessTicks, 1);
-        config.witheringAuraRefreshThresholdTicks = clampMin(config.witheringAuraRefreshThresholdTicks, 1);
-        config.witheringActiveRadius = clampMin(config.witheringActiveRadius, 0.0);
-        config.witheringActiveTicks = clampMin(config.witheringActiveTicks, 1);
-        config.witheringActiveTickRate = clampMin(config.witheringActiveTickRate, 1);
-        config.witheringActiveDamage = clampMin(config.witheringActiveDamage, 0.0);
-        config.witheringActiveCooldownTicks = clampMin(config.witheringActiveCooldownTicks, 0);
-        config.witheringDebuffTicks = clampMin(config.witheringDebuffTicks, 1);
-        config.witheringDebuffSlownessAmplifier = clampMin(config.witheringDebuffSlownessAmplifier, 0);
-        config.witheringDebuffWitherAmplifier = clampMin(config.witheringDebuffWitherAmplifier, 0);
         config.bloodyEssenceVillagerDropChance = clamp(config.bloodyEssenceVillagerDropChance, 0.0, 1.0);
         config.bloodyEssencePlayerDropChance = clamp(config.bloodyEssencePlayerDropChance, 0.0, 1.0);
-        config.witheringArmorIgnoreFraction = clamp(config.witheringArmorIgnoreFraction, 0.0, 1.0);
-        config.witheringArmorIgnoreBaseDamage = clampMin(config.witheringArmorIgnoreBaseDamage, 0.0);
     }
 
     private static int clampMin(int value, int min) {

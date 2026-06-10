@@ -19,17 +19,4 @@ public final class ModPackets {
 
     public static final Identifier BLOOD_HARVEST_STOP_S2C =
             new Identifier(ScytheMod.MOD_ID, "blood_harvest_stop");
-
-    public static final Identifier PLAGUE_START_S2C =
-            new Identifier(ScytheMod.MOD_ID, "plague_start");
-
-    public static final Identifier PLAGUE_STOP_S2C =
-            new Identifier(ScytheMod.MOD_ID, "plague_stop");
-
-    // ✅ Withering Scythe HUD
-    public static final Identifier WITHERING_START_S2C =
-            new Identifier(ScytheMod.MOD_ID, "withering_start");
-
-    public static final Identifier WITHERING_STOP_S2C =
-            new Identifier(ScytheMod.MOD_ID, "withering_stop");
 }

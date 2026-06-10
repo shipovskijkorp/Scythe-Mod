@@ -19,8 +19,6 @@ public final class MilestoneAdvancements {
 
     // objective names MUST be <= 16 chars
     private static final String OBJ_BLOODY_KILLS = "bs_bk";
-    private static final String OBJ_PLAGUE_KILLS = "bs_pk";
-    private static final String OBJ_WITHER_KILLS = "bs_wk";
     private static final String OBJ_PERF_HARV  = "bs_ph";
 
     private static final int[] KILL_THRESHOLDS = {1, 5, 10, 20};
@@ -28,8 +26,6 @@ public final class MilestoneAdvancements {
 
     public enum Kind {
         BLOODY("bloody_kills", OBJ_BLOODY_KILLS, KILL_THRESHOLDS),
-        PLAGUE("plague_kills", OBJ_PLAGUE_KILLS, KILL_THRESHOLDS),
-        WITHERING("withering_kills", OBJ_WITHER_KILLS, KILL_THRESHOLDS),
         PERFECT_HARVEST("perfect_harvest", OBJ_PERF_HARV, HARV_THRESHOLDS);
 
         public final String advPrefix;

@@ -6,10 +6,7 @@ import com.shipovskijkorp.scythes.mod.effect.BleedingEffect;
 import com.shipovskijkorp.scythes.mod.effect.NoJumpEffect;
 import com.shipovskijkorp.scythes.mod.enchantment.SpikedBladeEnchantment;
 import com.shipovskijkorp.scythes.mod.item.BloodScytheItem;
-import com.shipovskijkorp.scythes.mod.item.PlagueScytheItem;
-import com.shipovskijkorp.scythes.mod.item.WitheringScytheItem;
 import com.shipovskijkorp.scythes.mod.network.ScytheAbilityC2SPacket;
-import com.shipovskijkorp.scythes.mod.network.WitheringHudS2CPacket;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
@@ -34,8 +31,8 @@ public class ScytheMod implements ModInitializer {
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
 	public static final Item BLOODY_SCYTHE = new BloodScytheItem(new Item.Settings().maxCount(1).fireproof());
-	public static final Item PLAGUE_SCYTHE = new PlagueScytheItem(new Item.Settings().maxCount(1).fireproof());
-	public static final Item WITHERING_SCYTHE = new WitheringScytheItem(new Item.Settings().maxCount(1).fireproof());
+	public static final Item PLAGUE_SCYTHE = new Item(new Item.Settings().maxCount(1).fireproof());
+	public static final Item WITHERING_SCYTHE = new Item(new Item.Settings().maxCount(1).fireproof());
 
 	public static final Item BLOODY_ESSENCE = new Item(new Item.Settings());
 
@@ -104,8 +101,6 @@ public class ScytheMod implements ModInitializer {
 			server.execute(() -> {
 				BloodHarvestTracker.clear(player);
 				BloodScytheVampirism.clear(player);
-				PlagueScytheTracker.clear(player);
-				WitheringScytheTracker.clear(player);
 			});
 		});
 
@@ -121,43 +116,8 @@ public class ScytheMod implements ModInitializer {
 	}
 
 	private void tickServer(MinecraftServer server) {
-		int ticks = server.getTicks();
-
-		int plagueRate = 20;
-		int witheringRate = 20;
-
-		if (ScytheModConfigLoader.CONFIG != null) {
-			plagueRate = Math.max(1, ScytheModConfigLoader.CONFIG.plagueAuraTickRate);
-			witheringRate = Math.max(1, ScytheModConfigLoader.CONFIG.witheringAuraTickRate);
-		}
-
-		boolean runPlagueAuraThisTick = (ticks % plagueRate) == 0;
-		boolean runWitheringAuraThisTick = (ticks % witheringRate) == 0;
-
-		boolean everySecond = (ticks % 20) == 0;
-
 		for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-
 			BloodHarvestTracker.tick(player);
-
-			PlagueScytheTracker.tick(player);
-			PlagueScytheAbility.tick(player);
-
-			WitheringScytheTracker.tick(player);
-			WitheringScytheAbility.tick(player);
-
-			if (runPlagueAuraThisTick) {
-				PlagueScytheAura.apply(player);
-			}
-
-			if (runWitheringAuraThisTick) {
-				WitheringScytheAura.apply(player);
-			}
-
-			// HUD sync раз в секунду (страховка от рассинхрона)
-			if (everySecond && WitheringScytheTracker.isActive(player)) {
-				WitheringHudS2CPacket.sendTicks(player, WitheringScytheTracker.getTicksLeft(player));
-			}
 		}
 	}
 }
