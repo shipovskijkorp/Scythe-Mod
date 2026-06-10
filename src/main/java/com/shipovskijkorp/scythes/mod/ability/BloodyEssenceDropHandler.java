@@ -1,8 +1,6 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
-import com.shipovskijkorp.scythes.mod.config.ScytheModConfig;
-import com.shipovskijkorp.scythes.mod.config.ScytheModConfigLoader;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityCombatEvents;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.passive.VillagerEntity;
@@ -12,6 +10,9 @@ import net.minecraft.world.GameRules;
 
 public class BloodyEssenceDropHandler {
 
+    public static final double VILLAGER_DROP_CHANCE = 0.05D;
+    public static final double PLAYER_DROP_CHANCE = 0.20D;
+
     public static void register() {
         ServerEntityCombatEvents.AFTER_KILLED_OTHER_ENTITY.register((world, entity, killedEntity) -> {
 
@@ -19,18 +20,16 @@ public class BloodyEssenceDropHandler {
 
             if (!world.getGameRules().getBoolean(GameRules.DO_MOB_LOOT)) return;
 
-            ScytheModConfig config = ScytheModConfigLoader.getConfig();
             double chance;
             if (killedEntity instanceof VillagerEntity) {
-                chance = config.bloodyEssenceVillagerDropChance;
+                chance = VILLAGER_DROP_CHANCE;
             } else if (killedEntity instanceof ServerPlayerEntity victim) {
                 if (killer.isTeammate(victim)) return;
-                chance = config.bloodyEssencePlayerDropChance;
+                chance = PLAYER_DROP_CHANCE;
             } else {
                 return;
             }
 
-            chance = Math.max(0.0, Math.min(1.0, chance));
             if (world.getRandom().nextDouble() >= chance) return;
 
             ItemStack stack = new ItemStack(ScytheMod.BLOODY_ESSENCE);

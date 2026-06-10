@@ -1,7 +1,5 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
-import com.shipovskijkorp.scythes.mod.config.ScytheModConfig;
-import com.shipovskijkorp.scythes.mod.config.ScytheModConfigLoader;
 import com.shipovskijkorp.scythes.mod.network.BloodHarvestHudS2CPacket;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
@@ -14,9 +12,20 @@ import java.util.UUID;
 
 public class BloodHarvestTracker {
 
+    public static final int KILL_WINDOW_TICKS = 20 * 20;
+
+    public static final int SUCCESS_BUFF_TICKS = 20 * 16;
+    public static final int SUCCESS_SPEED_AMPLIFIER = 1;
+    public static final int SUCCESS_STRENGTH_AMPLIFIER = 1;
+    public static final int SUCCESS_REGEN_AMPLIFIER = 1;
+
+    public static final int FAILURE_DEBUFF_TICKS = 150;
+    public static final int FAILURE_SLOWNESS_AMPLIFIER = 1;
+    public static final int FAILURE_WEAKNESS_AMPLIFIER = 1;
+
     private static final Map<UUID, Integer> ACTIVE = new HashMap<>();
 
-    /** Сброс активки (например при DISCONNECT). Без пакетов — просто чистка. */
+    /** Сброс активной способности (например при DISCONNECT). Без пакетов — просто чистка. */
     public static void clear(ServerPlayerEntity player) {
         ACTIVE.remove(player.getUuid());
     }
@@ -27,12 +36,8 @@ public class BloodHarvestTracker {
     }
 
     public static int start(ServerPlayerEntity player) {
-        int ticks = 20 * 10;
-        if (ScytheModConfigLoader.CONFIG != null) {
-            ticks = Math.max(1, ScytheModConfigLoader.CONFIG.bloodHarvestKillWindowTicks);
-        }
-        ACTIVE.put(player.getUuid(), ticks);
-        return ticks;
+        ACTIVE.put(player.getUuid(), KILL_WINDOW_TICKS);
+        return KILL_WINDOW_TICKS;
     }
 
     public static boolean isActive(ServerPlayerEntity player) {
@@ -55,20 +60,9 @@ public class BloodHarvestTracker {
         if (time <= 0) {
             ACTIVE.remove(id);
 
-            // ✅ провал окна: наказание владельцу берём из конфига
-            int debuffTicks = 20 * 5;
-            int slowAmp = 1;
-            int weakAmp = 1;
-
-            if (ScytheModConfigLoader.CONFIG != null) {
-                debuffTicks = Math.max(1, ScytheModConfigLoader.CONFIG.bloodHarvestFailureDebuffTicks);
-                slowAmp = Math.max(0, ScytheModConfigLoader.CONFIG.bloodHarvestFailureSlownessAmplifier);
-                weakAmp = Math.max(0, ScytheModConfigLoader.CONFIG.bloodHarvestFailureWeaknessAmplifier);
-            }
-
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, debuffTicks, slowAmp));
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, debuffTicks, weakAmp));
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, debuffTicks, 0));
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, FAILURE_DEBUFF_TICKS, FAILURE_SLOWNESS_AMPLIFIER));
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, FAILURE_DEBUFF_TICKS, FAILURE_WEAKNESS_AMPLIFIER));
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, FAILURE_DEBUFF_TICKS, 0));
 
             player.sendMessage(Text.translatable("message.scythes.blood_harvest.failed"), true);
 
@@ -84,15 +78,9 @@ public class BloodHarvestTracker {
 
         ACTIVE.remove(player.getUuid());
 
-        ScytheModConfig config = ScytheModConfigLoader.getConfig();
-        int buffTicks = Math.max(1, config.bloodHarvestSuccessBuffTicks);
-        int speedAmp = Math.max(0, config.bloodHarvestSuccessSpeedAmplifier);
-        int strengthAmp = Math.max(0, config.bloodHarvestSuccessStrengthAmplifier);
-        int regenAmp = Math.max(0, config.bloodHarvestSuccessRegenAmplifier);
-
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, buffTicks, speedAmp, false, true, true));
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, buffTicks, strengthAmp, false, true, true));
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, buffTicks, regenAmp, false, true, true));
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, SUCCESS_BUFF_TICKS, SUCCESS_SPEED_AMPLIFIER, false, true, true));
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, SUCCESS_BUFF_TICKS, SUCCESS_STRENGTH_AMPLIFIER, false, true, true));
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, SUCCESS_BUFF_TICKS, SUCCESS_REGEN_AMPLIFIER, false, true, true));
         player.sendMessage(Text.translatable("message.scythes.blood_harvest.perfect"), true);
 
         BloodHarvestHudS2CPacket.sendStop(player);

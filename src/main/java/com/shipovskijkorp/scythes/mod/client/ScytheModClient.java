@@ -1,12 +1,15 @@
 package com.shipovskijkorp.scythes.mod.client;
 
+import com.shipovskijkorp.scythes.mod.ScytheMod;
 import com.shipovskijkorp.scythes.mod.network.ModPackets;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.render.entity.FlyingItemEntityRenderer;
 import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
 
@@ -16,6 +19,8 @@ public class ScytheModClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+
+        EntityRendererRegistry.register(ScytheMod.TOXIC_ORB, FlyingItemEntityRenderer::new);
 
         // HUD
         BloodHarvestHudRenderer.register();
@@ -34,7 +39,7 @@ public class ScytheModClient implements ClientModInitializer {
                         client.execute(BloodHarvestHudState::stop)
         );
 
-        // ✅ Универсальная активка (R) теперь обрабатывает только Кровавую косу.
+        // ✅ Универсальная активная способность (R): Кровавая жатва для кровавой косы и Токсичная аура для токсичной.
         scytheAbilityKey = KeyBindingHelper.registerKeyBinding(
                 new KeyBinding(
                         "key.scythes.scythe_ability",

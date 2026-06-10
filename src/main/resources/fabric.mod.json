@@ -3,7 +3,7 @@
 	"id": "scythes",
 	"version": "${version}",
 	"name": "Scythe Mod",
-	"description": "Adds three powerful endgame scythes for PvP and survival: the Bloody Scythe with bleeding and Blood Harvest, the Plague Scythe with poison auras and missing-health scaling, and the Withering Scythe with wither effects and partial armor bypass. Includes custom abilities, HUD timers, advancements, recipes, Bloody Essence drops, configuration, and English/Russian localization.",
+	"description": "Adds endgame scythes for PvP and survival: the Bloody Scythe with bleeding and Blood Harvest, the Toxic Scythe with armor-melting poison abilities, and the Withering Scythe as an empty legacy item. Includes custom abilities, HUD timers, advancements, recipes, Bloody Essence drops, and English/Russian localization.",
 	"authors": [
 		"Shipovskijkorp",
 		"Sun_Aloe"

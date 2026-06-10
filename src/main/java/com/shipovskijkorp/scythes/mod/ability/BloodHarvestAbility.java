@@ -1,7 +1,5 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
-import com.shipovskijkorp.scythes.mod.config.ScytheModConfig;
-import com.shipovskijkorp.scythes.mod.config.ScytheModConfigLoader;
 import com.shipovskijkorp.scythes.mod.item.BloodScytheItem;
 import com.shipovskijkorp.scythes.mod.network.BloodHarvestHudS2CPacket;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -17,6 +15,17 @@ import java.util.List;
 
 public class BloodHarvestAbility {
 
+    public static final double RADIUS = 10.0D;
+    public static final int COOLDOWN_TICKS = 20 * 60;
+    public static final int DURABILITY_COST = 100;
+
+    public static final int SLOWNESS_TICKS = 20 * 10;
+    public static final int BLINDNESS_TICKS = 20 * 10;
+    public static final int WEAKNESS_TICKS = 20 * 10;
+    public static final int GLOWING_TICKS = 20 * 20;
+    public static final int SLOWNESS_AMPLIFIER = 1;
+    public static final int WEAKNESS_AMPLIFIER = 1;
+
     /** Активация способности */
     public static void tryActivate(ServerPlayerEntity player) {
 
@@ -29,13 +38,9 @@ public class BloodHarvestAbility {
         ItemStack stack = player.getStackInHand(hand);
         Item item = stack.getItem();
 
-        // Цена активации общая для способностей всех кос
-        ScytheModConfig config = ScytheModConfigLoader.getConfig();
-        int cost = Math.max(0, config.scytheAbilityDurabilityCost);
-
-        if (cost > 0) {
+        if (DURABILITY_COST > 0) {
             int remaining = stack.getMaxDamage() - stack.getDamage();
-            if (remaining < cost) {
+            if (remaining < DURABILITY_COST) {
                 player.sendMessage(Text.translatable("message.scythes.blood_harvest.no_durability"), true);
                 return;
             }
@@ -46,13 +51,7 @@ public class BloodHarvestAbility {
             return;
         }
 
-        double radius = 10.0;
-        int cooldown = 20 * 60;
-
-        radius = config.bloodHarvestRadius;
-        cooldown = Math.max(0, config.bloodHarvestCooldownTicks);
-
-        Box box = player.getBoundingBox().expand(radius);
+        Box box = player.getBoundingBox().expand(RADIUS);
         List<ServerPlayerEntity> targets =
                 player.getWorld().getEntitiesByClass(
                         ServerPlayerEntity.class,
@@ -66,32 +65,18 @@ public class BloodHarvestAbility {
         }
 
         // ✅ тратим прочность ТОЛЬКО на активированной косе
-        if (cost > 0) {
-            stack.damage(cost, player, p -> p.sendToolBreakStatus(hand));
+        if (DURABILITY_COST > 0) {
+            stack.damage(DURABILITY_COST, player, p -> p.sendToolBreakStatus(hand));
         }
 
         // кулдаун по Item
-        player.getItemCooldownManager().set(item, cooldown);
-
-        int slowTicks = 20 * 5;
-        int blindTicks = 20 * 5;
-        int weakTicks = 20 * 5;
-        int glowTicks = 20 * 10;
-        int slowAmp = 1;
-        int weakAmp = 1;
-
-        slowTicks = Math.max(1, config.bloodHarvestSlownessTicks);
-        blindTicks = Math.max(1, config.bloodHarvestBlindnessTicks);
-        weakTicks = Math.max(1, config.bloodHarvestWeaknessTicks);
-        glowTicks = Math.max(1, config.bloodHarvestGlowingTicks);
-        slowAmp = Math.max(0, config.bloodHarvestSlownessAmplifier);
-        weakAmp = Math.max(0, config.bloodHarvestWeaknessAmplifier);
+        player.getItemCooldownManager().set(item, COOLDOWN_TICKS);
 
         for (ServerPlayerEntity target : targets) {
-            target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, slowTicks, slowAmp));
-            target.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, blindTicks, 0));
-            target.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, weakTicks, weakAmp));
-            target.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, glowTicks, 0));
+            target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, SLOWNESS_TICKS, SLOWNESS_AMPLIFIER));
+            target.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, BLINDNESS_TICKS, 0));
+            target.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, WEAKNESS_TICKS, WEAKNESS_AMPLIFIER));
+            target.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, GLOWING_TICKS, 0));
         }
 
         int windowTicks = BloodHarvestTracker.start(player);

@@ -1,7 +1,6 @@
 package com.shipovskijkorp.scythes.mod.mixin;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
-import com.shipovskijkorp.scythes.mod.ability.DamageAttributionTracker;
 import com.shipovskijkorp.scythes.mod.ability.BloodScytheVampirism;
 import com.shipovskijkorp.scythes.mod.item.BloodScytheItem;
 import net.minecraft.entity.Entity;
@@ -20,9 +19,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class LivingEntityMixin {
 
     @Unique
-    private static boolean scythes$redirectingWitherDamage;
-
-    @Unique
     private float scythes$healthBeforeDamage;
 
     @Unique
@@ -36,24 +32,6 @@ public abstract class LivingEntityMixin {
         }
     }
 
-    @Inject(method = "damage", at = @At("HEAD"), cancellable = true)
-    private void scythes$attributeTrackedWitherDamage(DamageSource source,
-                                                      float amount,
-                                                      CallbackInfoReturnable<Boolean> cir) {
-        if (scythes$redirectingWitherDamage) return;
-        if (!source.isOf(DamageTypes.WITHER)) return;
-
-        LivingEntity self = (LivingEntity) (Object) this;
-        ServerPlayerEntity owner = DamageAttributionTracker.getWitheringOwner(self);
-        if (owner == null || owner.getUuid().equals(self.getUuid())) return;
-
-        scythes$redirectingWitherDamage = true;
-        try {
-            cir.setReturnValue(self.damage(self.getDamageSources().indirectMagic(owner, owner), amount));
-        } finally {
-            scythes$redirectingWitherDamage = false;
-        }
-    }
     @Inject(method = "damage", at = @At("HEAD"))
     private void scythes$captureDamageBefore(DamageSource source,
                                              float amount,

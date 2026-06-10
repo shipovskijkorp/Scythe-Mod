@@ -1,21 +1,31 @@
 package com.shipovskijkorp.scythes.mod;
 
 import com.shipovskijkorp.scythes.mod.ability.*;
-import com.shipovskijkorp.scythes.mod.config.ScytheModConfigLoader;
 import com.shipovskijkorp.scythes.mod.effect.BleedingEffect;
 import com.shipovskijkorp.scythes.mod.effect.NoJumpEffect;
 import com.shipovskijkorp.scythes.mod.enchantment.SpikedBladeEnchantment;
+import com.shipovskijkorp.scythes.mod.entity.ToxicOrbEntity;
 import com.shipovskijkorp.scythes.mod.item.BloodScytheItem;
+import com.shipovskijkorp.scythes.mod.item.ToxicScytheItem;
 import com.shipovskijkorp.scythes.mod.network.ScytheAbilityC2SPacket;
+import com.shipovskijkorp.scythes.mod.recipe.ToxicEssenceRecipe;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.enchantment.Enchantment;
+import net.minecraft.entity.EntityDimensions;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.SpawnGroup;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.SwordItem;
+import net.minecraft.item.ToolMaterials;
+import net.minecraft.recipe.RecipeSerializer;
+import net.minecraft.recipe.SpecialRecipeSerializer;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.server.MinecraftServer;
@@ -31,15 +41,28 @@ public class ScytheMod implements ModInitializer {
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
 	public static final Item BLOODY_SCYTHE = new BloodScytheItem(new Item.Settings().maxCount(1).fireproof());
-	public static final Item PLAGUE_SCYTHE = new Item(new Item.Settings().maxCount(1).fireproof());
+	public static final Item TOXIC_SCYTHE = new ToxicScytheItem(new Item.Settings().maxCount(1).fireproof());
+	/** Legacy placeholder. Kept registered so old scythes:plague_scythe stacks survive load and can be migrated. */
+	public static final Item PLAGUE_SCYTHE = new SwordItem(ToolMaterials.NETHERITE, 4, -2.8F, new Item.Settings().maxCount(1).fireproof());
 	public static final Item WITHERING_SCYTHE = new Item(new Item.Settings().maxCount(1).fireproof());
 
+	public static final EntityType<ToxicOrbEntity> TOXIC_ORB = FabricEntityTypeBuilder
+			.<ToxicOrbEntity>create(SpawnGroup.MISC, ToxicOrbEntity::new)
+			.dimensions(EntityDimensions.fixed(0.35F, 0.35F))
+			.trackRangeBlocks(4)
+			.trackedUpdateRate(10)
+			.build();
+
 	public static final Item BLOODY_ESSENCE = new Item(new Item.Settings());
+	public static final Item TOXIC_ESSENCE = new Item(new Item.Settings());
+
+	public static final RecipeSerializer<ToxicEssenceRecipe> TOXIC_ESSENCE_RECIPE_SERIALIZER =
+			new SpecialRecipeSerializer<>(ToxicEssenceRecipe::new);
 
 	public static final Identifier SCYTHE_ITEM_GROUP_ID = new Identifier(MOD_ID, "scythes");
 	public static ItemGroup SCYTHE_ITEM_GROUP;
 
-	private static final Item[] TAB_ICON_ITEMS = new Item[] { BLOODY_SCYTHE, PLAGUE_SCYTHE, WITHERING_SCYTHE };
+	private static final Item[] TAB_ICON_ITEMS = new Item[] { BLOODY_SCYTHE, TOXIC_SCYTHE, WITHERING_SCYTHE };
 	private static final long TAB_ICON_INTERVAL_MS = 1200L;
 
 	public static final StatusEffect BLEEDING = new BleedingEffect();
@@ -50,14 +73,17 @@ public class ScytheMod implements ModInitializer {
 	@Override
 	public void onInitialize() {
 
-		ScytheModConfigLoader.load();
 
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "bloody_scythe"), BLOODY_SCYTHE);
+		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "toxic_scythe"), TOXIC_SCYTHE);
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "plague_scythe"), PLAGUE_SCYTHE);
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "withering_scythe"), WITHERING_SCYTHE);
+		Registry.register(Registries.ENTITY_TYPE, new Identifier(MOD_ID, "toxic_orb"), TOXIC_ORB);
+		Registry.register(Registries.RECIPE_SERIALIZER, new Identifier(MOD_ID, "craft_toxic_essence"), TOXIC_ESSENCE_RECIPE_SERIALIZER);
 
-		// ✅ регистрация bloody essence
+		// ✅ регистрация эссенций
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "bloody_essence"), BLOODY_ESSENCE);
+		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "toxic_essence"), TOXIC_ESSENCE);
 
 		Registry.register(Registries.STATUS_EFFECT, new Identifier(MOD_ID, "bleeding"), BLEEDING);
 		Registry.register(Registries.STATUS_EFFECT, new Identifier(MOD_ID, "no_jump"), NO_JUMP);
@@ -73,16 +99,18 @@ public class ScytheMod implements ModInitializer {
 						.displayName(Text.translatable("itemGroup." + MOD_ID + ".scythes"))
 						.entries((displayContext, entries) -> {
 							entries.add(BLOODY_SCYTHE);
-							entries.add(PLAGUE_SCYTHE);
+							entries.add(TOXIC_SCYTHE);
 							entries.add(WITHERING_SCYTHE);
 
-							// ✅ добавляем эссенцию в эту же вкладку
+							// ✅ добавляем эссенции в эту же вкладку
 							entries.add(BLOODY_ESSENCE);
+							entries.add(TOXIC_ESSENCE);
 						})
 						.build()
 		);
 
 		ScytheAbilityC2SPacket.register();
+		PlagueScytheMigrationHandler.register();
 
 		WelcomeAdvancementHandler.register();
 
@@ -92,15 +120,17 @@ public class ScytheMod implements ModInitializer {
 		// ✅ общий килл-хендлер для 1/5/10/20 убийств косами
 		ScytheKillMilestoneHandler.register();
 
-		// дроп Bloody Essence (шансы берутся из конфига)
+		// дроп Bloody Essence
 		BloodyEssenceDropHandler.register();
 
-		// ✅ чистим активки при DISCONNECT (не залипают UUID в Map)
+		// ✅ чистим активные способности при DISCONNECT (не залипают UUID в Map)
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			ServerPlayerEntity player = handler.player;
 			server.execute(() -> {
 				BloodHarvestTracker.clear(player);
 				BloodScytheVampirism.clear(player);
+				ToxicAuraTracker.clear(player);
+				ToxicScytheCooldowns.clear(player);
 			});
 		});
 
@@ -118,6 +148,8 @@ public class ScytheMod implements ModInitializer {
 	private void tickServer(MinecraftServer server) {
 		for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
 			BloodHarvestTracker.tick(player);
+			ToxicAuraTracker.tick(player);
+			PlagueScytheMigrationHandler.migratePlayer(player);
 		}
 	}
 }

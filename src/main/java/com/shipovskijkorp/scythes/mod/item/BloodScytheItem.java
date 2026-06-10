@@ -1,10 +1,12 @@
 package com.shipovskijkorp.scythes.mod.item;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.ability.BloodHarvestAbility;
+import com.shipovskijkorp.scythes.mod.ability.BloodHarvestTracker;
+import com.shipovskijkorp.scythes.mod.ability.BloodScytheVampirism;
 import com.shipovskijkorp.scythes.mod.ability.DamageAttributionTracker;
 import com.shipovskijkorp.scythes.mod.client.TooltipUtil;
-import com.shipovskijkorp.scythes.mod.config.ScytheModConfig;
-import com.shipovskijkorp.scythes.mod.config.ScytheModConfigLoader;
+import com.shipovskijkorp.scythes.mod.effect.BleedingEffect;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.screen.Screen;
@@ -25,6 +27,10 @@ import java.util.List;
 
 public class BloodScytheItem extends SwordItem {
 
+    public static final double BLEEDING_CHANCE = 0.35D;
+    public static final int BLEEDING_BASE_DURATION_TICKS = 20 * 2;
+    public static final int BLEEDING_EXTEND_TICKS = 20 * 2;
+
     public BloodScytheItem(Settings settings) {
         super(ToolMaterials.NETHERITE, 4, -2.8F, settings);
     }
@@ -40,9 +46,6 @@ public class BloodScytheItem extends SwordItem {
         }
 
         boolean alt = Screen.hasAltDown();
-        ScytheModConfig cfg = (ScytheModConfigLoader.CONFIG != null)
-                ? ScytheModConfigLoader.CONFIG
-                : new ScytheModConfig();
 
         tooltip.add(Text.empty());
         tooltip.add(Text.translatable("tooltip.scythes.section.passive").formatted(Formatting.GRAY));
@@ -55,7 +58,7 @@ public class BloodScytheItem extends SwordItem {
                     tooltip,
                     Text.translatable(
                             "tooltip.scythes.stat.bleed_chance_percent",
-                            TooltipUtil.fmtPercentValue(cfg.bloodBleedingChance)
+                            TooltipUtil.fmtPercentValue(BLEEDING_CHANCE)
                     ),
                     Formatting.DARK_RED
             );
@@ -63,7 +66,7 @@ public class BloodScytheItem extends SwordItem {
                     tooltip,
                     Text.translatable(
                             "tooltip.scythes.stat.bleed_base_sec",
-                            TooltipUtil.fmtSecondsValue(cfg.bloodBleedingBaseDurationTicks)
+                            TooltipUtil.fmtSecondsValue(BLEEDING_BASE_DURATION_TICKS)
                     ),
                     Formatting.DARK_GRAY
             );
@@ -71,7 +74,15 @@ public class BloodScytheItem extends SwordItem {
                     tooltip,
                     Text.translatable(
                             "tooltip.scythes.stat.bleed_extend_sec",
-                            TooltipUtil.fmtSecondsValue(cfg.bloodBleedingExtendTicks)
+                            TooltipUtil.fmtSecondsValue(BLEEDING_EXTEND_TICKS)
+                    ),
+                    Formatting.DARK_GRAY
+            );
+            TooltipUtil.addWrapped(
+                    tooltip,
+                    Text.translatable(
+                            "tooltip.scythes.stat.bleeding_damage_per_second",
+                            TooltipUtil.fmtNumber(BleedingEffect.DAMAGE_PER_SECOND)
                     ),
                     Formatting.DARK_GRAY
             );
@@ -79,7 +90,7 @@ public class BloodScytheItem extends SwordItem {
                     tooltip,
                     Text.translatable(
                             "tooltip.scythes.stat.vampirism_chance_percent",
-                            TooltipUtil.fmtPercentValue(cfg.bloodVampirismChance)
+                            TooltipUtil.fmtPercentValue(BloodScytheVampirism.VAMPIRISM_CHANCE)
                     ),
                     Formatting.DARK_RED
             );
@@ -87,7 +98,7 @@ public class BloodScytheItem extends SwordItem {
                     tooltip,
                     Text.translatable(
                             "tooltip.scythes.stat.vampirism_heal_percent",
-                            TooltipUtil.fmtPercentValue(cfg.bloodVampirismHealFraction)
+                            TooltipUtil.fmtPercentValue(BloodScytheVampirism.HEAL_FRACTION)
                     ),
                     Formatting.DARK_GRAY
             );
@@ -95,7 +106,7 @@ public class BloodScytheItem extends SwordItem {
                     tooltip,
                     Text.translatable(
                             "tooltip.scythes.stat.vampirism_cooldown_sec",
-                            TooltipUtil.fmtSecondsValue(cfg.bloodVampirismCooldownTicks)
+                            TooltipUtil.fmtSecondsValue(BloodScytheVampirism.COOLDOWN_TICKS)
                     ),
                     Formatting.DARK_GRAY
             );
@@ -113,43 +124,53 @@ public class BloodScytheItem extends SwordItem {
 
         TooltipUtil.addWrapped(
                 tooltip,
-                Text.translatable("tooltip.scythes.stat.radius_blocks", TooltipUtil.fmtNumber(cfg.bloodHarvestRadius)),
+                Text.translatable("tooltip.scythes.stat.radius_blocks", TooltipUtil.fmtNumber(BloodHarvestAbility.RADIUS)),
                 Formatting.GRAY
         );
         TooltipUtil.addWrapped(
                 tooltip,
-                Text.translatable("tooltip.scythes.stat.cooldown_sec", TooltipUtil.fmtSecondsValue(cfg.bloodHarvestCooldownTicks)),
+                Text.translatable("tooltip.scythes.stat.cooldown_sec", TooltipUtil.fmtSecondsValue(BloodHarvestAbility.COOLDOWN_TICKS)),
                 Formatting.GRAY
         );
         TooltipUtil.addWrapped(
                 tooltip,
-                Text.translatable("tooltip.scythes.stat.durability_cost", String.valueOf(cfg.scytheAbilityDurabilityCost)),
+                Text.translatable("tooltip.scythes.stat.durability_cost", String.valueOf(BloodHarvestAbility.DURABILITY_COST)),
                 Formatting.GRAY
         );
         TooltipUtil.addWrapped(
                 tooltip,
-                Text.translatable("tooltip.scythes.stat.kill_window_sec", TooltipUtil.fmtSecondsValue(cfg.bloodHarvestKillWindowTicks)),
+                Text.translatable("tooltip.scythes.stat.kill_window_sec", TooltipUtil.fmtSecondsValue(BloodHarvestTracker.KILL_WINDOW_TICKS)),
                 Formatting.GRAY
         );
 
         TooltipUtil.addWrapped(
                 tooltip,
-                Text.translatable("tooltip.scythes.stat.slowness_sec", TooltipUtil.fmtSecondsValue(cfg.bloodHarvestSlownessTicks)),
+                Text.translatable("tooltip.scythes.stat.slowness_sec", TooltipUtil.fmtSecondsValue(BloodHarvestAbility.SLOWNESS_TICKS)),
                 Formatting.DARK_GRAY
         );
         TooltipUtil.addWrapped(
                 tooltip,
-                Text.translatable("tooltip.scythes.stat.blindness_sec", TooltipUtil.fmtSecondsValue(cfg.bloodHarvestBlindnessTicks)),
+                Text.translatable("tooltip.scythes.stat.blindness_sec", TooltipUtil.fmtSecondsValue(BloodHarvestAbility.BLINDNESS_TICKS)),
                 Formatting.DARK_GRAY
         );
         TooltipUtil.addWrapped(
                 tooltip,
-                Text.translatable("tooltip.scythes.stat.weakness_sec", TooltipUtil.fmtSecondsValue(cfg.bloodHarvestWeaknessTicks)),
+                Text.translatable("tooltip.scythes.stat.weakness_sec", TooltipUtil.fmtSecondsValue(BloodHarvestAbility.WEAKNESS_TICKS)),
                 Formatting.DARK_GRAY
         );
         TooltipUtil.addWrapped(
                 tooltip,
-                Text.translatable("tooltip.scythes.stat.glowing_sec", TooltipUtil.fmtSecondsValue(cfg.bloodHarvestGlowingTicks)),
+                Text.translatable("tooltip.scythes.stat.glowing_sec", TooltipUtil.fmtSecondsValue(BloodHarvestAbility.GLOWING_TICKS)),
+                Formatting.DARK_GRAY
+        );
+        TooltipUtil.addWrapped(
+                tooltip,
+                Text.translatable("tooltip.scythes.stat.success_buffs_sec", TooltipUtil.fmtSecondsValue(BloodHarvestTracker.SUCCESS_BUFF_TICKS)),
+                Formatting.DARK_GRAY
+        );
+        TooltipUtil.addWrapped(
+                tooltip,
+                Text.translatable("tooltip.scythes.stat.failure_debuffs_sec", TooltipUtil.fmtSecondsValue(BloodHarvestTracker.FAILURE_DEBUFF_TICKS)),
                 Formatting.DARK_GRAY
         );
     }
@@ -160,30 +181,16 @@ public class BloodScytheItem extends SwordItem {
             return super.postHit(stack, target, attacker);
         }
 
-        double chance = 0.35;
-        int baseTicks = 40;
-        int extendTicks = 40;
-
-        if (ScytheModConfigLoader.CONFIG != null) {
-            chance = ScytheModConfigLoader.CONFIG.bloodBleedingChance;
-            baseTicks = ScytheModConfigLoader.CONFIG.bloodBleedingBaseDurationTicks;
-            extendTicks = ScytheModConfigLoader.CONFIG.bloodBleedingExtendTicks;
-        }
-
-        chance = Math.max(0.0, Math.min(1.0, chance));
-        baseTicks = Math.max(1, baseTicks);
-        extendTicks = Math.max(1, extendTicks);
-
-        if (attacker.getRandom().nextDouble() > chance) {
+        if (attacker.getRandom().nextDouble() > BLEEDING_CHANCE) {
             return super.postHit(stack, target, attacker);
         }
 
         int spikedLevel = EnchantmentHelper.getLevel(ScytheMod.SPIKED_BLADE, stack);
-        int duration = baseTicks * (1 + Math.max(0, spikedLevel));
+        int duration = BLEEDING_BASE_DURATION_TICKS * (1 + Math.max(0, spikedLevel));
 
         StatusEffectInstance current = target.getStatusEffect(ScytheMod.BLEEDING);
         if (current != null) {
-            duration = Math.max(duration, current.getDuration() + extendTicks);
+            duration = Math.max(duration, current.getDuration() + BLEEDING_EXTEND_TICKS);
         }
 
         target.addStatusEffect(new StatusEffectInstance(
