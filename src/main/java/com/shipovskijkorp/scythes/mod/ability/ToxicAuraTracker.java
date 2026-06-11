@@ -1,5 +1,6 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
+import com.shipovskijkorp.scythes.mod.network.ToxicAuraHudS2CPacket;
 import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
@@ -29,8 +30,9 @@ public final class ToxicAuraTracker {
 
     private static final Map<UUID, Integer> ACTIVE = new HashMap<>();
 
-    public static void start(ServerPlayerEntity player) {
+    public static int start(ServerPlayerEntity player) {
         ACTIVE.put(player.getUuid(), DURATION_TICKS);
+        return DURATION_TICKS;
     }
 
     public static void clear(ServerPlayerEntity player) {
@@ -47,6 +49,7 @@ public final class ToxicAuraTracker {
 
         if (!player.isAlive() || player.isSpectator()) {
             ACTIVE.remove(player.getUuid());
+            ToxicAuraHudS2CPacket.sendStop(player);
             return;
         }
 
@@ -55,6 +58,7 @@ public final class ToxicAuraTracker {
         ticksLeft--;
         if (ticksLeft <= 0) {
             ACTIVE.remove(player.getUuid());
+            ToxicAuraHudS2CPacket.sendStop(player);
         } else {
             ACTIVE.put(player.getUuid(), ticksLeft);
         }

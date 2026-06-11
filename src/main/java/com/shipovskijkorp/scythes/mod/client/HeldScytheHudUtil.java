@@ -24,4 +24,8 @@ public final class HeldScytheHudUtil {
     public static boolean isHoldingBloodScythe() {
         return isHolding(ScytheMod.BLOODY_SCYTHE);
     }
+
+    public static boolean isHoldingToxicScythe() {
+        return isHolding(ScytheMod.TOXIC_SCYTHE);
+    }
 }

@@ -1,6 +1,7 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
 import com.shipovskijkorp.scythes.mod.item.ToxicScytheItem;
+import com.shipovskijkorp.scythes.mod.network.ToxicAuraHudS2CPacket;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
@@ -44,7 +45,8 @@ public final class ToxicAuraAbility {
             stack.damage(AURA_DURABILITY_COST, player, p -> p.sendToolBreakStatus(hand));
         }
 
-        ToxicAuraTracker.start(player);
+        int auraTicks = ToxicAuraTracker.start(player);
+        ToxicAuraHudS2CPacket.sendTicks(player, auraTicks);
         ToxicScytheCooldowns.setAuraCooldown(player, AURA_COOLDOWN_TICKS);
 
         player.getWorld().playSound(

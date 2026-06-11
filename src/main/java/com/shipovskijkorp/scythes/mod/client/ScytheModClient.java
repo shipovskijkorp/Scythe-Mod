@@ -24,6 +24,7 @@ public class ScytheModClient implements ClientModInitializer {
 
         // HUD
         BloodHarvestHudRenderer.register();
+        ToxicAuraHudRenderer.register();
 
         // S2C: Blood Harvest HUD
         ClientPlayNetworking.registerGlobalReceiver(
@@ -39,6 +40,20 @@ public class ScytheModClient implements ClientModInitializer {
                         client.execute(BloodHarvestHudState::stop)
         );
 
+        // S2C: Toxic Aura HUD
+        ClientPlayNetworking.registerGlobalReceiver(
+                ModPackets.TOXIC_AURA_START_S2C,
+                (client, handler, buf, responseSender) -> {
+                    int ticks = buf.readInt();
+                    client.execute(() -> ToxicAuraHudState.startOrUpdate(ticks));
+                }
+        );
+        ClientPlayNetworking.registerGlobalReceiver(
+                ModPackets.TOXIC_AURA_STOP_S2C,
+                (client, handler, buf, responseSender) ->
+                        client.execute(ToxicAuraHudState::stop)
+        );
+
         // ✅ Универсальная активная способность (R): Кровавая жатва для кровавой косы и Токсичная аура для токсичной.
         scytheAbilityKey = KeyBindingHelper.registerKeyBinding(
                 new KeyBinding(
@@ -51,6 +66,7 @@ public class ScytheModClient implements ClientModInitializer {
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             BloodHarvestHudState.tick();
+            ToxicAuraHudState.tick();
 
             while (scytheAbilityKey.wasPressed()) {
                 if (client.getNetworkHandler() != null && ClientPlayNetworking.canSend(ModPackets.SCYTHE_ABILITY_C2S)) {

@@ -16,6 +16,7 @@
   "message.scythes.blood_harvest.success": "Ты высвободил Кровавую жатву",
   "message.scythes.blood_harvest.failed": "Жатва требует твоей крови",
   "hud.scythes.blood_harvest": "Кровавая жатва: %ss",
+  "hud.scythes.toxic_aura": "Токсичная аура: %sс",
   "advancement.scythes.root.title": "Scythe Mod",
   "advancement.scythes.root.desc": "Освой проклятые косы",
   "advancement.scythes.craft_bloody.title": "Выкованная кровью",

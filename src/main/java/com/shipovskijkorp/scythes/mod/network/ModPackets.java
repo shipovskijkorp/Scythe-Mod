@@ -19,4 +19,10 @@ public final class ModPackets {
 
     public static final Identifier BLOOD_HARVEST_STOP_S2C =
             new Identifier(ScytheMod.MOD_ID, "blood_harvest_stop");
+
+    public static final Identifier TOXIC_AURA_START_S2C =
+            new Identifier(ScytheMod.MOD_ID, "toxic_aura_start");
+
+    public static final Identifier TOXIC_AURA_STOP_S2C =
+            new Identifier(ScytheMod.MOD_ID, "toxic_aura_stop");
 }
