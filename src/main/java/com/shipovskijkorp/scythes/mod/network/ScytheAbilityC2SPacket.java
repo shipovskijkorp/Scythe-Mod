@@ -2,8 +2,10 @@ package com.shipovskijkorp.scythes.mod.network;
 
 import com.shipovskijkorp.scythes.mod.ability.BloodHarvestAbility;
 import com.shipovskijkorp.scythes.mod.ability.ToxicAuraAbility;
+import com.shipovskijkorp.scythes.mod.ability.WitheringAuraAbility;
 import com.shipovskijkorp.scythes.mod.item.BloodScytheItem;
 import com.shipovskijkorp.scythes.mod.item.ToxicScytheItem;
+import com.shipovskijkorp.scythes.mod.item.WitheringScytheItem;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.item.ItemStack;
 
@@ -24,6 +26,10 @@ public class ScytheAbilityC2SPacket {
                         ToxicAuraAbility.tryActivate(player);
                         return;
                     }
+                    if (stack.getItem() instanceof WitheringScytheItem) {
+                        WitheringAuraAbility.tryActivate(player);
+                        return;
+                    }
 
                     stack = player.getOffHandStack();
                     if (stack.getItem() instanceof BloodScytheItem) {
@@ -32,6 +38,10 @@ public class ScytheAbilityC2SPacket {
                     }
                     if (stack.getItem() instanceof ToxicScytheItem) {
                         ToxicAuraAbility.tryActivate(player);
+                        return;
+                    }
+                    if (stack.getItem() instanceof WitheringScytheItem) {
+                        WitheringAuraAbility.tryActivate(player);
                     }
                 })
         );

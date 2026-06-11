@@ -5,14 +5,17 @@ import com.shipovskijkorp.scythes.mod.effect.BleedingEffect;
 import com.shipovskijkorp.scythes.mod.effect.NoJumpEffect;
 import com.shipovskijkorp.scythes.mod.enchantment.SpikedBladeEnchantment;
 import com.shipovskijkorp.scythes.mod.entity.ToxicOrbEntity;
+import com.shipovskijkorp.scythes.mod.entity.WitheringMinionEntity;
 import com.shipovskijkorp.scythes.mod.item.BloodScytheItem;
 import com.shipovskijkorp.scythes.mod.item.ToxicScytheItem;
+import com.shipovskijkorp.scythes.mod.item.WitheringScytheItem;
 import com.shipovskijkorp.scythes.mod.network.ScytheAbilityC2SPacket;
 import com.shipovskijkorp.scythes.mod.recipe.ToxicEssenceRecipe;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.EntityDimensions;
@@ -44,7 +47,7 @@ public class ScytheMod implements ModInitializer {
 	public static final Item TOXIC_SCYTHE = new ToxicScytheItem(new Item.Settings().maxCount(1).fireproof());
 	/** Legacy placeholder. Kept registered so old scythes:plague_scythe stacks survive load and can be migrated. */
 	public static final Item PLAGUE_SCYTHE = new SwordItem(ToolMaterials.NETHERITE, 4, -2.8F, new Item.Settings().maxCount(1).fireproof());
-	public static final Item WITHERING_SCYTHE = new Item(new Item.Settings().maxCount(1).fireproof());
+	public static final Item WITHERING_SCYTHE = new WitheringScytheItem(new Item.Settings().maxCount(1).fireproof());
 
 	public static final EntityType<ToxicOrbEntity> TOXIC_ORB = FabricEntityTypeBuilder
 			.<ToxicOrbEntity>create(SpawnGroup.MISC, ToxicOrbEntity::new)
@@ -53,8 +56,16 @@ public class ScytheMod implements ModInitializer {
 			.trackedUpdateRate(10)
 			.build();
 
+	public static final EntityType<WitheringMinionEntity> WITHERING_MINION = FabricEntityTypeBuilder
+			.<WitheringMinionEntity>create(SpawnGroup.MONSTER, WitheringMinionEntity::new)
+			.dimensions(EntityDimensions.fixed(0.7F, 2.4F))
+			.trackRangeBlocks(8)
+			.trackedUpdateRate(3)
+			.build();
+
 	public static final Item BLOODY_ESSENCE = new Item(new Item.Settings());
 	public static final Item TOXIC_ESSENCE = new Item(new Item.Settings());
+	public static final Item WITHERING_ESSENCE = new Item(new Item.Settings());
 
 	public static final RecipeSerializer<ToxicEssenceRecipe> TOXIC_ESSENCE_RECIPE_SERIALIZER =
 			new SpecialRecipeSerializer<>(ToxicEssenceRecipe::new);
@@ -72,58 +83,49 @@ public class ScytheMod implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-
-
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "bloody_scythe"), BLOODY_SCYTHE);
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "toxic_scythe"), TOXIC_SCYTHE);
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "plague_scythe"), PLAGUE_SCYTHE);
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "withering_scythe"), WITHERING_SCYTHE);
 		Registry.register(Registries.ENTITY_TYPE, new Identifier(MOD_ID, "toxic_orb"), TOXIC_ORB);
+		Registry.register(Registries.ENTITY_TYPE, new Identifier(MOD_ID, "withering_minion"), WITHERING_MINION);
+		FabricDefaultAttributeRegistry.register(WITHERING_MINION, WitheringMinionEntity.createAttributes());
 		Registry.register(Registries.RECIPE_SERIALIZER, new Identifier(MOD_ID, "craft_toxic_essence"), TOXIC_ESSENCE_RECIPE_SERIALIZER);
 
-		// ✅ регистрация эссенций
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "bloody_essence"), BLOODY_ESSENCE);
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "toxic_essence"), TOXIC_ESSENCE);
+		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "withering_essence"), WITHERING_ESSENCE);
 
 		Registry.register(Registries.STATUS_EFFECT, new Identifier(MOD_ID, "bleeding"), BLEEDING);
 		Registry.register(Registries.STATUS_EFFECT, new Identifier(MOD_ID, "no_jump"), NO_JUMP);
 
 		Registry.register(Registries.ENCHANTMENT, new Identifier(MOD_ID, "spiked_blade"), SPIKED_BLADE);
 
-		// ✅ отдельная вкладка под предметы мода (иконка крутится косами через миксин)
 		SCYTHE_ITEM_GROUP = Registry.register(
 				Registries.ITEM_GROUP,
 				SCYTHE_ITEM_GROUP_ID,
 				FabricItemGroup.builder()
-						.icon(() -> new ItemStack(BLOODY_SCYTHE)) // fallback, если вдруг миксин не применился
+						.icon(() -> new ItemStack(BLOODY_SCYTHE))
 						.displayName(Text.translatable("itemGroup." + MOD_ID + ".scythes"))
 						.entries((displayContext, entries) -> {
 							entries.add(BLOODY_SCYTHE);
 							entries.add(TOXIC_SCYTHE);
 							entries.add(WITHERING_SCYTHE);
-
-							// ✅ добавляем эссенции в эту же вкладку
 							entries.add(BLOODY_ESSENCE);
 							entries.add(TOXIC_ESSENCE);
+							entries.add(WITHERING_ESSENCE);
 						})
 						.build()
 		);
 
 		ScytheAbilityC2SPacket.register();
 		PlagueScytheMigrationHandler.register();
-
 		WelcomeAdvancementHandler.register();
-
-		// Perfect Harvest milestones
 		BloodHarvestKillHandler.register();
-
-		// ✅ общий килл-хендлер для 1/5/10/20 убийств косами
 		ScytheKillMilestoneHandler.register();
-
-		// дроп Bloody Essence
+		WitheringSoulHandler.register();
 		BloodyEssenceDropHandler.register();
 
-		// ✅ чистим активные способности при DISCONNECT (не залипают UUID в Map)
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			ServerPlayerEntity player = handler.player;
 			server.execute(() -> {
@@ -131,6 +133,8 @@ public class ScytheMod implements ModInitializer {
 				BloodScytheVampirism.clear(player);
 				ToxicAuraTracker.clear(player);
 				ToxicScytheCooldowns.clear(player);
+				WitheringAuraTracker.clear(player);
+				WitheringScytheCooldowns.clear(player);
 			});
 		});
 
@@ -139,7 +143,6 @@ public class ScytheMod implements ModInitializer {
 		LOGGER.info("ScytheMod initialized successfully");
 	}
 
-	// Вызывается из миксина (ItemGroupMixin) чтобы иконка вкладки менялась со временем
 	public static ItemStack createRotatingTabIcon() {
 		int index = (int) ((System.currentTimeMillis() / TAB_ICON_INTERVAL_MS) % TAB_ICON_ITEMS.length);
 		return new ItemStack(TAB_ICON_ITEMS[index]);
@@ -149,6 +152,7 @@ public class ScytheMod implements ModInitializer {
 		for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
 			BloodHarvestTracker.tick(player);
 			ToxicAuraTracker.tick(player);
+			WitheringAuraTracker.tick(player);
 			PlagueScytheMigrationHandler.migratePlayer(player);
 		}
 	}

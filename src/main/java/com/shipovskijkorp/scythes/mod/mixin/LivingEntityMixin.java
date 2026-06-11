@@ -2,6 +2,7 @@ package com.shipovskijkorp.scythes.mod.mixin;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
 import com.shipovskijkorp.scythes.mod.ability.BloodScytheVampirism;
+import com.shipovskijkorp.scythes.mod.ability.WitheringSoulHandler;
 import com.shipovskijkorp.scythes.mod.item.BloodScytheItem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -60,6 +61,13 @@ public abstract class LivingEntityMixin {
         float actualDamage = Math.max(0.0f, before - after);
 
         BloodScytheVampirism.tryHeal(player, actualDamage);
+    }
+
+    @Inject(method = "onDeath", at = @At("HEAD"))
+    private void scythes$awardTrackedWitheringSoul(DamageSource source, CallbackInfo ci) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (self.getWorld().isClient) return;
+        WitheringSoulHandler.tryAwardTrackedWitheringDeath(self, source);
     }
 
 }

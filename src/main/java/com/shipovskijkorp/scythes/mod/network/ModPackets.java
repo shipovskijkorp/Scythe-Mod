@@ -25,4 +25,10 @@ public final class ModPackets {
 
     public static final Identifier TOXIC_AURA_STOP_S2C =
             new Identifier(ScytheMod.MOD_ID, "toxic_aura_stop");
+
+    public static final Identifier WITHERING_AURA_START_S2C =
+            new Identifier(ScytheMod.MOD_ID, "withering_aura_start");
+
+    public static final Identifier WITHERING_AURA_STOP_S2C =
+            new Identifier(ScytheMod.MOD_ID, "withering_aura_stop");
 }

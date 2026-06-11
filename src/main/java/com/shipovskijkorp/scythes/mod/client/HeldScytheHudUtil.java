@@ -28,4 +28,8 @@ public final class HeldScytheHudUtil {
     public static boolean isHoldingToxicScythe() {
         return isHolding(ScytheMod.TOXIC_SCYTHE);
     }
+
+    public static boolean isHoldingWitheringScythe() {
+        return isHolding(ScytheMod.WITHERING_SCYTHE);
+    }
 }

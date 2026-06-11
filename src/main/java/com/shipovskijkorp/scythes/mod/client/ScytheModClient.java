@@ -10,6 +10,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.entity.FlyingItemEntityRenderer;
+import net.minecraft.client.render.entity.WitherSkeletonEntityRenderer;
 import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
 
@@ -21,10 +22,12 @@ public class ScytheModClient implements ClientModInitializer {
     public void onInitializeClient() {
 
         EntityRendererRegistry.register(ScytheMod.TOXIC_ORB, FlyingItemEntityRenderer::new);
+        EntityRendererRegistry.register(ScytheMod.WITHERING_MINION, WitherSkeletonEntityRenderer::new);
 
         // HUD
         BloodHarvestHudRenderer.register();
         ToxicAuraHudRenderer.register();
+        WitheringAuraHudRenderer.register();
 
         // S2C: Blood Harvest HUD
         ClientPlayNetworking.registerGlobalReceiver(
@@ -54,7 +57,21 @@ public class ScytheModClient implements ClientModInitializer {
                         client.execute(ToxicAuraHudState::stop)
         );
 
-        // ✅ Универсальная активная способность (R): Кровавая жатва для кровавой косы и Токсичная аура для токсичной.
+        // S2C: Withering Aura HUD
+        ClientPlayNetworking.registerGlobalReceiver(
+                ModPackets.WITHERING_AURA_START_S2C,
+                (client, handler, buf, responseSender) -> {
+                    int ticks = buf.readInt();
+                    client.execute(() -> WitheringAuraHudState.startOrUpdate(ticks));
+                }
+        );
+        ClientPlayNetworking.registerGlobalReceiver(
+                ModPackets.WITHERING_AURA_STOP_S2C,
+                (client, handler, buf, responseSender) ->
+                        client.execute(WitheringAuraHudState::stop)
+        );
+
+        // ✅ Универсальная активная способность (R): Кровавая жатва, Токсичная аура и Иссушающая аура.
         scytheAbilityKey = KeyBindingHelper.registerKeyBinding(
                 new KeyBinding(
                         "key.scythes.scythe_ability",
@@ -67,6 +84,7 @@ public class ScytheModClient implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             BloodHarvestHudState.tick();
             ToxicAuraHudState.tick();
+            WitheringAuraHudState.tick();
 
             while (scytheAbilityKey.wasPressed()) {
                 if (client.getNetworkHandler() != null && ClientPlayNetworking.canSend(ModPackets.SCYTHE_ABILITY_C2S)) {

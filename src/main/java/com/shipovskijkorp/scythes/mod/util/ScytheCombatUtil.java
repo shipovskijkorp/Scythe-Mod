@@ -4,6 +4,9 @@ import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.passive.AbstractHorseEntity;
+import net.minecraft.entity.passive.TameableEntity;
+import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.item.ItemStack;
 
 public final class ScytheCombatUtil {
@@ -22,6 +25,9 @@ public final class ScytheCombatUtil {
         if (target == owner) return true;
         if (!target.isAlive()) return true;
         if (target.isSpectator()) return true;
+        if (target instanceof VillagerEntity) return true;
+        if (target instanceof TameableEntity tameable && tameable.isTamed()) return true;
+        if (target instanceof AbstractHorseEntity horse && horse.isTame()) return true;
         return owner != null && owner.isTeammate(target);
     }
 
