@@ -130,6 +130,7 @@ public class ScytheMod implements ModInitializer {
 			ServerPlayerEntity player = handler.player;
 			server.execute(() -> {
 				BloodHarvestTracker.clear(player);
+				BloodScytheCooldowns.clear(player);
 				BloodScytheVampirism.clear(player);
 				ToxicAuraTracker.clear(player);
 				ToxicScytheCooldowns.clear(player);
