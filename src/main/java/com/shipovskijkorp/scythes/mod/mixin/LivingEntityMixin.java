@@ -4,6 +4,7 @@ import com.shipovskijkorp.scythes.mod.ScytheMod;
 import com.shipovskijkorp.scythes.mod.ability.BloodScytheVampirism;
 import com.shipovskijkorp.scythes.mod.ability.WitheringSoulHandler;
 import com.shipovskijkorp.scythes.mod.item.BloodScytheItem;
+import com.shipovskijkorp.scythes.mod.util.ScytheDamageTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
@@ -25,6 +26,12 @@ public abstract class LivingEntityMixin {
     @Unique
     private float scythes$absorptionBeforeDamage;
 
+    @Unique
+    private boolean scythes$bloodDefensePierceQueued;
+
+    @Unique
+    private boolean scythes$applyingBloodPierceDamage;
+
     @Inject(method = "jump", at = @At("HEAD"), cancellable = true)
     private void scythes$noJump(CallbackInfo ci) {
         LivingEntity self = (LivingEntity) (Object) this;
@@ -37,9 +44,20 @@ public abstract class LivingEntityMixin {
     private void scythes$captureDamageBefore(DamageSource source,
                                              float amount,
                                              CallbackInfoReturnable<Boolean> cir) {
+        if (scythes$applyingBloodPierceDamage) return;
+
         LivingEntity self = (LivingEntity) (Object) this;
         scythes$healthBeforeDamage = self.getHealth();
         scythes$absorptionBeforeDamage = self.getAbsorptionAmount();
+        scythes$bloodDefensePierceQueued = false;
+
+        if (self.getWorld().isClient) return;
+
+        ServerPlayerEntity player = scythes$getBloodScytheAttacker(source);
+        if (player == null) return;
+
+        scythes$bloodDefensePierceQueued = BloodScytheItem.DEFENSE_PIERCE_CHANCE > 0.0D
+                && player.getRandom().nextDouble() < BloodScytheItem.DEFENSE_PIERCE_CHANCE;
     }
 
     @Inject(method = "damage", at = @At("RETURN"))
@@ -47,20 +65,49 @@ public abstract class LivingEntityMixin {
                                                  float amount,
                                                  CallbackInfoReturnable<Boolean> cir) {
         if (!cir.getReturnValueZ()) return;
-        if (!source.isOf(DamageTypes.PLAYER_ATTACK)) return;
+        if (scythes$applyingBloodPierceDamage) return;
 
         LivingEntity self = (LivingEntity) (Object) this;
         if (self.getWorld().isClient) return;
 
-        Entity attacker = source.getAttacker();
-        if (!(attacker instanceof ServerPlayerEntity player)) return;
-        if (!(player.getMainHandStack().getItem() instanceof BloodScytheItem)) return;
+        ServerPlayerEntity player = scythes$getBloodScytheAttacker(source);
+        if (player == null) return;
 
         float before = scythes$healthBeforeDamage + scythes$absorptionBeforeDamage;
-        float after = self.getHealth() + self.getAbsorptionAmount();
-        float actualDamage = Math.max(0.0f, before - after);
+        float afterBaseHit = self.getHealth() + self.getAbsorptionAmount();
+        float baseActualDamage = Math.max(0.0f, before - afterBaseHit);
+        float bonusActualDamage = 0.0f;
 
-        BloodScytheVampirism.tryHeal(player, actualDamage);
+        if (scythes$bloodDefensePierceQueued && self.isAlive()) {
+            float mitigatedDamage = Math.max(0.0f, amount - baseActualDamage);
+            float bonusDamage = mitigatedDamage * (float) BloodScytheItem.DEFENSE_PIERCE_MITIGATION_IGNORED;
+
+            if (bonusDamage > 0.0f) {
+                float beforeBonus = self.getHealth() + self.getAbsorptionAmount();
+                scythes$applyingBloodPierceDamage = true;
+                try {
+                    self.damage(ScytheDamageTypes.bloodPierce(self.getWorld(), player), bonusDamage);
+                } finally {
+                    scythes$applyingBloodPierceDamage = false;
+                }
+                float afterBonus = self.getHealth() + self.getAbsorptionAmount();
+                bonusActualDamage = Math.max(0.0f, beforeBonus - afterBonus);
+            }
+        }
+
+        scythes$bloodDefensePierceQueued = false;
+        BloodScytheVampirism.tryHeal(player, baseActualDamage + bonusActualDamage);
+    }
+
+    @Unique
+    private ServerPlayerEntity scythes$getBloodScytheAttacker(DamageSource source) {
+        if (!source.isOf(DamageTypes.PLAYER_ATTACK)) return null;
+
+        Entity attacker = source.getAttacker();
+        if (!(attacker instanceof ServerPlayerEntity player)) return null;
+        if (!(player.getMainHandStack().getItem() instanceof BloodScytheItem)) return null;
+
+        return player;
     }
 
     @Inject(method = "onDeath", at = @At("HEAD"))

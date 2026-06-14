@@ -114,7 +114,7 @@ public class WitheringScytheItem extends SwordItem {
 
         tooltip.add(Text.empty());
         tooltip.add(Text.translatable("tooltip.scythes.section.active").formatted(Formatting.GRAY));
-        tooltip.add(Text.translatable("tooltip.scythes.withering_aura").formatted(Formatting.DARK_PURPLE));
+        tooltip.add(Text.translatable("tooltip.scythes.withering_aura", TooltipUtil.getScytheAbilityKeyText(Formatting.DARK_PURPLE)));
         if (!alt) {
             TooltipUtil.addWrapped(tooltip, "tooltip.scythes.withering_aura.desc", Formatting.GRAY);
             TooltipUtil.addHoldAltHint(tooltip);

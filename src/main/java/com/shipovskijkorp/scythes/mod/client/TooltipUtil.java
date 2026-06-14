@@ -36,6 +36,10 @@ public final class TooltipUtil {
         );
     }
 
+    public static Text getScytheAbilityKeyText(Formatting formatting) {
+        return ScytheModClient.getScytheAbilityKeyBoundText().copy().formatted(formatting);
+    }
+
     public static void addWrapped(List<Text> tooltip, String translationKey, Formatting... formatting) {
         addWrapped(tooltip, Text.translatable(translationKey), formatting);
     }

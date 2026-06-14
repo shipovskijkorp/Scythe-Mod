@@ -12,11 +12,18 @@ import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.entity.FlyingItemEntityRenderer;
 import net.minecraft.client.render.entity.WitherSkeletonEntityRenderer;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 
 public class ScytheModClient implements ClientModInitializer {
 
     private static KeyBinding scytheAbilityKey;
+
+    public static Text getScytheAbilityKeyBoundText() {
+        return scytheAbilityKey == null
+                ? Text.literal("R")
+                : scytheAbilityKey.getBoundKeyLocalizedText();
+    }
 
     @Override
     public void onInitializeClient() {
@@ -71,7 +78,7 @@ public class ScytheModClient implements ClientModInitializer {
                         client.execute(WitheringAuraHudState::stop)
         );
 
-        // ✅ Универсальная активная способность (R): Кровавая жатва, Токсичная аура и Иссушающая аура.
+        // ✅ Универсальная активная способность: Кровавая жатва, Токсичная аура и Иссушающая аура.
         scytheAbilityKey = KeyBindingHelper.registerKeyBinding(
                 new KeyBinding(
                         "key.scythes.scythe_ability",

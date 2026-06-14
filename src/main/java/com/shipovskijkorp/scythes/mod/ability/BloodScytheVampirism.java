@@ -11,8 +11,8 @@ public final class BloodScytheVampirism {
     private BloodScytheVampirism() {
     }
 
-    public static final double VAMPIRISM_CHANCE = 0.20D;
-    public static final double HEAL_FRACTION = 0.40D;
+    public static final double VAMPIRISM_CHANCE = 0.25D;
+    public static final double HEAL_FRACTION = 0.50D;
     public static final int COOLDOWN_TICKS = 20;
 
     private static final Map<UUID, Long> LAST_HEAL_TICK = new HashMap<>();

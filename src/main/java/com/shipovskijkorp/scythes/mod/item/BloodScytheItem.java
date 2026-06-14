@@ -27,7 +27,9 @@ import java.util.List;
 
 public class BloodScytheItem extends SwordItem {
 
-    public static final double BLEEDING_CHANCE = 0.35D;
+    public static final double BLEEDING_CHANCE = 0.40D;
+    public static final double DEFENSE_PIERCE_CHANCE = 0.20D;
+    public static final double DEFENSE_PIERCE_MITIGATION_IGNORED = 0.50D;
     public static final int BLEEDING_BASE_DURATION_TICKS = 20 * 2;
     public static final int BLEEDING_EXTEND_TICKS = 20 * 2;
 
@@ -110,11 +112,20 @@ public class BloodScytheItem extends SwordItem {
                     ),
                     Formatting.DARK_GRAY
             );
+            TooltipUtil.addWrapped(
+                    tooltip,
+                    Text.translatable(
+                            "tooltip.scythes.stat.defense_pierce",
+                            TooltipUtil.fmtPercentValue(DEFENSE_PIERCE_CHANCE),
+                            TooltipUtil.fmtPercentValue(DEFENSE_PIERCE_MITIGATION_IGNORED)
+                    ),
+                    Formatting.DARK_RED
+            );
         }
 
         tooltip.add(Text.empty());
         tooltip.add(Text.translatable("tooltip.scythes.section.active").formatted(Formatting.GRAY));
-        tooltip.add(Text.translatable("tooltip.scythes.blood_harvest"));
+        tooltip.add(Text.translatable("tooltip.scythes.blood_harvest", TooltipUtil.getScytheAbilityKeyText(Formatting.DARK_RED)));
 
         if (!alt) {
             TooltipUtil.addWrapped(tooltip, "tooltip.scythes.blood_harvest.desc", Formatting.GRAY);

@@ -134,7 +134,7 @@ public class ToxicScytheItem extends SwordItem {
 
         tooltip.add(Text.empty());
         tooltip.add(Text.translatable("tooltip.scythes.section.active").formatted(Formatting.GRAY));
-        tooltip.add(Text.translatable("tooltip.scythes.toxic_aura").formatted(Formatting.GREEN));
+        tooltip.add(Text.translatable("tooltip.scythes.toxic_aura", TooltipUtil.getScytheAbilityKeyText(Formatting.GREEN)));
         if (!alt) {
             TooltipUtil.addWrapped(tooltip, "tooltip.scythes.toxic_aura.desc", Formatting.GRAY);
             TooltipUtil.addHoldAltHint(tooltip);
