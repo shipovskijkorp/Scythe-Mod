@@ -122,7 +122,6 @@ public class ScytheMod implements ModInitializer {
 		PlagueScytheMigrationHandler.register();
 		WelcomeAdvancementHandler.register();
 		BloodHarvestKillHandler.register();
-		ScytheKillMilestoneHandler.register();
 		WitheringSoulHandler.register();
 		BloodyEssenceDropHandler.register();
 

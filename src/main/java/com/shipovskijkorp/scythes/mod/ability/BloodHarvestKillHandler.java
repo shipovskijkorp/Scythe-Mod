@@ -24,9 +24,6 @@ public class BloodHarvestKillHandler {
             if (!holdingScythe) return;
 
             BloodHarvestTracker.onKill(killer);
-
-            // ✅ новый счётчик идеальной жатвы
-            MilestoneAdvancements.record(killer, MilestoneAdvancements.Kind.PERFECT_HARVEST);
         });
     }
 }

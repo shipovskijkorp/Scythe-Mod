@@ -1,0 +1,32 @@
+{
+  "parent": "scythes:root",
+  "display": {
+    "icon": {
+      "item": "scythes:withering_essence"
+    },
+    "title": {
+      "translate": "advancement.scythes.withering_essence.title"
+    },
+    "description": {
+      "translate": "advancement.scythes.withering_essence.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "get_essence": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "scythes:withering_essence"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

@@ -18,11 +18,11 @@ public final class DamageAttributionTracker {
     private static final Map<UUID, TrackedSource> WITHERING = new HashMap<>();
 
     public static void recordBleeding(LivingEntity target, ServerPlayerEntity owner, int ticks) {
-        record(BLEEDING, target, owner, ticks, MilestoneAdvancements.Kind.BLOODY);
+        record(BLEEDING, target, owner, ticks);
     }
 
     public static void recordWithering(LivingEntity target, ServerPlayerEntity owner, int ticks) {
-        record(WITHERING, target, owner, ticks, MilestoneAdvancements.Kind.BLOODY);
+        record(WITHERING, target, owner, ticks);
     }
 
     @Nullable
@@ -35,15 +35,6 @@ public final class DamageAttributionTracker {
         return getOwner(WITHERING, target);
     }
 
-    @Nullable
-    public static MilestoneAdvancements.Kind getKillKind(ServerPlayerEntity owner, LivingEntity target) {
-        TrackedSource bleeding = getTracked(BLEEDING, target);
-        if (bleeding != null && bleeding.ownerUuid.equals(owner.getUuid())) {
-            return bleeding.kind;
-        }
-
-        return null;
-    }
 
     public static void clear(LivingEntity target) {
         BLEEDING.remove(target.getUuid());
@@ -53,14 +44,13 @@ public final class DamageAttributionTracker {
     private static void record(Map<UUID, TrackedSource> map,
                                LivingEntity target,
                                ServerPlayerEntity owner,
-                               int ticks,
-                               MilestoneAdvancements.Kind kind) {
+                               int ticks) {
         if (target.getWorld().isClient) return;
         if (ticks <= 0) return;
         if (target.getUuid().equals(owner.getUuid())) return;
 
         long expiresAt = target.getWorld().getTime() + ticks + 20L;
-        map.put(target.getUuid(), new TrackedSource(owner.getUuid(), expiresAt, kind));
+        map.put(target.getUuid(), new TrackedSource(owner.getUuid(), expiresAt));
     }
 
     @Nullable
@@ -92,6 +82,6 @@ public final class DamageAttributionTracker {
         return tracked;
     }
 
-    private record TrackedSource(UUID ownerUuid, long expiresAt, MilestoneAdvancements.Kind kind) {
+    private record TrackedSource(UUID ownerUuid, long expiresAt) {
     }
 }
