@@ -46,6 +46,7 @@ public final class WitheringAuraAbility {
         int auraTicks = WitheringAuraTracker.start(player);
         WitheringAuraHudS2CPacket.sendTicks(player, auraTicks);
         WitheringScytheCooldowns.setAuraCooldown(player, AURA_COOLDOWN_TICKS);
+        ScytheAdvancementTracker.markWitheringActive(player);
 
         player.getWorld().playSound(
                 null,

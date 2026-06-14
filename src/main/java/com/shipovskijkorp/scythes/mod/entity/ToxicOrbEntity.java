@@ -1,6 +1,7 @@
 package com.shipovskijkorp.scythes.mod.entity;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
 import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -10,6 +11,7 @@ import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.projectile.thrown.ThrownItemEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Box;
@@ -76,6 +78,7 @@ public class ToxicOrbEntity extends ThrownItemEntity {
     private void applyToxicBurst() {
         Entity ownerEntity = getOwner();
         LivingEntity owner = ownerEntity instanceof LivingEntity livingOwner ? livingOwner : null;
+        ServerPlayerEntity playerOwner = ownerEntity instanceof ServerPlayerEntity serverPlayer ? serverPlayer : null;
         DamageSource damageSource = ownerEntity != null
                 ? getDamageSources().indirectMagic(this, ownerEntity)
                 : getDamageSources().magic();
@@ -90,6 +93,9 @@ public class ToxicOrbEntity extends ThrownItemEntity {
         for (LivingEntity target : targets) {
             target.damage(damageSource, PURE_DAMAGE);
             ScytheCombatUtil.refreshStatus(target, StatusEffects.POISON, POISON_TICKS, POISON_AMPLIFIER);
+            if (playerOwner != null) {
+                ScytheAdvancementTracker.recordToxicPoison(playerOwner, target, POISON_TICKS);
+            }
             ScytheCombatUtil.damageArmorSet(target, ARMOR_DAMAGE);
         }
     }

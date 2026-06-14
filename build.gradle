@@ -11,7 +11,19 @@ base {
 }
 
 repositories {
-    // обычно пусто — loom сам добавляет нужные репозитории
+    // JEI's official Maven (maven.blamejared.com) can time out from some networks.
+    // Modrinth Maven hosts the Fabric mod jar and is enough for optional JEI compatibility.
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = "https://api.modrinth.com/maven"
+            }
+        }
+        filter {
+            includeGroup "maven.modrinth"
+        }
+    }
 }
 
 fabricApi {
@@ -26,6 +38,11 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+    // Optional JEI integration. JEI is used only for compiling the optional plugin and dev runtime;
+    // users still do not need JEI to launch the mod. The version filter forces Fabric 1.20.1.
+    modCompileOnly "maven.modrinth:jei:${project.jei_version}-fabric,${project.minecraft_version}"
+    modRuntimeOnly "maven.modrinth:jei:${project.jei_version}-fabric,${project.minecraft_version}"
 }
 
 processResources {

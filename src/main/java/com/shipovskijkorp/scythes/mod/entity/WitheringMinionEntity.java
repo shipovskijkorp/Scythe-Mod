@@ -1,5 +1,6 @@
 package com.shipovskijkorp.scythes.mod.entity;
 
+import com.shipovskijkorp.scythes.mod.ability.WitheringMinionManager;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
@@ -9,6 +10,7 @@ import net.minecraft.entity.ai.goal.LookAtEntityGoal;
 import net.minecraft.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.entity.ai.goal.SwimGoal;
 import net.minecraft.entity.ai.goal.WanderAroundFarGoal;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -36,12 +38,17 @@ public class WitheringMinionEntity extends WitherSkeletonEntity {
 
     public static final float MAX_HEALTH = 20.0F;
     public static final double ARMOR = 14.0D;
-    public static final int LIFETIME_TICKS = 20 * 60 * 5;
+    public static final int LIFETIME_TICKS = 20 * 60 * 15;
+    public static final int REGEN_IDLE_TICKS = 20 * 5;
+    public static final int REGEN_INTERVAL_TICKS = 20;
+    public static final float REGEN_HEALTH_PER_TICK = 1.0F;
+    public static final int REGEN_DURABILITY_COST = 1;
     private static final double OWNER_TELEPORT_DISTANCE_SQUARED = 12.0D * 12.0D;
 
     @Nullable
     private UUID ownerUuid;
     private int lifeTicks;
+    private long lastDamageWorldTick;
 
     public WitheringMinionEntity(EntityType<? extends WitheringMinionEntity> entityType, World world) {
         super(entityType, world);
@@ -71,6 +78,7 @@ public class WitheringMinionEntity extends WitherSkeletonEntity {
     public void initializeForOwner(ServerPlayerEntity owner) {
         this.ownerUuid = owner.getUuid();
         this.lifeTicks = 0;
+        this.lastDamageWorldTick = getWorld().getTime();
         this.setCustomNameVisible(false);
         this.setPersistent();
         this.setHealth(MAX_HEALTH);
@@ -104,6 +112,32 @@ public class WitheringMinionEntity extends WitherSkeletonEntity {
 
         if (age % 10 == 0) {
             updateDogLikeTarget();
+        }
+
+        tryPassiveRegeneration();
+    }
+
+    @Override
+    public boolean damage(DamageSource source, float amount) {
+        boolean damaged = super.damage(source, amount);
+        if (!getWorld().isClient && damaged && amount > 0.0F) {
+            lastDamageWorldTick = getWorld().getTime();
+        }
+        return damaged;
+    }
+
+    private void tryPassiveRegeneration() {
+        if (age % REGEN_INTERVAL_TICKS != 0) return;
+        if (getHealth() >= getMaxHealth()) return;
+
+        long now = getWorld().getTime();
+        if (now - lastDamageWorldTick < REGEN_IDLE_TICKS) return;
+
+        ServerPlayerEntity owner = getOwnerPlayer();
+        if (owner == null) return;
+
+        if (WitheringMinionManager.damageOwnerScytheForMinionRegen(owner, REGEN_DURABILITY_COST)) {
+            heal(REGEN_HEALTH_PER_TICK);
         }
     }
 
@@ -225,6 +259,7 @@ public class WitheringMinionEntity extends WitherSkeletonEntity {
             nbt.putUuid(OWNER_KEY, ownerUuid);
         }
         nbt.putInt(LIFE_TICKS_KEY, lifeTicks);
+        nbt.putLong("LastDamageWorldTick", lastDamageWorldTick);
     }
 
     @Override
@@ -234,6 +269,7 @@ public class WitheringMinionEntity extends WitherSkeletonEntity {
             ownerUuid = nbt.getUuid(OWNER_KEY);
         }
         lifeTicks = Math.max(0, nbt.getInt(LIFE_TICKS_KEY));
+        lastDamageWorldTick = nbt.contains("LastDamageWorldTick") ? nbt.getLong("LastDamageWorldTick") : getWorld().getTime();
     }
 
     private static final class FollowOwnerLikeWolfGoal extends Goal {

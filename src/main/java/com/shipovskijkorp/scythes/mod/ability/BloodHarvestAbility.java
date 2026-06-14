@@ -73,6 +73,7 @@ public class BloodHarvestAbility {
         player.getItemCooldownManager().set(item, COOLDOWN_TICKS);
 
         for (ServerPlayerEntity target : targets) {
+            ScytheAdvancementTracker.markBloodActive(player, target);
             target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, SLOWNESS_TICKS, SLOWNESS_AMPLIFIER));
             target.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, BLINDNESS_TICKS, 0));
             target.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, WEAKNESS_TICKS, WEAKNESS_AMPLIFIER));

@@ -48,6 +48,7 @@ public final class ToxicAuraAbility {
         int auraTicks = ToxicAuraTracker.start(player);
         ToxicAuraHudS2CPacket.sendTicks(player, auraTicks);
         ToxicScytheCooldowns.setAuraCooldown(player, AURA_COOLDOWN_TICKS);
+        ScytheAdvancementTracker.markToxicActive(player);
 
         player.getWorld().playSound(
                 null,

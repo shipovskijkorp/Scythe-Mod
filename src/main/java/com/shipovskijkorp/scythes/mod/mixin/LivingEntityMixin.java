@@ -2,6 +2,7 @@ package com.shipovskijkorp.scythes.mod.mixin;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
 import com.shipovskijkorp.scythes.mod.ability.BloodScytheVampirism;
+import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
 import com.shipovskijkorp.scythes.mod.ability.WitheringSoulHandler;
 import com.shipovskijkorp.scythes.mod.item.BloodScytheItem;
 import com.shipovskijkorp.scythes.mod.util.ScytheDamageTypes;
@@ -115,6 +116,7 @@ public abstract class LivingEntityMixin {
         LivingEntity self = (LivingEntity) (Object) this;
         if (self.getWorld().isClient) return;
         WitheringSoulHandler.tryAwardTrackedWitheringDeath(self, source);
+        ScytheAdvancementTracker.tryGrantMercilessOnDeath(self, source);
     }
 
 }

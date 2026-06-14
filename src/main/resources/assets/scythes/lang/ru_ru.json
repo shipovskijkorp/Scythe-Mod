@@ -104,7 +104,7 @@
   "tooltip.scythes.withering_scythe.passive": "Поглощение душ — накоплено: %s",
   "tooltip.scythes.withering_scythe.passive.desc": "При ударе: 30% шанс наложить Иссушение II на 10 секунд. За убийство моба коса получает 1 душу, за убийство игрока — 12 душ.",
   "tooltip.scythes.withering_minion": "§5ПКМ§7 — Призыв миньона",
-  "tooltip.scythes.withering_minion.desc": "ПКМ по воздуху призывает рядом визер-скелета-миньона за 10 прочности и 6 душ. Миньоны следуют за владельцем, защищают его и исчезают через 5 минут. Shift+ПКМ отзывает всех твоих миньонов.",
+  "tooltip.scythes.withering_minion.desc": "ПКМ по воздуху призывает рядом визер-скелета-миньона за 10 прочности и 6 душ. Миньоны следуют за владельцем, защищают его, пассивно восстанавливаются за прочность косы и исчезают через 15 минут. Shift+ПКМ отзывает всех твоих миньонов.",
   "tooltip.scythes.withering_aura": "%s§7 — Иссушающая аура",
   "tooltip.scythes.withering_aura.desc": "Активируется на 10 секунд, имеет перезарядку 60 секунд и стоит 100 прочности. В радиусе 5 блоков обновляет Иссушение II на 10 секунд, а твоим миньонам в радиусе 10 блоков обновляет Силу II и Скорость II на 3 секунды.",
   "tooltip.scythes.stat.souls": "Души: %s",
@@ -132,5 +132,16 @@
   "death.attack.scythes_bleeding": "%1$s истёк кровью",
   "death.attack.scythes_bleeding.player": "%1$s истёк кровью из-за %2$s",
   "death.attack.scythes_blood_pierce": "%1$s был пробит кровавой косой",
-  "death.attack.scythes_blood_pierce.player": "%1$s был пробит кровавой косой %2$s"
+  "death.attack.scythes_blood_pierce.player": "%1$s был пробит кровавой косой %2$s",
+  "advancement.scythes.money_cards_god_scythe.title": "Деньги, карты, бог косы",
+  "advancement.scythes.money_cards_god_scythe.desc": "Получи все косы и хотя бы раз активируй пассивную, активную и особую способность каждой.",
+  "advancement.scythes.super_necromancer.title": "Супер некромант",
+  "advancement.scythes.super_necromancer.desc": "Одновременно призови 10 иссушающих скелетов.",
+  "advancement.scythes.merciless.title": "Беспощадный",
+  "advancement.scythes.merciless.desc": "Убей цель, предварительно использовав на ней пассивную, активную и особую способность Кровавой косы.",
+  "advancement.scythes.impossible_intoxication.title": "Интоксикация невозможна",
+  "advancement.scythes.impossible_intoxication.desc": "При помощи Токсичной косы продержи отравление на одной цели 22 секунды.",
+  "tooltip.scythes.stat.minion_regen_delay_sec": "Регенерация после без урона: %s с",
+  "tooltip.scythes.stat.minion_regen_cost": "Цена регенерации: %s прочности за 1 HP",
+  "jei.scythes.category.toxic_essence": "Крафт токсичной эссенции"
 }

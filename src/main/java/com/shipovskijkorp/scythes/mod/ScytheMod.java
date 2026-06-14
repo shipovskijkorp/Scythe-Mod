@@ -135,6 +135,7 @@ public class ScytheMod implements ModInitializer {
 				ToxicScytheCooldowns.clear(player);
 				WitheringAuraTracker.clear(player);
 				WitheringScytheCooldowns.clear(player);
+				ScytheAdvancementTracker.clear(player);
 			});
 		});
 

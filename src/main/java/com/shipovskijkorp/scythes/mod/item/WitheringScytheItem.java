@@ -2,6 +2,7 @@ package com.shipovskijkorp.scythes.mod.item;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
 import com.shipovskijkorp.scythes.mod.ability.DamageAttributionTracker;
+import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
 import com.shipovskijkorp.scythes.mod.ability.WitheringAuraAbility;
 import com.shipovskijkorp.scythes.mod.ability.WitheringAuraTracker;
 import com.shipovskijkorp.scythes.mod.ability.WitheringMinionManager;
@@ -42,7 +43,7 @@ public class WitheringScytheItem extends SwordItem {
 
     public static final int MINION_DURABILITY_COST = 10;
     public static final int MINION_SOUL_COST = 6;
-    public static final int MAX_MINIONS = 6;
+    public static final int MAX_MINIONS = 10;
 
     public WitheringScytheItem(Settings settings) {
         super(ToolMaterials.NETHERITE, 4, -2.8F, settings);
@@ -110,6 +111,8 @@ public class WitheringScytheItem extends SwordItem {
             TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.minion_health", TooltipUtil.fmtNumber(WitheringMinionEntity.MAX_HEALTH)), Formatting.DARK_GRAY);
             TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.minion_armor", TooltipUtil.fmtNumber(WitheringMinionEntity.ARMOR)), Formatting.DARK_GRAY);
             TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.minion_lifetime_sec", TooltipUtil.fmtSecondsValue(WitheringMinionEntity.LIFETIME_TICKS)), Formatting.DARK_GRAY);
+            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.minion_regen_delay_sec", TooltipUtil.fmtSecondsValue(WitheringMinionEntity.REGEN_IDLE_TICKS)), Formatting.DARK_GRAY);
+            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.minion_regen_cost", String.valueOf(WitheringMinionEntity.REGEN_DURABILITY_COST)), Formatting.DARK_GRAY);
         }
 
         tooltip.add(Text.empty());
@@ -143,6 +146,7 @@ public class WitheringScytheItem extends SwordItem {
             ));
 
             if (attacker instanceof ServerPlayerEntity player) {
+                ScytheAdvancementTracker.markWitheringPassive(player);
                 DamageAttributionTracker.recordWithering(target, player, WITHER_TICKS);
             }
         }
@@ -191,6 +195,8 @@ public class WitheringScytheItem extends SwordItem {
 
         spendSouls(stack, MINION_SOUL_COST);
         stack.damage(MINION_DURABILITY_COST, player, p -> p.sendToolBreakStatus(hand));
+        ScytheAdvancementTracker.markWitheringSpecial(player);
+        ScytheAdvancementTracker.tryGrantSuperNecromancer(player, WitheringMinionManager.countMinions(player));
         world.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENTITY_WITHER_SKELETON_AMBIENT, SoundCategory.PLAYERS, 0.8F, 0.75F);
         player.sendMessage(Text.translatable("message.scythes.withering_minion.spawned", getSouls(stack)), true);
         return TypedActionResult.success(stack);

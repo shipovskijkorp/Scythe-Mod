@@ -21,6 +21,9 @@
 		],
 		"client": [
 			"com.shipovskijkorp.scythes.mod.client.ScytheModClient"
+		],
+		"jei_mod_plugin": [
+			"com.shipovskijkorp.scythes.mod.compat.jei.ScythesJeiPlugin"
 		]
 	},
 	"mixins": [
@@ -31,5 +34,8 @@
 		"minecraft": "~1.20.1",
 		"java": ">=17",
 		"fabric-api": "*"
+	},
+	"suggests": {
+		"jei": "*"
 	}
 }

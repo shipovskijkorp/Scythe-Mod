@@ -104,7 +104,7 @@
   "tooltip.scythes.withering_scythe.passive": "Soul Harvest — stored: %s",
   "tooltip.scythes.withering_scythe.passive.desc": "On hit: 30% chance to inflict Wither II for 10 seconds. Killing a mob stores 1 soul; killing a player stores 12 souls.",
   "tooltip.scythes.withering_minion": "§5Right Click§7 — Summon Minion",
-  "tooltip.scythes.withering_minion.desc": "Right click in the air summons a nearby wither-skeleton minion for 10 durability and 6 souls. Minions follow their owner, defend them, and vanish after 5 minutes. Shift+right click dismisses all of your minions.",
+  "tooltip.scythes.withering_minion.desc": "Right click in the air summons a nearby wither-skeleton minion for 10 durability and 6 souls. Minions follow their owner, defend them, passively regenerate by consuming scythe durability, and vanish after 15 minutes. Shift+right click dismisses all of your minions.",
   "tooltip.scythes.withering_aura": "%s§7 — Withering Aura",
   "tooltip.scythes.withering_aura.desc": "Activates for 10 seconds with a 60-second cooldown and costs 100 durability. Within 5 blocks it refreshes Wither II for 10 seconds, while your minions within 10 blocks receive refreshed Strength II and Speed II for 3 seconds.",
   "tooltip.scythes.stat.souls": "Souls: %s",
@@ -132,5 +132,16 @@
   "death.attack.scythes_bleeding": "%1$s bled out",
   "death.attack.scythes_bleeding.player": "%1$s bled out because of %2$s",
   "death.attack.scythes_blood_pierce": "%1$s was pierced by blood magic",
-  "death.attack.scythes_blood_pierce.player": "%1$s was pierced by %2$s's blood magic"
+  "death.attack.scythes_blood_pierce.player": "%1$s was pierced by %2$s's blood magic",
+  "advancement.scythes.money_cards_god_scythe.title": "Money, Cards, God of Scythes",
+  "advancement.scythes.money_cards_god_scythe.desc": "Obtain every scythe and trigger each scythe passive, active, and special ability at least once.",
+  "advancement.scythes.super_necromancer.title": "Super Necromancer",
+  "advancement.scythes.super_necromancer.desc": "Summon 10 withering skeletons at the same time.",
+  "advancement.scythes.merciless.title": "Merciless",
+  "advancement.scythes.merciless.desc": "Kill a target after using the Bloody Scythe passive, active, and special ability on it.",
+  "advancement.scythes.impossible_intoxication.title": "Intoxication Impossible",
+  "advancement.scythes.impossible_intoxication.desc": "Use the Toxic Scythe to keep one target poisoned for 22 seconds.",
+  "tooltip.scythes.stat.minion_regen_delay_sec": "Regeneration after no damage: %s s",
+  "tooltip.scythes.stat.minion_regen_cost": "Regeneration cost: %s durability per 1 HP",
+  "jei.scythes.category.toxic_essence": "Toxic Essence Crafting"
 }

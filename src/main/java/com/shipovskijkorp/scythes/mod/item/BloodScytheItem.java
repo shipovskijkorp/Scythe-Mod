@@ -6,6 +6,7 @@ import com.shipovskijkorp.scythes.mod.ability.BloodHarvestTracker;
 import com.shipovskijkorp.scythes.mod.ability.BloodScytheCooldowns;
 import com.shipovskijkorp.scythes.mod.ability.BloodScytheVampirism;
 import com.shipovskijkorp.scythes.mod.ability.DamageAttributionTracker;
+import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
 import com.shipovskijkorp.scythes.mod.client.TooltipUtil;
 import com.shipovskijkorp.scythes.mod.effect.BleedingEffect;
 import net.fabricmc.api.EnvType;
@@ -282,6 +283,7 @@ public class BloodScytheItem extends SwordItem {
         }
 
         for (LivingEntity target : targets) {
+            ScytheAdvancementTracker.markBloodSpecial(player, target);
             pullTowardPlayer(player, target);
             float damage = calculateBlenderDamage(stack, target);
             target.damage(player.getDamageSources().playerAttack(player), damage);
@@ -402,6 +404,7 @@ public class BloodScytheItem extends SwordItem {
         ));
 
         if (attacker instanceof ServerPlayerEntity player) {
+            ScytheAdvancementTracker.markBloodPassive(player, target);
             DamageAttributionTracker.recordBleeding(target, player, duration);
         }
 

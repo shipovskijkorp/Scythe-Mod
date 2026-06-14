@@ -1,5 +1,6 @@
 package com.shipovskijkorp.scythes.mod.item;
 
+import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
 import com.shipovskijkorp.scythes.mod.ability.ToxicAuraAbility;
 import com.shipovskijkorp.scythes.mod.ability.ToxicAuraTracker;
 import com.shipovskijkorp.scythes.mod.ability.ToxicScytheCooldowns;
@@ -202,12 +203,24 @@ public class ToxicScytheItem extends SwordItem {
     @Override
     public boolean postHit(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         if (!attacker.getWorld().isClient) {
+            ServerPlayerEntity player = attacker instanceof ServerPlayerEntity serverPlayer ? serverPlayer : null;
+            boolean passiveTriggered = false;
+
             if (attacker.getRandom().nextDouble() < PASSIVE_ARMOR_DAMAGE_CHANCE) {
                 ScytheCombatUtil.damageArmorSet(target, PASSIVE_ARMOR_DAMAGE);
+                passiveTriggered = true;
             }
 
             if (attacker.getRandom().nextDouble() < PASSIVE_POISON_CHANCE) {
                 ScytheCombatUtil.refreshStatus(target, StatusEffects.POISON, PASSIVE_POISON_TICKS, PASSIVE_POISON_AMPLIFIER);
+                if (player != null) {
+                    ScytheAdvancementTracker.recordToxicPoison(player, target, PASSIVE_POISON_TICKS);
+                }
+                passiveTriggered = true;
+            }
+
+            if (player != null && passiveTriggered) {
+                ScytheAdvancementTracker.markToxicPassive(player);
             }
         }
 
@@ -244,6 +257,7 @@ public class ToxicScytheItem extends SwordItem {
 
         stack.damage(ORB_DURABILITY_COST, player, p -> p.sendToolBreakStatus(hand));
         ToxicScytheCooldowns.setOrbCooldown(player, ORB_COOLDOWN_TICKS);
+        ScytheAdvancementTracker.markToxicSpecial(player);
 
         world.playSound(
                 null,

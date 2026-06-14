@@ -76,6 +76,7 @@ public final class ToxicAuraTracker {
 
         for (LivingEntity target : targets) {
             ScytheCombatUtil.refreshStatus(target, StatusEffects.POISON, POISON_TICKS, POISON_AMPLIFIER);
+            ScytheAdvancementTracker.recordToxicPoison(player, target, POISON_TICKS);
             ScytheCombatUtil.damageArmorSet(target, ARMOR_DAMAGE_PER_TICK);
 
             if (player.getRandom().nextDouble() < PURE_DAMAGE_CHANCE) {
