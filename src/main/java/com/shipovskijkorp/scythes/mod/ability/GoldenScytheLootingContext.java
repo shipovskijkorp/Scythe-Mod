@@ -1,0 +1,38 @@
+package com.shipovskijkorp.scythes.mod.ability;
+
+import com.shipovskijkorp.scythes.mod.item.GoldenScytheItem;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.server.network.ServerPlayerEntity;
+
+public final class GoldenScytheLootingContext {
+
+    private GoldenScytheLootingContext() {
+    }
+
+    private static final ThreadLocal<LivingEntity> CURRENT_LOOT_TARGET = new ThreadLocal<>();
+
+    public static void enter(LivingEntity target) {
+        CURRENT_LOOT_TARGET.set(target);
+    }
+
+    public static void exit() {
+        CURRENT_LOOT_TARGET.remove();
+    }
+
+    public static int getLootingBonus(LivingEntity looter) {
+        if (!(looter instanceof ServerPlayerEntity player)) return 0;
+
+        int bonus = 0;
+        if (GoldenScytheItem.hasGoldenScythe(player)) {
+            bonus += GoldenScytheItem.PASSIVE_LOOTING_BONUS;
+            ScytheAdvancementTracker.markGoldenPassive(player);
+        }
+
+        LivingEntity target = CURRENT_LOOT_TARGET.get();
+        if (target != null && GoldenLootMarkTracker.isMarkedBy(target, player)) {
+            bonus += GoldenLootMarkTracker.MARK_LOOTING_BONUS;
+        }
+
+        return bonus;
+    }
+}

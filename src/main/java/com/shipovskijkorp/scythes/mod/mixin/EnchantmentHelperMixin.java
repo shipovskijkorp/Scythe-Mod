@@ -1,8 +1,10 @@
 package com.shipovskijkorp.scythes.mod.mixin;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.ability.GoldenScytheLootingContext;
 import net.minecraft.enchantment.EnchantmentLevelEntry;
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import java.util.List;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,4 +27,13 @@ public abstract class EnchantmentHelperMixin {
 
         cir.setReturnValue(filtered);
     }
+
+    @Inject(method = "getLooting", at = @At("RETURN"), cancellable = true)
+    private static void scythes$addGoldenScytheLooting(LivingEntity entity, CallbackInfoReturnable<Integer> cir) {
+        int bonus = GoldenScytheLootingContext.getLootingBonus(entity);
+        if (bonus > 0) {
+            cir.setReturnValue(cir.getReturnValue() + bonus);
+        }
+    }
+
 }

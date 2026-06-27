@@ -2,6 +2,8 @@ package com.shipovskijkorp.scythes.mod.mixin;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
 import com.shipovskijkorp.scythes.mod.ability.BloodScytheVampirism;
+import com.shipovskijkorp.scythes.mod.ability.GoldenLootMarkTracker;
+import com.shipovskijkorp.scythes.mod.ability.GoldenScytheLootingContext;
 import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
 import com.shipovskijkorp.scythes.mod.ability.WitheringSoulHandler;
 import com.shipovskijkorp.scythes.mod.item.BloodScytheItem;
@@ -117,6 +119,24 @@ public abstract class LivingEntityMixin {
         if (self.getWorld().isClient) return;
         WitheringSoulHandler.tryAwardTrackedWitheringDeath(self, source);
         ScytheAdvancementTracker.tryGrantMercilessOnDeath(self, source);
+    }
+
+
+    @Inject(method = "dropLoot", at = @At("HEAD"))
+    private void scythes$enterGoldenLootingContext(DamageSource source, boolean causedByPlayer, CallbackInfo ci) {
+        GoldenScytheLootingContext.enter((LivingEntity) (Object) this);
+    }
+
+    @Inject(method = "dropLoot", at = @At("RETURN"))
+    private void scythes$exitGoldenLootingContext(DamageSource source, boolean causedByPlayer, CallbackInfo ci) {
+        GoldenScytheLootingContext.exit();
+    }
+
+    @Inject(method = "onDeath", at = @At("RETURN"))
+    private void scythes$clearGoldenLootMark(DamageSource source, CallbackInfo ci) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (self.getWorld().isClient) return;
+        GoldenLootMarkTracker.clear(self);
     }
 
 }

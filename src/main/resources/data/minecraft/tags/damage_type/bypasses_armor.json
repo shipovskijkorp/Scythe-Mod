@@ -2,6 +2,7 @@
   "replace": false,
   "values": [
     "scythes:bleeding",
-    "scythes:blood_pierce"
+    "scythes:blood_pierce",
+    "scythes:midas_touch"
   ]
 }

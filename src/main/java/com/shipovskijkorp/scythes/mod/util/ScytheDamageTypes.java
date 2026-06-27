@@ -21,6 +21,11 @@ public final class ScytheDamageTypes {
             new Identifier(ScytheMod.MOD_ID, "blood_pierce")
     );
 
+    public static final RegistryKey<DamageType> MIDAS_TOUCH = RegistryKey.of(
+            RegistryKeys.DAMAGE_TYPE,
+            new Identifier(ScytheMod.MOD_ID, "midas_touch")
+    );
+
     private ScytheDamageTypes() {
     }
 
@@ -34,5 +39,9 @@ public final class ScytheDamageTypes {
 
     public static DamageSource bloodPierce(World world, Entity attacker) {
         return world.getDamageSources().create(BLOOD_PIERCE, attacker, attacker);
+    }
+
+    public static DamageSource midasTouch(World world, Entity attacker) {
+        return world.getDamageSources().create(MIDAS_TOUCH, attacker, attacker);
     }
 }

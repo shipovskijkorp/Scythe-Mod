@@ -78,6 +78,27 @@
     },
     "withering_special": {
       "trigger": "minecraft:impossible"
+    },
+    "has_golden_scythe": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "scythes:golden_scythe"
+            ]
+          }
+        ]
+      }
+    },
+    "golden_passive": {
+      "trigger": "minecraft:impossible"
+    },
+    "golden_active": {
+      "trigger": "minecraft:impossible"
+    },
+    "golden_special": {
+      "trigger": "minecraft:impossible"
     }
   },
   "requirements": [
@@ -116,6 +137,18 @@
     ],
     [
       "withering_special"
+    ],
+    [
+      "has_golden_scythe"
+    ],
+    [
+      "golden_passive"
+    ],
+    [
+      "golden_active"
+    ],
+    [
+      "golden_special"
     ]
   ]
 }

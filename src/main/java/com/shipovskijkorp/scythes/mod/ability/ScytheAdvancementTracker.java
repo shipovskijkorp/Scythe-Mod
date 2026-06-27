@@ -33,6 +33,9 @@ public final class ScytheAdvancementTracker {
     private static final String CRITERION_WITHERING_PASSIVE = "withering_passive";
     private static final String CRITERION_WITHERING_ACTIVE = "withering_active";
     private static final String CRITERION_WITHERING_SPECIAL = "withering_special";
+    private static final String CRITERION_GOLDEN_PASSIVE = "golden_passive";
+    private static final String CRITERION_GOLDEN_ACTIVE = "golden_active";
+    private static final String CRITERION_GOLDEN_SPECIAL = "golden_special";
 
     private static final int BLOOD_SKILL_PASSIVE = 1;
     private static final int BLOOD_SKILL_ACTIVE = 1 << 1;
@@ -81,6 +84,18 @@ public final class ScytheAdvancementTracker {
 
     public static void markWitheringSpecial(ServerPlayerEntity player) {
         grantMasteryCriterion(player, CRITERION_WITHERING_SPECIAL);
+    }
+
+    public static void markGoldenPassive(ServerPlayerEntity player) {
+        grantMasteryCriterion(player, CRITERION_GOLDEN_PASSIVE);
+    }
+
+    public static void markGoldenActive(ServerPlayerEntity player) {
+        grantMasteryCriterion(player, CRITERION_GOLDEN_ACTIVE);
+    }
+
+    public static void markGoldenSpecial(ServerPlayerEntity player) {
+        grantMasteryCriterion(player, CRITERION_GOLDEN_SPECIAL);
     }
 
     public static void recordToxicPoison(ServerPlayerEntity player, LivingEntity target, int durationTicks) {
