@@ -23,6 +23,7 @@ public final class ScytheAdvancementTracker {
     private static final String SUPER_NECROMANCER_ADVANCEMENT = "super_necromancer";
     private static final String MERCILESS_ADVANCEMENT = "merciless";
     private static final String IMPOSSIBLE_INTOXICATION_ADVANCEMENT = "impossible_intoxication";
+    private static final String THREE_DAYS_RAIN_ADVANCEMENT = "three_days_rain";
 
     private static final String CRITERION_BLOOD_PASSIVE = "blood_passive";
     private static final String CRITERION_BLOOD_ACTIVE = "blood_active";
@@ -92,6 +93,9 @@ public final class ScytheAdvancementTracker {
 
     public static void markGoldenActive(ServerPlayerEntity player) {
         grantMasteryCriterion(player, CRITERION_GOLDEN_ACTIVE);
+        if (GoldenRainDimensionDayTracker.recordActivation(player)) {
+            grantCriterion(player, THREE_DAYS_RAIN_ADVANCEMENT, "activate_in_three_dimension_days");
+        }
     }
 
     public static void markGoldenSpecial(ServerPlayerEntity player) {

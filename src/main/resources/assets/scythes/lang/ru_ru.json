@@ -169,10 +169,12 @@
   "message.scythes.golden_rain.no_scythe": "Нужно держать Золотую косу в руке",
   "message.scythes.golden_rain.no_targets": "Поблизости нет целей для Золотого дождя",
   "message.scythes.golden_rain.success": "Золотой дождь отметил целей: %s",
-  "advancement.scythes.golden_essence.title": "Слиток судьбы",
+  "advancement.scythes.golden_essence.title": "Лучше чем подкова",
   "advancement.scythes.golden_essence.desc": "Получи Золотую эссенцию",
   "advancement.scythes.craft_golden.title": "Благословение Мидаса",
   "advancement.scythes.craft_golden.desc": "Создай Золотую косу",
+  "advancement.scythes.three_days_rain.title": "Три дня дождя",
+  "advancement.scythes.three_days_rain.desc": "Активируй Золотой дождь в трёх разных измерениях и в три разных игровых дня.",
   "death.attack.scythes_midas_touch": "%1$s был обращён в золото",
   "death.attack.scythes_midas_touch.player": "%1$s был обращён в золото касанием %2$s"
 }

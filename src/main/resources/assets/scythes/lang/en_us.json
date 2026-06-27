@@ -169,10 +169,12 @@
   "message.scythes.golden_rain.no_scythe": "You must hold the Golden Scythe",
   "message.scythes.golden_rain.no_targets": "No valid targets nearby for Golden Rain",
   "message.scythes.golden_rain.success": "Golden Rain marked targets: %s",
-  "advancement.scythes.golden_essence.title": "Ingot of Fate",
+  "advancement.scythes.golden_essence.title": "Better Than a Horseshoe",
   "advancement.scythes.golden_essence.desc": "Obtain Golden Essence",
   "advancement.scythes.craft_golden.title": "Blessing of Midas",
   "advancement.scythes.craft_golden.desc": "Craft the Golden Scythe",
+  "advancement.scythes.three_days_rain.title": "Three Days of Rain",
+  "advancement.scythes.three_days_rain.desc": "Activate Golden Rain in three different dimensions across three different in-game days.",
   "death.attack.scythes_midas_touch": "%1$s was turned to gold",
   "death.attack.scythes_midas_touch.player": "%1$s was turned to gold by %2$s's touch"
 }
