@@ -2,6 +2,7 @@ package com.shipovskijkorp.scythes.mod.entity;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
 import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
+import com.shipovskijkorp.scythes.mod.item.ToxicScytheItem;
 import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -10,6 +11,7 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.projectile.thrown.ThrownItemEntity;
 import net.minecraft.item.Item;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.particle.ParticleTypes;
@@ -26,20 +28,36 @@ public class ToxicOrbEntity extends ThrownItemEntity {
     public static final int POISON_TICKS = 20 * 10;
     public static final int POISON_AMPLIFIER = 1;
     public static final int ARMOR_DAMAGE = 30;
+    private static final String ACIDITY_LEVEL_KEY = "AcidityLevel";
+
+    private int acidityLevel;
 
     public ToxicOrbEntity(EntityType<? extends ToxicOrbEntity> entityType, World world) {
         super(entityType, world);
         setNoGravity(true);
     }
 
-    public ToxicOrbEntity(World world, LivingEntity owner) {
+    public ToxicOrbEntity(World world, LivingEntity owner, int acidityLevel) {
         super(ScytheMod.TOXIC_ORB, owner, world);
+        this.acidityLevel = Math.max(0, Math.min(3, acidityLevel));
         setNoGravity(true);
     }
 
     @Override
     protected Item getDefaultItem() {
         return Items.SLIME_BALL;
+    }
+
+    @Override
+    public void writeCustomDataToNbt(NbtCompound nbt) {
+        super.writeCustomDataToNbt(nbt);
+        nbt.putInt(ACIDITY_LEVEL_KEY, acidityLevel);
+    }
+
+    @Override
+    public void readCustomDataFromNbt(NbtCompound nbt) {
+        super.readCustomDataFromNbt(nbt);
+        acidityLevel = Math.max(0, Math.min(3, nbt.getInt(ACIDITY_LEVEL_KEY)));
     }
 
     @Override
@@ -96,7 +114,8 @@ public class ToxicOrbEntity extends ThrownItemEntity {
             if (playerOwner != null) {
                 ScytheAdvancementTracker.recordToxicPoison(playerOwner, target, POISON_TICKS);
             }
-            ScytheCombatUtil.damageArmorSet(target, ARMOR_DAMAGE);
+            int armorDamage = ToxicScytheItem.applyAcidityArmorDamageBonus(ARMOR_DAMAGE, acidityLevel, target.getRandom());
+            ScytheCombatUtil.damageArmorSet(target, armorDamage);
         }
     }
 }

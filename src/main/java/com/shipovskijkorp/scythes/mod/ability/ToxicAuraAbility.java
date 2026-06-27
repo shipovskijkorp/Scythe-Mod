@@ -45,7 +45,7 @@ public final class ToxicAuraAbility {
             stack.damage(AURA_DURABILITY_COST, player, p -> p.sendToolBreakStatus(hand));
         }
 
-        int auraTicks = ToxicAuraTracker.start(player);
+        int auraTicks = ToxicAuraTracker.start(player, stack);
         ToxicAuraHudS2CPacket.sendTicks(player, auraTicks);
         ToxicScytheCooldowns.setAuraCooldown(player, AURA_COOLDOWN_TICKS);
         ScytheAdvancementTracker.markToxicActive(player);

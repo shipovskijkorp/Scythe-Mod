@@ -1,5 +1,6 @@
 package com.shipovskijkorp.scythes.mod.item;
 
+import com.shipovskijkorp.scythes.mod.ScytheMod;
 import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
 import com.shipovskijkorp.scythes.mod.ability.ToxicAuraAbility;
 import com.shipovskijkorp.scythes.mod.ability.ToxicAuraTracker;
@@ -11,6 +12,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.item.TooltipContext;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
@@ -23,6 +25,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
+import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,6 +38,7 @@ public class ToxicScytheItem extends SwordItem {
     public static final double PASSIVE_POISON_CHANCE = 0.25D;
     public static final int PASSIVE_POISON_TICKS = 20 * 2;
     public static final int PASSIVE_POISON_AMPLIFIER = 1;
+    public static final double ACIDITY_ARMOR_DAMAGE_BONUS_PER_LEVEL = 0.11D;
 
     public static final int ORB_COOLDOWN_TICKS = 20 * 5;
     public static final int ORB_DURABILITY_COST = 20;
@@ -207,7 +211,8 @@ public class ToxicScytheItem extends SwordItem {
             boolean passiveTriggered = false;
 
             if (attacker.getRandom().nextDouble() < PASSIVE_ARMOR_DAMAGE_CHANCE) {
-                ScytheCombatUtil.damageArmorSet(target, PASSIVE_ARMOR_DAMAGE);
+                int armorDamage = applyAcidityArmorDamageBonus(PASSIVE_ARMOR_DAMAGE, getAcidityLevel(stack), attacker.getRandom());
+                ScytheCombatUtil.damageArmorSet(target, armorDamage);
                 passiveTriggered = true;
             }
 
@@ -250,7 +255,7 @@ public class ToxicScytheItem extends SwordItem {
             return TypedActionResult.fail(stack);
         }
 
-        ToxicOrbEntity orb = new ToxicOrbEntity(world, player);
+        ToxicOrbEntity orb = new ToxicOrbEntity(world, player, getAcidityLevel(stack));
         orb.refreshPositionAndAngles(player.getX(), player.getEyeY() - 0.15D, player.getZ(), player.getYaw(), player.getPitch());
         orb.setVelocity(player, player.getPitch(), player.getYaw(), 0.0F, ORB_SPEED, 0.0F);
         world.spawnEntity(orb);
@@ -271,6 +276,25 @@ public class ToxicScytheItem extends SwordItem {
         );
 
         return TypedActionResult.success(stack);
+    }
+
+
+    public static int getAcidityLevel(ItemStack stack) {
+        return Math.max(0, Math.min(3, EnchantmentHelper.getLevel(ScytheMod.ACIDITY, stack)));
+    }
+
+    public static int applyAcidityArmorDamageBonus(int baseAmount, int acidityLevel, Random random) {
+        if (baseAmount <= 0) return 0;
+        int level = Math.max(0, Math.min(3, acidityLevel));
+        if (level <= 0) return baseAmount;
+
+        double exactAmount = baseAmount * (1.0D + ACIDITY_ARMOR_DAMAGE_BONUS_PER_LEVEL * level);
+        int amount = (int) Math.floor(exactAmount);
+        double fractional = exactAmount - amount;
+        if (random != null && fractional > 0.0D && random.nextDouble() < fractional) {
+            amount++;
+        }
+        return Math.max(baseAmount, amount);
     }
 
     public static boolean hasEnoughDurability(ItemStack stack, int cost) {

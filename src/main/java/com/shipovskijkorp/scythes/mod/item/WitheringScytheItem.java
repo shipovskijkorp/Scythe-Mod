@@ -12,6 +12,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.item.TooltipContext;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
@@ -43,7 +44,7 @@ public class WitheringScytheItem extends SwordItem {
 
     public static final int MINION_DURABILITY_COST = 10;
     public static final int MINION_SOUL_COST = 6;
-    public static final int MAX_MINIONS = 10;
+    public static final int BASE_MAX_MINIONS = 6;
 
     public WitheringScytheItem(Settings settings) {
         super(ToolMaterials.NETHERITE, 4, -2.8F, settings);
@@ -107,7 +108,7 @@ public class WitheringScytheItem extends SwordItem {
         } else {
             TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.durability_cost", String.valueOf(MINION_DURABILITY_COST)), Formatting.GRAY);
             TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.soul_cost", String.valueOf(MINION_SOUL_COST)), Formatting.GRAY);
-            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.minion_cap", String.valueOf(MAX_MINIONS)), Formatting.GRAY);
+            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.minion_cap", String.valueOf(getMaxMinions(stack))), Formatting.GRAY);
             TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.minion_health", TooltipUtil.fmtNumber(WitheringMinionEntity.MAX_HEALTH)), Formatting.DARK_GRAY);
             TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.minion_armor", TooltipUtil.fmtNumber(WitheringMinionEntity.ARMOR)), Formatting.DARK_GRAY);
             TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.minion_lifetime_sec", TooltipUtil.fmtSecondsValue(WitheringMinionEntity.LIFETIME_TICKS)), Formatting.DARK_GRAY);
@@ -172,9 +173,10 @@ public class WitheringScytheItem extends SwordItem {
             return TypedActionResult.success(stack);
         }
 
+        int maxMinions = getMaxMinions(stack);
         int ownedMinions = WitheringMinionManager.countMinions(player);
-        if (ownedMinions >= MAX_MINIONS) {
-            player.sendMessage(Text.translatable("message.scythes.withering_minion.cap", MAX_MINIONS), true);
+        if (ownedMinions >= maxMinions) {
+            player.sendMessage(Text.translatable("message.scythes.withering_minion.cap", maxMinions), true);
             return TypedActionResult.fail(stack);
         }
 
@@ -200,6 +202,21 @@ public class WitheringScytheItem extends SwordItem {
         world.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENTITY_WITHER_SKELETON_AMBIENT, SoundCategory.PLAYERS, 0.8F, 0.75F);
         player.sendMessage(Text.translatable("message.scythes.withering_minion.spawned", getSouls(stack)), true);
         return TypedActionResult.success(stack);
+    }
+
+
+    public static int getMaxMinions(ItemStack stack) {
+        return BASE_MAX_MINIONS + getAdditionalSlotBonus(stack);
+    }
+
+    public static int getAdditionalSlotBonus(ItemStack stack) {
+        int level = EnchantmentHelper.getLevel(ScytheMod.ADDITIONAL_SLOT, stack);
+        return switch (level) {
+            case 1 -> 1;
+            case 2 -> 2;
+            case 3 -> 4;
+            default -> 0;
+        };
     }
 
     public static int getSouls(ItemStack stack) {

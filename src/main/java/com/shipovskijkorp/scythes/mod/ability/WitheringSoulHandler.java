@@ -1,10 +1,12 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
+import com.shipovskijkorp.scythes.mod.ScytheMod;
 import com.shipovskijkorp.scythes.mod.entity.WitheringMinionEntity;
 import com.shipovskijkorp.scythes.mod.item.WitheringScytheItem;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityCombatEvents;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -56,6 +58,9 @@ public final class WitheringSoulHandler {
         int amount = killedEntity instanceof ServerPlayerEntity
                 ? WitheringScytheItem.SOULS_PER_PLAYER_KILL
                 : WitheringScytheItem.SOULS_PER_MOB_KILL;
+        if (EnchantmentHelper.getLevel(ScytheMod.SOUL_SIPHON, scythe) > 0 && owner.getRandom().nextDouble() < 0.5D) {
+            amount *= 2;
+        }
         WitheringScytheItem.addSouls(scythe, amount);
     }
 

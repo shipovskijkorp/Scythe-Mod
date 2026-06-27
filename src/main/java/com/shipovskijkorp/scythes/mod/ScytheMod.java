@@ -3,6 +3,9 @@ package com.shipovskijkorp.scythes.mod;
 import com.shipovskijkorp.scythes.mod.ability.*;
 import com.shipovskijkorp.scythes.mod.effect.BleedingEffect;
 import com.shipovskijkorp.scythes.mod.effect.NoJumpEffect;
+import com.shipovskijkorp.scythes.mod.enchantment.AcidityEnchantment;
+import com.shipovskijkorp.scythes.mod.enchantment.AdditionalSlotEnchantment;
+import com.shipovskijkorp.scythes.mod.enchantment.SoulSiphonEnchantment;
 import com.shipovskijkorp.scythes.mod.enchantment.SpikedBladeEnchantment;
 import com.shipovskijkorp.scythes.mod.entity.ToxicOrbEntity;
 import com.shipovskijkorp.scythes.mod.entity.WitheringMinionEntity;
@@ -83,6 +86,9 @@ public class ScytheMod implements ModInitializer {
 	public static final StatusEffect NO_JUMP = new NoJumpEffect();
 
 	public static final Enchantment SPIKED_BLADE = new SpikedBladeEnchantment();
+	public static final Enchantment ADDITIONAL_SLOT = new AdditionalSlotEnchantment();
+	public static final Enchantment SOUL_SIPHON = new SoulSiphonEnchantment();
+	public static final Enchantment ACIDITY = new AcidityEnchantment();
 
 	@Override
 	public void onInitialize() {
@@ -105,6 +111,9 @@ public class ScytheMod implements ModInitializer {
 		Registry.register(Registries.STATUS_EFFECT, new Identifier(MOD_ID, "no_jump"), NO_JUMP);
 
 		Registry.register(Registries.ENCHANTMENT, new Identifier(MOD_ID, "spiked_blade"), SPIKED_BLADE);
+		Registry.register(Registries.ENCHANTMENT, new Identifier(MOD_ID, "additional_slot"), ADDITIONAL_SLOT);
+		Registry.register(Registries.ENCHANTMENT, new Identifier(MOD_ID, "soul_siphon"), SOUL_SIPHON);
+		Registry.register(Registries.ENCHANTMENT, new Identifier(MOD_ID, "acidity"), ACIDITY);
 
 		SCYTHE_ITEM_GROUP = Registry.register(
 				Registries.ITEM_GROUP,

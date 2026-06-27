@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "scythes:bloody_scythe",
+    "scythes:toxic_scythe",
+    "scythes:withering_scythe",
+    "scythes:golden_scythe",
+    "scythes:plague_scythe"
+  ]
+}
