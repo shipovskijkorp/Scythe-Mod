@@ -99,6 +99,27 @@
     },
     "golden_special": {
       "trigger": "minecraft:impossible"
+    },
+    "has_frozen_scythe": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "scythes:frozen_scythe"
+            ]
+          }
+        ]
+      }
+    },
+    "frozen_passive": {
+      "trigger": "minecraft:impossible"
+    },
+    "frozen_active": {
+      "trigger": "minecraft:impossible"
+    },
+    "frozen_special": {
+      "trigger": "minecraft:impossible"
     }
   },
   "requirements": [
@@ -149,6 +170,18 @@
     ],
     [
       "golden_special"
+    ],
+    [
+      "has_frozen_scythe"
+    ],
+    [
+      "frozen_passive"
+    ],
+    [
+      "frozen_active"
+    ],
+    [
+      "frozen_special"
     ]
   ]
 }

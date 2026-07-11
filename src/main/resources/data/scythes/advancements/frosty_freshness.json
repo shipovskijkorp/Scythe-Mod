@@ -1,0 +1,32 @@
+{
+  "parent": "scythes:cold_heart",
+  "display": {
+    "icon": {
+      "item": "scythes:frozen_essence"
+    },
+    "title": {
+      "translate": "advancement.scythes.frosty_freshness.title"
+    },
+    "description": {
+      "translate": "advancement.scythes.frosty_freshness.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "get_frozen_essence": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "scythes:frozen_essence"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,6 +1,7 @@
 package com.shipovskijkorp.scythes.mod.entity;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
 import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -9,6 +10,7 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.hit.BlockHitResult;
@@ -64,6 +66,9 @@ public final class IceSpikeEntity extends PersistentProjectileEntity {
                     true,
                     true
             ));
+            if (owner instanceof ServerPlayerEntity playerOwner) {
+                ScytheAdvancementTracker.markFrozenSpecial(playerOwner);
+            }
         }
 
         playImpactSound();

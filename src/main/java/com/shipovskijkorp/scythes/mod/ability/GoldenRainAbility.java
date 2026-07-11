@@ -15,7 +15,7 @@ public final class GoldenRainAbility {
 
     public static final double RADIUS = 20.0D;
     public static final int COOLDOWN_TICKS = 20 * 150;
-    public static final int DURABILITY_COST = 200;
+    public static final int DURABILITY_COST = 100;
 
     public static void tryActivate(ServerPlayerEntity player) {
         Hand hand = GoldenScytheItem.getHeldGoldenScytheHand(player);

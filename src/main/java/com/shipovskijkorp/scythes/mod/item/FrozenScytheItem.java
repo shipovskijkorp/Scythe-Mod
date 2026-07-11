@@ -3,6 +3,7 @@ package com.shipovskijkorp.scythes.mod.item;
 import com.shipovskijkorp.scythes.mod.ScytheMod;
 import com.shipovskijkorp.scythes.mod.ability.FrozenScytheCooldowns;
 import com.shipovskijkorp.scythes.mod.ability.FrozenStormAbility;
+import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
 import com.shipovskijkorp.scythes.mod.client.TooltipUtil;
 import com.shipovskijkorp.scythes.mod.entity.IceSpikeEntity;
 import net.fabricmc.api.EnvType;
@@ -189,6 +190,9 @@ public class FrozenScytheItem extends SwordItem {
                     COLD_MASTER_FREEZING_TICKS,
                     0
             ));
+            if (attacker instanceof ServerPlayerEntity player) {
+                ScytheAdvancementTracker.markFrozenPassive(player);
+            }
         }
 
         return result;

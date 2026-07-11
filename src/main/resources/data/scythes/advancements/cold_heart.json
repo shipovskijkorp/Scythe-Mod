@@ -1,0 +1,32 @@
+{
+  "parent": "scythes:root",
+  "display": {
+    "icon": {
+      "item": "scythes:frozen_heart"
+    },
+    "title": {
+      "translate": "advancement.scythes.cold_heart.title"
+    },
+    "description": {
+      "translate": "advancement.scythes.cold_heart.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "get_frozen_heart": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "scythes:frozen_heart"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

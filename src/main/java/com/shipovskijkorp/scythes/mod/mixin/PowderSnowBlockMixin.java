@@ -1,9 +1,11 @@
 package com.shipovskijkorp.scythes.mod.mixin;
 
+import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
 import com.shipovskijkorp.scythes.mod.item.FrozenScytheItem;
 import net.minecraft.block.PowderSnowBlock;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.server.network.ServerPlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -18,6 +20,9 @@ public abstract class PowderSnowBlockMixin {
             CallbackInfoReturnable<Boolean> cir
     ) {
         if (entity instanceof PlayerEntity player && FrozenScytheItem.isInPlayerInventory(player)) {
+            if (player instanceof ServerPlayerEntity serverPlayer) {
+                ScytheAdvancementTracker.markFrozenPassive(serverPlayer);
+            }
             cir.setReturnValue(true);
         }
     }

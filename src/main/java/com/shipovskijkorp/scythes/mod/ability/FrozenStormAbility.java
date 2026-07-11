@@ -98,6 +98,7 @@ public final class FrozenStormAbility {
 
         stack.damage(DURABILITY_COST, player, p -> p.sendToolBreakStatus(hand));
         FrozenScytheCooldowns.setStormCooldown(player, COOLDOWN_TICKS);
+        ScytheAdvancementTracker.markFrozenActive(player);
 
         player.getWorld().playSound(
                 null,

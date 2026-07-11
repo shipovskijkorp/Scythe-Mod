@@ -1,0 +1,30 @@
+{
+  "parent": "scythes:cold_heart",
+  "display": {
+    "icon": {
+      "item": "scythes:frozen_heart"
+    },
+    "title": {
+      "translate": "advancement.scythes.ice_cream.title"
+    },
+    "description": {
+      "translate": "advancement.scythes.ice_cream.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "eat_frozen_heart": {
+      "trigger": "minecraft:consume_item",
+      "conditions": {
+        "item": {
+          "items": [
+            "scythes:frozen_heart"
+          ]
+        }
+      }
+    }
+  }
+}
