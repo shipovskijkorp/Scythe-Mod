@@ -11,6 +11,7 @@ import com.shipovskijkorp.scythes.mod.entity.ToxicOrbEntity;
 import com.shipovskijkorp.scythes.mod.entity.WitheringMinionEntity;
 import com.shipovskijkorp.scythes.mod.item.BloodScytheItem;
 import com.shipovskijkorp.scythes.mod.item.GoldenScytheItem;
+import com.shipovskijkorp.scythes.mod.item.FrozenScytheItem;
 import com.shipovskijkorp.scythes.mod.item.ToxicScytheItem;
 import com.shipovskijkorp.scythes.mod.item.WitheringScytheItem;
 import com.shipovskijkorp.scythes.mod.network.ScytheAbilityC2SPacket;
@@ -53,6 +54,7 @@ public class ScytheMod implements ModInitializer {
 	public static final Item PLAGUE_SCYTHE = new SwordItem(ToolMaterials.NETHERITE, 4, -2.8F, new Item.Settings().maxCount(1).fireproof());
 	public static final Item WITHERING_SCYTHE = new WitheringScytheItem(new Item.Settings().maxCount(1).fireproof());
 	public static final Item GOLDEN_SCYTHE = new GoldenScytheItem(new Item.Settings().maxCount(1).fireproof());
+	public static final Item FROZEN_SCYTHE = new FrozenScytheItem(new Item.Settings().maxCount(1).fireproof());
 
 	public static final EntityType<ToxicOrbEntity> TOXIC_ORB = FabricEntityTypeBuilder
 			.<ToxicOrbEntity>create(SpawnGroup.MISC, ToxicOrbEntity::new)
@@ -72,6 +74,8 @@ public class ScytheMod implements ModInitializer {
 	public static final Item TOXIC_ESSENCE = new Item(new Item.Settings());
 	public static final Item WITHERING_ESSENCE = new Item(new Item.Settings());
 	public static final Item GOLDEN_ESSENCE = new Item(new Item.Settings());
+	public static final Item FROZEN_ESSENCE = new Item(new Item.Settings());
+	public static final Item FROZEN_HEART = new Item(new Item.Settings());
 
 	public static final RecipeSerializer<ToxicEssenceRecipe> TOXIC_ESSENCE_RECIPE_SERIALIZER =
 			new SpecialRecipeSerializer<>(ToxicEssenceRecipe::new);
@@ -79,7 +83,7 @@ public class ScytheMod implements ModInitializer {
 	public static final Identifier SCYTHE_ITEM_GROUP_ID = new Identifier(MOD_ID, "scythes");
 	public static ItemGroup SCYTHE_ITEM_GROUP;
 
-	private static final Item[] TAB_ICON_ITEMS = new Item[] { BLOODY_SCYTHE, TOXIC_SCYTHE, WITHERING_SCYTHE, GOLDEN_SCYTHE };
+	private static final Item[] TAB_ICON_ITEMS = new Item[] { BLOODY_SCYTHE, TOXIC_SCYTHE, WITHERING_SCYTHE, GOLDEN_SCYTHE, FROZEN_SCYTHE };
 	private static final long TAB_ICON_INTERVAL_MS = 1200L;
 
 	public static final StatusEffect BLEEDING = new BleedingEffect();
@@ -97,6 +101,7 @@ public class ScytheMod implements ModInitializer {
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "plague_scythe"), PLAGUE_SCYTHE);
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "withering_scythe"), WITHERING_SCYTHE);
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "golden_scythe"), GOLDEN_SCYTHE);
+		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "frozen_scythe"), FROZEN_SCYTHE);
 		Registry.register(Registries.ENTITY_TYPE, new Identifier(MOD_ID, "toxic_orb"), TOXIC_ORB);
 		Registry.register(Registries.ENTITY_TYPE, new Identifier(MOD_ID, "withering_minion"), WITHERING_MINION);
 		FabricDefaultAttributeRegistry.register(WITHERING_MINION, WitheringMinionEntity.createAttributes());
@@ -106,6 +111,8 @@ public class ScytheMod implements ModInitializer {
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "toxic_essence"), TOXIC_ESSENCE);
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "withering_essence"), WITHERING_ESSENCE);
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "golden_essence"), GOLDEN_ESSENCE);
+		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "frozen_essence"), FROZEN_ESSENCE);
+		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "frozen_heart"), FROZEN_HEART);
 
 		Registry.register(Registries.STATUS_EFFECT, new Identifier(MOD_ID, "bleeding"), BLEEDING);
 		Registry.register(Registries.STATUS_EFFECT, new Identifier(MOD_ID, "no_jump"), NO_JUMP);
@@ -126,10 +133,13 @@ public class ScytheMod implements ModInitializer {
 							entries.add(TOXIC_SCYTHE);
 							entries.add(WITHERING_SCYTHE);
 							entries.add(GOLDEN_SCYTHE);
+							entries.add(FROZEN_SCYTHE);
 							entries.add(BLOODY_ESSENCE);
 							entries.add(TOXIC_ESSENCE);
 							entries.add(WITHERING_ESSENCE);
 							entries.add(GOLDEN_ESSENCE);
+							entries.add(FROZEN_ESSENCE);
+							entries.add(FROZEN_HEART);
 						})
 						.build()
 		);
@@ -140,6 +150,7 @@ public class ScytheMod implements ModInitializer {
 		BloodHarvestKillHandler.register();
 		WitheringSoulHandler.register();
 		BloodyEssenceDropHandler.register();
+		FrozenHeartDropHandler.register();
 
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			ServerPlayerEntity player = handler.player;

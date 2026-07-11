@@ -182,5 +182,8 @@
   "advancement.scythes.three_days_rain.title": "Three Days of Rain",
   "advancement.scythes.three_days_rain.desc": "Activate Golden Rain in three different dimensions across three different in-game days.",
   "death.attack.scythes_midas_touch": "%1$s was turned to gold",
-  "death.attack.scythes_midas_touch.player": "%1$s was turned to gold by %2$s's touch"
+  "death.attack.scythes_midas_touch.player": "%1$s was turned to gold by %2$s's touch",
+  "item.scythes.frozen_scythe": "Frost Scythe",
+  "item.scythes.frozen_essence": "Frost Essence",
+  "item.scythes.frozen_heart": "Frozen Heart"
 }

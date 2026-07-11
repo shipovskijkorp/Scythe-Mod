@@ -182,5 +182,8 @@
   "advancement.scythes.three_days_rain.title": "Три дня дождя",
   "advancement.scythes.three_days_rain.desc": "Активируй Золотой дождь в трёх разных измерениях и в три разных игровых дня.",
   "death.attack.scythes_midas_touch": "%1$s был обращён в золото",
-  "death.attack.scythes_midas_touch.player": "%1$s был обращён в золото касанием %2$s"
+  "death.attack.scythes_midas_touch.player": "%1$s был обращён в золото касанием %2$s",
+  "item.scythes.frozen_scythe": "Морозная коса",
+  "item.scythes.frozen_essence": "Морозная эссенция",
+  "item.scythes.frozen_heart": "Замороженное сердце"
 }
