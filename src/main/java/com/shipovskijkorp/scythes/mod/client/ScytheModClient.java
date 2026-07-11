@@ -28,6 +28,7 @@ public class ScytheModClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
 
+        EntityRendererRegistry.register(ScytheMod.ICE_SPIKE, IceSpikeEntityRenderer::new);
         EntityRendererRegistry.register(ScytheMod.TOXIC_ORB, FlyingItemEntityRenderer::new);
         EntityRendererRegistry.register(ScytheMod.WITHERING_MINION, WitherSkeletonEntityRenderer::new);
 

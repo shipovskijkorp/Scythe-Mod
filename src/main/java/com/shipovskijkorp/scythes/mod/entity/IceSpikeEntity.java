@@ -1,0 +1,114 @@
+package com.shipovskijkorp.scythes.mod.entity;
+
+import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.projectile.PersistentProjectileEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.particle.ParticleTypes;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.EntityHitResult;
+import net.minecraft.world.World;
+
+/** Arrow-like projectile fired by the Frost Scythe. */
+public final class IceSpikeEntity extends PersistentProjectileEntity {
+
+    public static final float HIT_DAMAGE = 10.0F;
+    public static final int FREEZING_TICKS = 30;
+    public static final int MAX_LIFETIME_TICKS = 20 * 10;
+
+    public IceSpikeEntity(EntityType<? extends IceSpikeEntity> entityType, World world) {
+        super(entityType, world);
+    }
+
+    public IceSpikeEntity(World world, LivingEntity owner) {
+        super(ScytheMod.ICE_SPIKE, owner, world);
+    }
+
+    @Override
+    protected ItemStack asItemStack() {
+        return ItemStack.EMPTY;
+    }
+
+    @Override
+    protected boolean canHit(Entity entity) {
+        if (!super.canHit(entity)) return false;
+
+        Entity owner = getOwner();
+        if (entity instanceof LivingEntity livingTarget && owner instanceof LivingEntity livingOwner) {
+            return !ScytheCombatUtil.isInvalidHostileTarget(livingOwner, livingTarget);
+        }
+
+        return true;
+    }
+
+    @Override
+    protected void onEntityHit(EntityHitResult entityHitResult) {
+        if (getWorld().isClient) return;
+
+        Entity hitEntity = entityHitResult.getEntity();
+        Entity owner = getOwner();
+
+        if (hitEntity instanceof LivingEntity target) {
+            target.damage(getDamageSources().arrow(this, owner), HIT_DAMAGE);
+            target.addStatusEffect(new StatusEffectInstance(
+                    ScytheMod.FREEZING,
+                    FREEZING_TICKS,
+                    0,
+                    false,
+                    true,
+                    true
+            ));
+        }
+
+        playImpactSound();
+        discard();
+    }
+
+    @Override
+    protected void onBlockHit(BlockHitResult blockHitResult) {
+        if (!getWorld().isClient) {
+            playImpactSound();
+            discard();
+        }
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+
+        if (getWorld().isClient && !inGround) {
+            getWorld().addParticle(
+                    ParticleTypes.SNOWFLAKE,
+                    getX(),
+                    getY(),
+                    getZ(),
+                    0.0D,
+                    0.0D,
+                    0.0D
+            );
+        }
+
+        if (!getWorld().isClient && age > MAX_LIFETIME_TICKS) {
+            discard();
+        }
+    }
+
+    private void playImpactSound() {
+        getWorld().playSound(
+                null,
+                getX(),
+                getY(),
+                getZ(),
+                SoundEvents.BLOCK_GLASS_BREAK,
+                SoundCategory.PLAYERS,
+                0.7F,
+                1.6F
+        );
+    }
+}

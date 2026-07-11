@@ -8,6 +8,7 @@ import com.shipovskijkorp.scythes.mod.enchantment.AcidityEnchantment;
 import com.shipovskijkorp.scythes.mod.enchantment.AdditionalSlotEnchantment;
 import com.shipovskijkorp.scythes.mod.enchantment.SoulSiphonEnchantment;
 import com.shipovskijkorp.scythes.mod.enchantment.SpikedBladeEnchantment;
+import com.shipovskijkorp.scythes.mod.entity.IceSpikeEntity;
 import com.shipovskijkorp.scythes.mod.entity.ToxicOrbEntity;
 import com.shipovskijkorp.scythes.mod.entity.WitheringMinionEntity;
 import com.shipovskijkorp.scythes.mod.item.BloodScytheItem;
@@ -58,6 +59,13 @@ public class ScytheMod implements ModInitializer {
 	public static final Item WITHERING_SCYTHE = new WitheringScytheItem(new Item.Settings().maxCount(1).fireproof());
 	public static final Item GOLDEN_SCYTHE = new GoldenScytheItem(new Item.Settings().maxCount(1).fireproof());
 	public static final Item FROZEN_SCYTHE = new FrozenScytheItem(new Item.Settings().maxCount(1).fireproof());
+
+	public static final EntityType<IceSpikeEntity> ICE_SPIKE = FabricEntityTypeBuilder
+			.<IceSpikeEntity>create(SpawnGroup.MISC, IceSpikeEntity::new)
+			.dimensions(EntityDimensions.fixed(0.5F, 0.5F))
+			.trackRangeBlocks(8)
+			.trackedUpdateRate(10)
+			.build();
 
 	public static final EntityType<ToxicOrbEntity> TOXIC_ORB = FabricEntityTypeBuilder
 			.<ToxicOrbEntity>create(SpawnGroup.MISC, ToxicOrbEntity::new)
@@ -114,6 +122,7 @@ public class ScytheMod implements ModInitializer {
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "withering_scythe"), WITHERING_SCYTHE);
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "golden_scythe"), GOLDEN_SCYTHE);
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "frozen_scythe"), FROZEN_SCYTHE);
+		Registry.register(Registries.ENTITY_TYPE, new Identifier(MOD_ID, "ice_spike"), ICE_SPIKE);
 		Registry.register(Registries.ENTITY_TYPE, new Identifier(MOD_ID, "toxic_orb"), TOXIC_ORB);
 		Registry.register(Registries.ENTITY_TYPE, new Identifier(MOD_ID, "withering_minion"), WITHERING_MINION);
 		FabricDefaultAttributeRegistry.register(WITHERING_MINION, WitheringMinionEntity.createAttributes());
@@ -176,6 +185,7 @@ public class ScytheMod implements ModInitializer {
 				WitheringAuraTracker.clear(player);
 				WitheringScytheCooldowns.clear(player);
 				GoldenScytheCooldowns.clear(player);
+				FrozenScytheCooldowns.clear(player);
 				GoldenLootMarkTracker.clearOwner(player);
 				ScytheAdvancementTracker.clear(player);
 			});
