@@ -185,5 +185,8 @@
   "death.attack.scythes_midas_touch.player": "%1$s was turned to gold by %2$s's touch",
   "item.scythes.frozen_scythe": "Frost Scythe",
   "item.scythes.frozen_essence": "Frost Essence",
-  "item.scythes.frozen_heart": "Frozen Heart"
+  "item.scythes.frozen_heart": "Frozen Heart",
+  "effect.scythes.freezing": "Freezing",
+  "death.attack.scythes_freezing": "%1$s froze to death",
+  "death.attack.scythes_freezing.player": "%1$s was frozen to death by %2$s"
 }

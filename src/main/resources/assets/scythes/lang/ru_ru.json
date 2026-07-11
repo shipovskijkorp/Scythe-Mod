@@ -185,5 +185,8 @@
   "death.attack.scythes_midas_touch.player": "%1$s был обращён в золото касанием %2$s",
   "item.scythes.frozen_scythe": "Морозная коса",
   "item.scythes.frozen_essence": "Морозная эссенция",
-  "item.scythes.frozen_heart": "Замороженное сердце"
+  "item.scythes.frozen_heart": "Замороженное сердце",
+  "effect.scythes.freezing": "Заморозка",
+  "death.attack.scythes_freezing": "%1$s замёрз насмерть",
+  "death.attack.scythes_freezing.player": "%1$s замёрз насмерть из-за %2$s"
 }

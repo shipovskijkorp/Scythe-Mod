@@ -26,6 +26,11 @@ public final class ScytheDamageTypes {
             new Identifier(ScytheMod.MOD_ID, "midas_touch")
     );
 
+    public static final RegistryKey<DamageType> FREEZING = RegistryKey.of(
+            RegistryKeys.DAMAGE_TYPE,
+            new Identifier(ScytheMod.MOD_ID, "freezing")
+    );
+
     private ScytheDamageTypes() {
     }
 
@@ -43,5 +48,9 @@ public final class ScytheDamageTypes {
 
     public static DamageSource midasTouch(World world, Entity attacker) {
         return world.getDamageSources().create(MIDAS_TOUCH, attacker, attacker);
+    }
+
+    public static DamageSource freezing(World world) {
+        return world.getDamageSources().create(FREEZING);
     }
 }

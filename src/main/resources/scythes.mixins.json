@@ -6,10 +6,13 @@
     "LivingEntityMixin",
     "EnchantmentMixin",
     "EnchantmentHelperMixin",
-    "PiglinBrainMixin"
+    "PiglinBrainMixin",
+    "FreezingLivingEntityMixin",
+    "FreezingEntityLookMixin"
   ],
   "client": [
-    "ItemGroupMixin"
+    "ItemGroupMixin",
+    "FreezingLivingEntityRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

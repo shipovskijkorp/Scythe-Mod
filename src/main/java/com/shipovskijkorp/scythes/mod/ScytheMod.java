@@ -2,6 +2,7 @@ package com.shipovskijkorp.scythes.mod;
 
 import com.shipovskijkorp.scythes.mod.ability.*;
 import com.shipovskijkorp.scythes.mod.effect.BleedingEffect;
+import com.shipovskijkorp.scythes.mod.effect.FreezingEffect;
 import com.shipovskijkorp.scythes.mod.effect.NoJumpEffect;
 import com.shipovskijkorp.scythes.mod.enchantment.AcidityEnchantment;
 import com.shipovskijkorp.scythes.mod.enchantment.AdditionalSlotEnchantment;
@@ -12,6 +13,7 @@ import com.shipovskijkorp.scythes.mod.entity.WitheringMinionEntity;
 import com.shipovskijkorp.scythes.mod.item.BloodScytheItem;
 import com.shipovskijkorp.scythes.mod.item.GoldenScytheItem;
 import com.shipovskijkorp.scythes.mod.item.FrozenScytheItem;
+import com.shipovskijkorp.scythes.mod.item.FrozenHeartItem;
 import com.shipovskijkorp.scythes.mod.item.ToxicScytheItem;
 import com.shipovskijkorp.scythes.mod.item.WitheringScytheItem;
 import com.shipovskijkorp.scythes.mod.network.ScytheAbilityC2SPacket;
@@ -27,6 +29,7 @@ import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnGroup;
 import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.item.FoodComponent;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
@@ -75,7 +78,15 @@ public class ScytheMod implements ModInitializer {
 	public static final Item WITHERING_ESSENCE = new Item(new Item.Settings());
 	public static final Item GOLDEN_ESSENCE = new Item(new Item.Settings());
 	public static final Item FROZEN_ESSENCE = new Item(new Item.Settings());
-	public static final Item FROZEN_HEART = new Item(new Item.Settings());
+	private static final FoodComponent FROZEN_HEART_FOOD = new FoodComponent.Builder()
+			.hunger(3)
+			.saturationModifier(0.3F)
+			.meat()
+			.alwaysEdible()
+			.build();
+	public static final Item FROZEN_HEART = new FrozenHeartItem(
+			new Item.Settings().food(FROZEN_HEART_FOOD)
+	);
 
 	public static final RecipeSerializer<ToxicEssenceRecipe> TOXIC_ESSENCE_RECIPE_SERIALIZER =
 			new SpecialRecipeSerializer<>(ToxicEssenceRecipe::new);
@@ -88,6 +99,7 @@ public class ScytheMod implements ModInitializer {
 
 	public static final StatusEffect BLEEDING = new BleedingEffect();
 	public static final StatusEffect NO_JUMP = new NoJumpEffect();
+	public static final StatusEffect FREEZING = new FreezingEffect();
 
 	public static final Enchantment SPIKED_BLADE = new SpikedBladeEnchantment();
 	public static final Enchantment ADDITIONAL_SLOT = new AdditionalSlotEnchantment();
@@ -116,6 +128,7 @@ public class ScytheMod implements ModInitializer {
 
 		Registry.register(Registries.STATUS_EFFECT, new Identifier(MOD_ID, "bleeding"), BLEEDING);
 		Registry.register(Registries.STATUS_EFFECT, new Identifier(MOD_ID, "no_jump"), NO_JUMP);
+		Registry.register(Registries.STATUS_EFFECT, new Identifier(MOD_ID, "freezing"), FREEZING);
 
 		Registry.register(Registries.ENCHANTMENT, new Identifier(MOD_ID, "spiked_blade"), SPIKED_BLADE);
 		Registry.register(Registries.ENCHANTMENT, new Identifier(MOD_ID, "additional_slot"), ADDITIONAL_SLOT);

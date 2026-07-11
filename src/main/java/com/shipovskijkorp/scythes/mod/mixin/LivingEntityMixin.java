@@ -38,7 +38,7 @@ public abstract class LivingEntityMixin {
     @Inject(method = "jump", at = @At("HEAD"), cancellable = true)
     private void scythes$noJump(CallbackInfo ci) {
         LivingEntity self = (LivingEntity) (Object) this;
-        if (self.hasStatusEffect(ScytheMod.NO_JUMP)) {
+        if (self.hasStatusEffect(ScytheMod.NO_JUMP) || self.hasStatusEffect(ScytheMod.FREEZING)) {
             ci.cancel();
         }
     }
