@@ -1,0 +1,23 @@
+{
+  "parent": "scythes:craft_golden_scythe",
+  "display": {
+    "icon": {
+      "id": "scythes:golden_scythe"
+    },
+    "title": {
+      "translate": "advancement.scythes.three_days_rain.title"
+    },
+    "description": {
+      "translate": "advancement.scythes.three_days_rain.desc"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "activate_in_three_dimension_days": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "scythes:scythes",
+  "pattern": [
+    "NN ",
+    "P E",
+    "P  "
+  ],
+  "key": {
+    "N": "minecraft:netherite_ingot",
+    "P": "minecraft:stick",
+    "E": "scythes:golden_essence"
+  },
+  "result": {
+    "id": "scythes:golden_scythe"
+  },
+  "category": "equipment"
+}

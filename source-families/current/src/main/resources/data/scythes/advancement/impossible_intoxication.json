@@ -1,0 +1,24 @@
+{
+  "parent": "scythes:craft_toxic_scythe",
+  "display": {
+    "icon": {
+      "id": "scythes:toxic_scythe",
+      "count": 1
+    },
+    "title": {
+      "translate": "advancement.scythes.impossible_intoxication.title"
+    },
+    "description": {
+      "translate": "advancement.scythes.impossible_intoxication.desc"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "poison_22_seconds": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

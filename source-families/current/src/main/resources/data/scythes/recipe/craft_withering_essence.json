@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "scythes:essences",
+  "pattern": [
+    "BIB",
+    "HSH",
+    "BIB"
+  ],
+  "key": {
+    "B": "minecraft:bone",
+    "I": "minecraft:netherite_ingot",
+    "S": "minecraft:nether_star",
+    "H": "minecraft:wither_skeleton_skull"
+  },
+  "result": {
+    "id": "scythes:withering_essence"
+  },
+  "category": "equipment"
+}

@@ -1,0 +1,23 @@
+{
+  "parent": "scythes:craft_withering_scythe",
+  "display": {
+    "icon": {
+      "id": "scythes:withering_scythe"
+    },
+    "title": {
+      "translate": "advancement.scythes.super_necromancer.title"
+    },
+    "description": {
+      "translate": "advancement.scythes.super_necromancer.desc"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "summon_10_minions": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

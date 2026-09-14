@@ -1,0 +1,22 @@
+{
+  "description": {
+    "translate": "enchantment.scythes.acidity"
+  },
+  "supported_items": "#scythes:enchantable/toxic_scythe",
+  "primary_items": "#scythes:enchantable/toxic_scythe",
+  "weight": 5,
+  "max_level": 3,
+  "min_cost": {
+    "base": 8,
+    "per_level_above_first": 12
+  },
+  "max_cost": {
+    "base": 43,
+    "per_level_above_first": 12
+  },
+  "anvil_cost": 2,
+  "slots": [
+    "mainhand"
+  ],
+  "effects": {}
+}

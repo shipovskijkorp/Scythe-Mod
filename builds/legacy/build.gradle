@@ -1,0 +1,202 @@
+plugins {
+    id 'fabric-loom' version "${loom_version}"
+    id 'maven-publish'
+}
+
+def repositoryRoot = rootProject.file('../..').canonicalFile
+def commonConfigFile = new File(repositoryRoot, 'build-config/common.properties')
+def targetConfigFile = rootProject.file('targets.properties')
+
+if (!commonConfigFile.isFile() || !targetConfigFile.isFile()) {
+    throw new GradleException('Missing Scythe Mod multiversion configuration')
+}
+
+def commonConfig = new Properties()
+commonConfigFile.withInputStream { commonConfig.load(it) }
+def targetConfig = new Properties()
+targetConfigFile.withInputStream { targetConfig.load(it) }
+
+def configuredTargets = targetConfig.getProperty('targets', '')
+        .split(',').collect { it.trim() }.findAll { !it.isEmpty() }
+if (configuredTargets.size() != 1) {
+    throw new GradleException("This family build currently expects exactly one target, got ${configuredTargets}")
+}
+def targetName = configuredTargets[0]
+
+def value = { String key ->
+    def targetValue = targetConfig.getProperty("target.${targetName}.${key}")
+    if (targetValue != null && !targetValue.trim().isEmpty()) return targetValue.trim()
+    def commonValue = commonConfig.getProperty("common.${key}")
+    if (commonValue != null && !commonValue.trim().isEmpty()) return commonValue.trim()
+    return null
+}
+def required = { String key ->
+    def result = value(key)
+    if (result == null) throw new GradleException("Missing '${key}' for ${targetName}")
+    result
+}
+
+def minecraftVersion = required('deps.minecraft')
+def yarnMappings = required('deps.yarn')
+def loaderVersion = required('deps.loader')
+def fabricApiVersion = required('deps.fabric_api')
+def jeiVersion = required('deps.jei')
+def javaVersion = Integer.parseInt(required('java.version'))
+def modVersion = required('mod.version')
+def archiveName = required('mod.archive_name')
+
+def sharedSourceRoot = new File(repositoryRoot, required('source.shared_root'))
+def familySourceRoot = new File(repositoryRoot, required('source.root'))
+def platformSourceRoot = new File(repositoryRoot, required('source.platform_root'))
+def targetOverlayRoot = new File(repositoryRoot, required('source.overlay_root'))
+def sourceLayers = [sharedSourceRoot, familySourceRoot, platformSourceRoot, targetOverlayRoot]
+sourceLayers.each { layer ->
+    if (!layer.isDirectory()) throw new GradleException("Configured source layer does not exist: ${layer}")
+}
+
+version = "${modVersion}+${minecraftVersion}"
+group = required('mod.group')
+base {
+    archivesName = archiveName
+}
+
+repositories {
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = 'Modrinth'
+                url = 'https://api.modrinth.com/maven'
+            }
+        }
+        filter {
+            includeGroup 'maven.modrinth'
+        }
+    }
+}
+
+fabricApi {
+    configureDataGeneration {
+        client = true
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraftVersion}"
+    mappings "net.fabricmc:yarn:${yarnMappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${loaderVersion}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}"
+
+    modCompileOnly "maven.modrinth:jei:${jeiVersion}-fabric,${minecraftVersion}"
+    modRuntimeOnly "maven.modrinth:jei:${jeiVersion}-fabric,${minecraftVersion}"
+}
+
+def effectiveSourceDir = layout.buildDirectory.dir("effective-source/${targetName}")
+def effectiveSourceDirFile = effectiveSourceDir.get().asFile
+def sourceLayoutScript = new File(repositoryRoot, 'scripts/source_layout.py')
+def pythonExecutable = System.getenv('PYTHON') ?: (System.getProperty('os.name').toLowerCase().contains('win') ? 'python' : 'python3')
+
+def prepareEffectiveSource = tasks.register('prepareEffectiveSource', Exec) {
+    group = 'build setup'
+    description = "Materialize shared + family + Fabric + ${targetName} sources"
+    inputs.file(commonConfigFile)
+    inputs.file(targetConfigFile)
+    inputs.file(sourceLayoutScript)
+    sourceLayers.each { inputs.dir(it) }
+    outputs.dir(effectiveSourceDir)
+
+    doFirst {
+        def out = effectiveSourceDir.get().asFile
+        out.parentFile.mkdirs()
+        commandLine pythonExecutable,
+                sourceLayoutScript.absolutePath,
+                targetName,
+                '--config', targetConfigFile.absolutePath,
+                '--output', out.absolutePath
+    }
+}
+
+sourceSets {
+    main {
+        java.setSrcDirs([new File(effectiveSourceDirFile, 'src/main/java')])
+        resources.setSrcDirs([new File(effectiveSourceDirFile, 'src/main/resources')])
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(javaVersion)
+    }
+    withSourcesJar()
+}
+
+processResources {
+    dependsOn prepareEffectiveSource
+    inputs.property 'version', project.version
+    filesMatching('fabric.mod.json') {
+        expand 'version': project.version
+    }
+}
+
+tasks.named('compileJava') {
+    dependsOn prepareEffectiveSource
+}
+tasks.named('sourcesJar') {
+    dependsOn prepareEffectiveSource
+}
+tasks.matching { it.name == 'runClient' || it.name == 'runServer' || it.name == 'runDatagen' }.configureEach {
+    dependsOn prepareEffectiveSource
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = javaVersion
+    options.encoding = 'UTF-8'
+}
+
+jar {
+    inputs.property 'archivesName', project.base.archivesName
+    from(new File(repositoryRoot, 'LICENSE')) {
+        rename { "${it}_${inputs.properties.archivesName}" }
+    }
+}
+
+tasks.register('materializeSource') {
+    group = 'build setup'
+    description = "Materialize the effective source tree for ${targetName}"
+    dependsOn prepareEffectiveSource
+}
+
+tasks.register('runActiveClient') {
+    group = 'fabric'
+    dependsOn 'runClient'
+}
+
+tasks.register('runActiveServer') {
+    group = 'fabric'
+    dependsOn 'runServer'
+}
+
+tasks.register('buildAndCollect') {
+    group = 'build'
+    description = "Build ${targetName} and collect the release jar in repository build/release"
+    dependsOn 'build'
+    doLast {
+        def releaseDir = new File(repositoryRoot, 'build/release')
+        releaseDir.mkdirs()
+        copy {
+            from tasks.named('remapJar').get().archiveFile.get().asFile
+            into releaseDir
+        }
+        println "Collected ${targetName} -> ${releaseDir}"
+    }
+}
+
+publishing {
+    publications {
+        create('mavenJava', MavenPublication) {
+            artifactId = archiveName
+            from components.java
+        }
+    }
+}
+
+println "Scythe Mod target: ${targetName}; Minecraft ${minecraftVersion}; Fabric ${loaderVersion}; Java ${javaVersion}"

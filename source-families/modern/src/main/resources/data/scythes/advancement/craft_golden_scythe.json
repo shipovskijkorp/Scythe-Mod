@@ -1,0 +1,26 @@
+{
+  "parent": "scythes:golden_essence",
+  "display": {
+    "icon": {
+      "id": "scythes:golden_scythe"
+    },
+    "title": {
+      "translate": "advancement.scythes.craft_golden.title"
+    },
+    "description": {
+      "translate": "advancement.scythes.craft_golden.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "craft": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "scythes:craft_golden_scythe"
+      }
+    }
+  }
+}

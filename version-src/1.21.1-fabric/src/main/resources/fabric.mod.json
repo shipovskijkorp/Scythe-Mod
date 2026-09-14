@@ -1,0 +1,41 @@
+{
+	"schemaVersion": 1,
+	"id": "scythes",
+	"version": "${version}",
+	"name": "Scythe Mod",
+	"description": "Adds endgame scythes for PvP and survival: Bloody, Toxic, Withering, Golden, and Frost scythes with custom abilities, minions, projectiles, status effects, HUD timers, recipes, advancements, drops, enchantments, JEI compatibility, and English/Russian localization.",
+	"authors": [
+		"Shipovskijkorp",
+		"Sun_Aloe"
+	],
+	"contact": {
+		"homepage": "",
+		"sources": ""
+	},
+	"license": "All Rights Reserved",
+	"icon": "assets/scythes/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.shipovskijkorp.scythes.mod.ScytheMod"
+		],
+		"client": [
+			"com.shipovskijkorp.scythes.mod.client.ScytheModClient"
+		],
+		"jei_mod_plugin": [
+			"com.shipovskijkorp.scythes.mod.compat.jei.ScythesJeiPlugin"
+		]
+	},
+	"mixins": [
+		"scythes.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.16.14",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": ">=0.116.6+1.21.1"
+	},
+	"suggests": {
+		"jei": "*"
+	}
+}

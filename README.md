@@ -1,31 +1,56 @@
 # Scythe Mod
 
-**Scythe Mod** is a Fabric mod for Minecraft 1.20.1 that adds a set of endgame scythes with PvP-focused abilities, passive auras, HUD timers, custom advancements, recipes, and configurable balance values.
+This repository contains the multiversion Scythe Mod source layout.
 
-## Content
+## Current supported targets in this repository
 
-- **Bloody Scythe** — inflicts Bleeding on hit and can trigger **Blood Harvest**, a risk/reward ability that curses nearby enemy players. Kill during the harvest window to earn Perfect Harvest progress and receive temporary combat buffs; fail the window and the harvest punishes you.
-- **Plague Scythe** — poisons nearby enemies, scales melee damage from the wielder's missing health, and can unleash **Plague Surge** to damage and debuff enemies in an area.
-- **Withering Scythe** — applies Wither and Slowness through an aura, then uses **Withering Strike** to pressure nearby enemies and partially bypass armor.
-- **Bloody Essence** — a crafting material dropped from player/villager kills and used to forge the Bloody Scythe.
-- **Spiked Blade** — a custom enchantment that improves Bleeding duration.
-- **HUD timers** — client-side timers for active scythe abilities.
-- **Advancements** — progression for crafting scythes, collecting Bloody Essence, kill milestones, and Perfect Harvest milestones.
-- **Config** — generated as `config/scythes.json` and sanitized at runtime.
-- **Localization** — English and Russian translations included.
+- Minecraft **1.20.1 Fabric** — `legacy` family, target Java 17
+- Minecraft **1.21.1 Fabric** — `modern` family, target Java 21
+- Minecraft **1.21.11 Fabric** — `modern` family, target Java 21
+- Minecraft **26.1.2 Fabric** — `current` family, target Java 25
+- Minecraft **26.2 Fabric** — `current` family, target Java 25
 
-## Controls
+The Gradle/Loom build JVM is Java 21 for the legacy/modern generations and Java 25 for the current generation in CI. The 1.20.1 mod itself still compiles to Java 17 bytecode.
 
-- Press **R** while holding a supported scythe to use its active ability.
-- Hold **Shift** on item tooltips for detailed ability descriptions.
-- Hold **Alt** on item tooltips for numeric stats.
+Minecraft 26.1+ uses unobfuscated Mojang names instead of Yarn mappings in this project, so it is intentionally isolated from the 1.21.x source/build generation instead of forcing mapping-generation differences into the same family.
 
-## Requirements
+The gameplay/source snapshots from the existing branches are integrated without changing their target-specific implementation. Shared files are stored once; family, Fabric and target-specific differences are layered on top.
 
-- Minecraft **1.20.1**
-- Fabric Loader **0.18.4+**
-- Fabric API **0.92.6+1.20.1**
-- Java **17+**
+See [SOURCE_FAMILIES.md](SOURCE_FAMILIES.md) for the source layout and build commands.
+
+## IntelliJ IDEA
+
+Open the repository root in IntelliJ IDEA. The shared IDEA Gradle configuration links all independent family builds using their own Gradle wrappers:
+
+- `builds/legacy` — Minecraft 1.20.1 Fabric
+- `builds/modern` — Minecraft 1.21.1 + 1.21.11 Fabric
+- `builds/current` — Minecraft 26.1.2 + 26.2 Fabric
+
+After Gradle synchronization, the Run/Debug selector contains:
+
+- `ScytheMod 1.20.1 Fabric Client`
+- `ScytheMod 1.21.1 Fabric Client`
+- `ScytheMod 1.21.11 Fabric Client`
+- `ScytheMod 26.1.2 Fabric Client`
+- `ScytheMod 26.2 Fabric Client`
+
+The modern and current targets are Gradle subprojects, so IDEA can load the targets at the same time and launch the correct Loom `runClient` task without per-version launcher scripts.
+
+## Quick build
+
+Windows PowerShell:
+
+```powershell
+./build-all.ps1
+```
+
+Linux/macOS:
+
+```bash
+./build-all.sh
+```
+
+Release jars are collected into `build/release/`.
 
 ## License
 

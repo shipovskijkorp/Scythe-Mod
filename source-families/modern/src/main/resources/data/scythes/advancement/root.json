@@ -1,0 +1,22 @@
+{
+  "display": {
+    "icon": {
+      "id": "scythes:bloody_scythe"
+    },
+    "title": {
+      "translate": "advancement.scythes.root.title"
+    },
+    "description": {
+      "translate": "advancement.scythes.root.desc"
+    },
+    "background": "minecraft:textures/gui/advancements/backgrounds/nether.png",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "join": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

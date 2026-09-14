@@ -1,0 +1,23 @@
+{
+  "parent": "scythes:craft_bloody_scythe",
+  "display": {
+    "icon": {
+      "id": "scythes:bloody_scythe"
+    },
+    "title": {
+      "translate": "advancement.scythes.merciless.title"
+    },
+    "description": {
+      "translate": "advancement.scythes.merciless.desc"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "kill_after_all_blood_skills": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

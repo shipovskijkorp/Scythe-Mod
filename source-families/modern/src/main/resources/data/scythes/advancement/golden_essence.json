@@ -1,0 +1,30 @@
+{
+  "parent": "scythes:root",
+  "display": {
+    "icon": {
+      "id": "scythes:golden_essence"
+    },
+    "title": {
+      "translate": "advancement.scythes.golden_essence.title"
+    },
+    "description": {
+      "translate": "advancement.scythes.golden_essence.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "get_essence": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "scythes:golden_essence"
+          }
+        ]
+      }
+    }
+  }
+}

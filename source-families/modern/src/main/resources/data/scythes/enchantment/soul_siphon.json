@@ -1,0 +1,22 @@
+{
+  "description": {
+    "translate": "enchantment.scythes.soul_siphon"
+  },
+  "supported_items": "#scythes:enchantable/withering_scythe",
+  "primary_items": "#scythes:enchantable/withering_scythe",
+  "weight": 2,
+  "max_level": 1,
+  "min_cost": {
+    "base": 20,
+    "per_level_above_first": 0
+  },
+  "max_cost": {
+    "base": 60,
+    "per_level_above_first": 0
+  },
+  "anvil_cost": 4,
+  "slots": [
+    "mainhand"
+  ],
+  "effects": {}
+}
