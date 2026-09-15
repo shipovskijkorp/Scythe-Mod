@@ -36,6 +36,10 @@ public final class ScytheAbilityHandler {
             FrozenStormAbility.tryActivate(player);
             return true;
         }
+        if (stack.getItem() instanceof FarmerScytheItem) {
+            FarmerGrowthAbility.tryActivate(player);
+            return true;
+        }
         return false;
     }
 }

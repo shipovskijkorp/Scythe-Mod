@@ -24,6 +24,7 @@ public final class ScytheTooltips {
         if (stack.getItem() instanceof WitheringScytheItem) withering(stack, context, displayComponent, textConsumer, type);
         if (stack.getItem() instanceof GoldenScytheItem) golden(stack, context, displayComponent, textConsumer, type);
         if (stack.getItem() instanceof FrozenScytheItem) frozen(stack, context, displayComponent, textConsumer, type);
+        if (stack.getItem() instanceof FarmerScytheItem) farmer(stack, context, displayComponent, textConsumer, type);
     }
 
     private static void blood(ItemStack stack, Item.TooltipContext context, TooltipDisplayComponent displayComponent, Consumer<Text> textConsumer, TooltipType type) {
@@ -527,6 +528,65 @@ public final class ScytheTooltips {
                 Formatting.DARK_GRAY
         );
         TooltipUtil.addWrapped(tooltip, "tooltip.scythes.stat.ignores_pets_and_teammates", Formatting.DARK_GRAY);
+        TooltipUtil.flush(tooltip, textConsumer);
+    }
+
+    private static void farmer(ItemStack stack, Item.TooltipContext context, TooltipDisplayComponent displayComponent, Consumer<Text> textConsumer, TooltipType type) {
+        List<Text> tooltip = new ArrayList<>();
+        TooltipUtil.addWrapped(tooltip, "tooltip.scythes.farmer_scythe.desc", Formatting.GRAY, Formatting.ITALIC);
+
+        if (!TooltipUtil.isShiftDown()) {
+            TooltipUtil.addHoldShiftHint(tooltip);
+            TooltipUtil.flush(tooltip, textConsumer);
+            return;
+        }
+
+        boolean alt = TooltipUtil.isAltDown();
+        if (alt) {
+            tooltip.add(Text.empty());
+            TooltipUtil.addWrapped(tooltip, "tooltip.scythes.farmer_scythe.base_stats", Formatting.DARK_GRAY);
+        }
+
+        tooltip.add(Text.empty());
+        tooltip.add(Text.translatable("tooltip.scythes.section.passive").formatted(Formatting.GRAY));
+        tooltip.add(Text.translatable("tooltip.scythes.farmer_scythe.passive").formatted(Formatting.GREEN));
+        if (!alt) {
+            TooltipUtil.addWrapped(tooltip, "tooltip.scythes.farmer_scythe.passive.desc", Formatting.DARK_GRAY);
+        } else {
+            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.double_drop_chance_percent", TooltipUtil.fmtPercentValue(ScytheBalance.Farmer.DOUBLE_DROP_CHANCE)), Formatting.GREEN);
+            TooltipUtil.addWrapped(tooltip, "tooltip.scythes.stat.fortune_stacks", Formatting.DARK_GRAY);
+            TooltipUtil.addWrapped(tooltip, "tooltip.scythes.stat.reap_replants", Formatting.DARK_GRAY);
+            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.area_tilling", String.valueOf(ScytheBalance.Farmer.TILLING_DIAMETER), String.valueOf(ScytheBalance.Farmer.TILLING_DIAMETER)), Formatting.DARK_GRAY);
+        }
+
+        tooltip.add(Text.empty());
+        tooltip.add(Text.translatable("tooltip.scythes.section.special").formatted(Formatting.GRAY));
+        tooltip.add(Text.translatable("tooltip.scythes.farmer_harvest").formatted(Formatting.GREEN));
+        if (!alt) {
+            TooltipUtil.addWrapped(tooltip, "tooltip.scythes.farmer_harvest.desc", Formatting.GRAY);
+        } else {
+            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.radius_blocks", TooltipUtil.fmtNumber(ScytheBalance.Farmer.MASS_HARVEST_RADIUS)), Formatting.GRAY);
+            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.cooldown_sec", TooltipUtil.fmtSecondsValue(ScytheBalance.Farmer.MASS_HARVEST_COOLDOWN_TICKS)), Formatting.GRAY);
+            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.durability_cost", String.valueOf(ScytheBalance.Farmer.MASS_HARVEST_DURABILITY_COST)), Formatting.GRAY);
+            TooltipUtil.addWrapped(tooltip, "tooltip.scythes.stat.direct_inventory", Formatting.DARK_GRAY);
+        }
+
+        tooltip.add(Text.empty());
+        tooltip.add(Text.translatable("tooltip.scythes.section.active").formatted(Formatting.GRAY));
+        tooltip.add(Text.translatable("tooltip.scythes.farmer_growth", TooltipUtil.getScytheAbilityKeyText(Formatting.GREEN)));
+        if (!alt) {
+            TooltipUtil.addWrapped(tooltip, "tooltip.scythes.farmer_growth.desc", Formatting.GRAY);
+            TooltipUtil.addHoldAltHint(tooltip);
+            TooltipUtil.flush(tooltip, textConsumer);
+            return;
+        }
+
+        TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.radius_blocks", TooltipUtil.fmtNumber(ScytheBalance.Farmer.GROWTH_ACCELERATION_RADIUS)), Formatting.GRAY);
+        TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.cooldown_sec", TooltipUtil.fmtSecondsValue(ScytheBalance.Farmer.GROWTH_COOLDOWN_TICKS)), Formatting.GRAY);
+        TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.durability_cost", String.valueOf(ScytheBalance.Farmer.GROWTH_DURABILITY_COST)), Formatting.GRAY);
+        TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.bone_meal_cost", String.valueOf(ScytheBalance.Farmer.GROWTH_BONE_MEAL_COST)), Formatting.DARK_GREEN);
+        TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.growth_reduction_percent", TooltipUtil.fmtPercentValue(ScytheBalance.Farmer.GROWTH_REDUCTION_FRACTION)), Formatting.DARK_GREEN);
+        TooltipUtil.addWrapped(tooltip, "tooltip.scythes.stat.once_per_crop", Formatting.DARK_GRAY);
         TooltipUtil.flush(tooltip, textConsumer);
     }
 }

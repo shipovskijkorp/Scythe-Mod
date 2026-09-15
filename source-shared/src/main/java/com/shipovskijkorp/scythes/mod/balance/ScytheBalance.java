@@ -317,6 +317,34 @@ public final class ScytheBalance {
         public static final int FREEZING_AMPLIFIER = 0;
     }
 
+
+    /** Farmer Scythe tuning. Base tool stats follow the other scythes; combat damage follows a Netherite Hoe. */
+    public static final class Farmer {
+        private Farmer() {}
+
+        /** Vanilla Netherite Hoe total attack damage, while attack speed deliberately stays at the scythe baseline. */
+        public static final float ATTACK_DAMAGE = 1.0F;
+        public static final float MATERIAL_ATTACK_DAMAGE = 4.0F;
+        public static final float HOE_ATTACK_DAMAGE_BASELINE = ATTACK_DAMAGE - Base.PLAYER_ATTACK_DAMAGE - MATERIAL_ATTACK_DAMAGE;
+        public static final float HOE_ATTACK_SPEED_BASELINE = Base.ATTACK_SPEED_MODIFIER;
+
+        public static final double DOUBLE_DROP_CHANCE = 0.20D;
+
+        /** Right-click hoeing expands to a square around the clicked tillable block. */
+        public static final int TILLING_RADIUS = 1;
+        public static final int TILLING_DIAMETER = TILLING_RADIUS * 2 + 1;
+
+        public static final double MASS_HARVEST_RADIUS = 20.0D;
+        public static final int MASS_HARVEST_COOLDOWN_TICKS = TICKS_PER_SECOND * 10;
+        public static final int MASS_HARVEST_DURABILITY_COST = 50;
+
+        public static final double GROWTH_ACCELERATION_RADIUS = 20.0D;
+        public static final double GROWTH_REDUCTION_FRACTION = 0.15D;
+        public static final int GROWTH_BONE_MEAL_COST = 32;
+        public static final int GROWTH_DURABILITY_COST = Base.ACTIVE_DURABILITY_COST;
+        public static final int GROWTH_COOLDOWN_TICKS = TICKS_PER_SECOND * 60;
+    }
+
     /** Loot chances and output counts; vanilla Fortune/Looting rules are unchanged. */
     public static final class Drops {
         private Drops() {}

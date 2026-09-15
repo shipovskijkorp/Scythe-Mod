@@ -53,6 +53,8 @@ public class ScytheMod implements ModInitializer {
     public static final Item WITHERING_SCYTHE = registerItem("withering_scythe", WitheringScytheItem::new, scytheSettings("withering_scythe"));
     public static final Item GOLDEN_SCYTHE = registerItem("golden_scythe", GoldenScytheItem::new, scytheSettings("golden_scythe"));
     public static final Item FROZEN_SCYTHE = registerItem("frozen_scythe", FrozenScytheItem::new, scytheSettings("frozen_scythe"));
+    public static final Item FARMER_SCYTHE = registerItem("farmer_scythe", FarmerScytheItem::new,
+            ScytheMaterial.configureBase(itemSettings("farmer_scythe")));
 
     public static final EntityType<ToxicOrbEntity> TOXIC_ORB = EntityType.Builder
             .<ToxicOrbEntity>of(ToxicOrbEntity::new, MobCategory.MISC)
@@ -80,6 +82,7 @@ public class ScytheMod implements ModInitializer {
     public static final Item WITHERING_ESSENCE = registerItem("withering_essence", Item::new, itemSettings("withering_essence"));
     public static final Item GOLDEN_ESSENCE = registerItem("golden_essence", Item::new, itemSettings("golden_essence"));
     public static final Item FROZEN_ESSENCE = registerItem("frozen_essence", Item::new, itemSettings("frozen_essence"));
+    public static final Item FARMER_ESSENCE = registerItem("farmer_essence", Item::new, itemSettings("farmer_essence"));
     public static final Item FROZEN_HEART = registerItem(
             "frozen_heart",
             FrozenHeartItem::new,
@@ -97,7 +100,7 @@ public class ScytheMod implements ModInitializer {
     public static CreativeModeTab SCYTHE_ITEM_GROUP;
 
     private static final Item[] TAB_ICON_ITEMS = new Item[] {
-            BLOODY_SCYTHE, TOXIC_SCYTHE, WITHERING_SCYTHE, GOLDEN_SCYTHE, FROZEN_SCYTHE
+            BLOODY_SCYTHE, TOXIC_SCYTHE, WITHERING_SCYTHE, GOLDEN_SCYTHE, FROZEN_SCYTHE, FARMER_SCYTHE
     };
 
     public static final Holder<MobEffect> BLEEDING =
@@ -137,11 +140,13 @@ public class ScytheMod implements ModInitializer {
                             entries.accept(WITHERING_SCYTHE);
                             entries.accept(GOLDEN_SCYTHE);
                             entries.accept(FROZEN_SCYTHE);
+                            entries.accept(FARMER_SCYTHE);
                             entries.accept(BLOODY_ESSENCE);
                             entries.accept(TOXIC_ESSENCE);
                             entries.accept(WITHERING_ESSENCE);
                             entries.accept(GOLDEN_ESSENCE);
                             entries.accept(FROZEN_ESSENCE);
+                            entries.accept(FARMER_ESSENCE);
                             entries.accept(FROZEN_HEART);
                         })
                         .build()

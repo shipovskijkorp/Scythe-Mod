@@ -19,6 +19,7 @@ public final class ScytheItemUtil {
                 || item instanceof WitheringScytheItem
                 || item instanceof GoldenScytheItem
                 || item instanceof FrozenScytheItem
+                || item instanceof FarmerScytheItem
                 || item == ScytheMod.PLAGUE_SCYTHE;
     }
 

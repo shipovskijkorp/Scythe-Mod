@@ -9,9 +9,11 @@ import com.shipovskijkorp.scythes.mod.entity.IceSpikeEntity;
 import com.shipovskijkorp.scythes.mod.entity.ToxicOrbEntity;
 import com.shipovskijkorp.scythes.mod.entity.WitheringMinionEntity;
 import com.shipovskijkorp.scythes.mod.item.BloodScytheItem;
+import com.shipovskijkorp.scythes.mod.item.FarmerScytheItem;
 import com.shipovskijkorp.scythes.mod.item.FrozenHeartItem;
 import com.shipovskijkorp.scythes.mod.item.FrozenScytheItem;
 import com.shipovskijkorp.scythes.mod.item.GoldenScytheItem;
+import com.shipovskijkorp.scythes.mod.item.ScytheMaterial;
 import com.shipovskijkorp.scythes.mod.item.ToxicScytheItem;
 import com.shipovskijkorp.scythes.mod.item.WitheringScytheItem;
 import com.shipovskijkorp.scythes.mod.network.ModPackets;
@@ -56,6 +58,8 @@ public class ScytheMod implements ModInitializer {
     public static final Item WITHERING_SCYTHE = registerItem("withering_scythe", WitheringScytheItem::new, scytheSettings("withering_scythe"));
     public static final Item GOLDEN_SCYTHE = registerItem("golden_scythe", GoldenScytheItem::new, scytheSettings("golden_scythe"));
     public static final Item FROZEN_SCYTHE = registerItem("frozen_scythe", FrozenScytheItem::new, scytheSettings("frozen_scythe"));
+    public static final Item FARMER_SCYTHE = registerItem("farmer_scythe", FarmerScytheItem::new,
+            ScytheMaterial.configureBase(itemSettings("farmer_scythe")));
 
     private static final RegistryKey<EntityType<?>> TOXIC_ORB_KEY = RegistryKey.of(RegistryKeys.ENTITY_TYPE, id("toxic_orb"));
     private static final RegistryKey<EntityType<?>> ICE_SPIKE_KEY = RegistryKey.of(RegistryKeys.ENTITY_TYPE, id("ice_spike"));
@@ -87,6 +91,7 @@ public class ScytheMod implements ModInitializer {
     public static final Item WITHERING_ESSENCE = registerItem("withering_essence", Item::new, itemSettings("withering_essence"));
     public static final Item GOLDEN_ESSENCE = registerItem("golden_essence", Item::new, itemSettings("golden_essence"));
     public static final Item FROZEN_ESSENCE = registerItem("frozen_essence", Item::new, itemSettings("frozen_essence"));
+    public static final Item FARMER_ESSENCE = registerItem("farmer_essence", Item::new, itemSettings("farmer_essence"));
 
     private static final FoodComponent FROZEN_HEART_FOOD = new FoodComponent.Builder()
             .nutrition(ScytheBalance.FrozenHeart.NUTRITION)
@@ -106,7 +111,7 @@ public class ScytheMod implements ModInitializer {
     public static ItemGroup SCYTHE_ITEM_GROUP;
 
     private static final Item[] TAB_ICON_ITEMS = new Item[] {
-            BLOODY_SCYTHE, TOXIC_SCYTHE, WITHERING_SCYTHE, GOLDEN_SCYTHE, FROZEN_SCYTHE
+            BLOODY_SCYTHE, TOXIC_SCYTHE, WITHERING_SCYTHE, GOLDEN_SCYTHE, FROZEN_SCYTHE, FARMER_SCYTHE
     };
 
     public static final RegistryEntry<StatusEffect> BLEEDING =
@@ -142,11 +147,13 @@ public class ScytheMod implements ModInitializer {
                             entries.add(WITHERING_SCYTHE);
                             entries.add(GOLDEN_SCYTHE);
                             entries.add(FROZEN_SCYTHE);
+                            entries.add(FARMER_SCYTHE);
                             entries.add(BLOODY_ESSENCE);
                             entries.add(TOXIC_ESSENCE);
                             entries.add(WITHERING_ESSENCE);
                             entries.add(GOLDEN_ESSENCE);
                             entries.add(FROZEN_ESSENCE);
+                            entries.add(FARMER_ESSENCE);
                             entries.add(FROZEN_HEART);
                         })
                         .build()

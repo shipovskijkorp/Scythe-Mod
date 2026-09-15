@@ -6,6 +6,7 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerEntityCombatEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.loot.v2.LootTableEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 
@@ -30,6 +31,12 @@ public final class FabricServerHooks {
         ServerLivingEntityEvents.AFTER_DEATH.register(FrozenHeartDropHandler::onDeath);
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
                 server.execute(() -> ScytheLifecycle.disconnect(handler.player)));
+        PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, blockEntity) -> {
+            if (world instanceof net.minecraft.server.world.ServerWorld serverWorld
+                    && player instanceof net.minecraft.server.network.ServerPlayerEntity serverPlayer) {
+                FarmerHarvestHandler.afterCropBroken(serverWorld, serverPlayer, pos, state);
+            }
+        });
         ServerTickEvents.END_SERVER_TICK.register(ScytheLifecycle::tickServer);
     }
 }

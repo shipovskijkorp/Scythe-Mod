@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "scythes:essences",
+  "pattern": [
+    "EFE",
+    "CHP",
+    "EWE"
+  ],
+  "key": {
+    "E": "minecraft:ender_pearl",
+    "F": "minecraft:beetroot",
+    "C": "minecraft:carrot",
+    "H": "minecraft:chorus_fruit",
+    "P": "minecraft:potato",
+    "W": "minecraft:wheat"
+  },
+  "result": {
+    "id": "scythes:farmer_essence"
+  },
+  "category": "misc"
+}

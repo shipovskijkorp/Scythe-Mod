@@ -8,7 +8,7 @@ public final class ScytheItemUtil {
     }
 
     public static boolean isScythe(ItemStack stack) {
-        return !stack.isEmpty() && stack.getItem() instanceof ScytheSwordItem;
+        return !stack.isEmpty() && (stack.getItem() instanceof ScytheSwordItem || stack.getItem() instanceof FarmerScytheItem);
     }
 
     public static boolean isBloodScythe(ItemStack stack) {

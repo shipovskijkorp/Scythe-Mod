@@ -3,6 +3,7 @@ package com.shipovskijkorp.scythes.mod.client;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.shipovskijkorp.scythes.mod.ScytheMod;
 import com.shipovskijkorp.scythes.mod.item.ScytheSwordItem;
+import com.shipovskijkorp.scythes.mod.item.FarmerScytheItem;
 import com.shipovskijkorp.scythes.mod.network.ModPackets;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -31,6 +32,7 @@ public class ScytheModClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         ScytheSwordItem.installTooltipAppender(ScytheTooltips::append);
+        FarmerScytheItem.installTooltipAppender(ScytheTooltips::append);
         EntityRendererRegistry.register(ScytheMod.TOXIC_ORB, ThrownItemRenderer::new);
         EntityRendererRegistry.register(ScytheMod.ICE_SPIKE, IceSpikeEntityRenderer::new);
         EntityRendererRegistry.register(ScytheMod.WITHERING_MINION, WitherSkeletonRenderer::new);

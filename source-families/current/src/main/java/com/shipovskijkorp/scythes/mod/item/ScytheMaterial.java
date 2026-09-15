@@ -16,9 +16,21 @@ public final class ScytheMaterial {
             ScytheBalance.Base.ENCHANTABILITY,
             ToolMaterial.NETHERITE.repairItems());
 
-    public static Item.Properties configure(Item.Properties settings) {
+    public static final ToolMaterial FARMER = new ToolMaterial(
+            ToolMaterial.NETHERITE.incorrectBlocksForDrops(),
+            ScytheBalance.Base.DURABILITY,
+            ScytheBalance.Base.MINING_SPEED,
+            ScytheBalance.Farmer.MATERIAL_ATTACK_DAMAGE,
+            ScytheBalance.Base.ENCHANTABILITY,
+            ToolMaterial.NETHERITE.repairItems());
+
+    public static Item.Properties configureBase(Item.Properties settings) {
         settings.stacksTo(ScytheBalance.Base.MAX_STACK_SIZE);
         if (ScytheBalance.Base.FIRE_RESISTANT) settings.fireResistant();
-        return settings.sword(INSTANCE, ScytheBalance.Base.ATTACK_DAMAGE_BONUS, ScytheBalance.Base.ATTACK_SPEED_MODIFIER);
+        return settings;
+    }
+
+    public static Item.Properties configure(Item.Properties settings) {
+        return configureBase(settings).sword(INSTANCE, ScytheBalance.Base.ATTACK_DAMAGE_BONUS, ScytheBalance.Base.ATTACK_SPEED_MODIFIER);
     }
 }

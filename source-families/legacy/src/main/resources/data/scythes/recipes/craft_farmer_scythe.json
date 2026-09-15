@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "scythes:scythes",
+  "pattern": [
+    "NN ",
+    "P E",
+    "P  "
+  ],
+  "key": {
+    "N": { "item": "minecraft:netherite_ingot" },
+    "P": { "item": "minecraft:stick" },
+    "E": { "item": "scythes:farmer_essence" }
+  },
+  "result": {
+    "item": "scythes:farmer_scythe"
+  }
+}

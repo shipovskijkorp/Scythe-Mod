@@ -10,6 +10,7 @@ import com.shipovskijkorp.scythes.mod.entity.IceSpikeEntity;
 import com.shipovskijkorp.scythes.mod.entity.ToxicOrbEntity;
 import com.shipovskijkorp.scythes.mod.entity.WitheringMinionEntity;
 import com.shipovskijkorp.scythes.mod.item.BloodScytheItem;
+import com.shipovskijkorp.scythes.mod.item.FarmerScytheItem;
 import com.shipovskijkorp.scythes.mod.item.FrozenHeartItem;
 import com.shipovskijkorp.scythes.mod.item.FrozenScytheItem;
 import com.shipovskijkorp.scythes.mod.item.GoldenScytheItem;
@@ -54,6 +55,7 @@ public class ScytheMod implements ModInitializer {
 	public static final Item WITHERING_SCYTHE = new WitheringScytheItem(ScytheMaterial.configure(new Item.Settings()));
 	public static final Item GOLDEN_SCYTHE = new GoldenScytheItem(ScytheMaterial.configure(new Item.Settings()));
 	public static final Item FROZEN_SCYTHE = new FrozenScytheItem(ScytheMaterial.configure(new Item.Settings()));
+	public static final Item FARMER_SCYTHE = new FarmerScytheItem(ScytheMaterial.configureBase(new Item.Settings()));
 
 	public static final EntityType<IceSpikeEntity> ICE_SPIKE = FabricEntityTypeBuilder
 			.<IceSpikeEntity>create(SpawnGroup.MISC, IceSpikeEntity::new)
@@ -81,6 +83,7 @@ public class ScytheMod implements ModInitializer {
 	public static final Item WITHERING_ESSENCE = new Item(new Item.Settings());
 	public static final Item GOLDEN_ESSENCE = new Item(new Item.Settings());
 	public static final Item FROZEN_ESSENCE = new Item(new Item.Settings());
+	public static final Item FARMER_ESSENCE = new Item(new Item.Settings());
 	private static final FoodComponent FROZEN_HEART_FOOD = new FoodComponent.Builder()
 			.hunger(ScytheBalance.FrozenHeart.NUTRITION)
 			.saturationModifier(ScytheBalance.FrozenHeart.SATURATION_MODIFIER)
@@ -97,7 +100,7 @@ public class ScytheMod implements ModInitializer {
 	public static final Identifier SCYTHE_ITEM_GROUP_ID = new Identifier(MOD_ID, "scythes");
 	public static ItemGroup SCYTHE_ITEM_GROUP;
 
-	private static final Item[] TAB_ICON_ITEMS = new Item[] { BLOODY_SCYTHE, TOXIC_SCYTHE, WITHERING_SCYTHE, GOLDEN_SCYTHE, FROZEN_SCYTHE };
+	private static final Item[] TAB_ICON_ITEMS = new Item[] { BLOODY_SCYTHE, TOXIC_SCYTHE, WITHERING_SCYTHE, GOLDEN_SCYTHE, FROZEN_SCYTHE, FARMER_SCYTHE };
 
 	public static final StatusEffect BLEEDING = new BleedingEffect();
 	public static final StatusEffect NO_JUMP = new NoJumpEffect();
@@ -116,6 +119,7 @@ public class ScytheMod implements ModInitializer {
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "withering_scythe"), WITHERING_SCYTHE);
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "golden_scythe"), GOLDEN_SCYTHE);
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "frozen_scythe"), FROZEN_SCYTHE);
+		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "farmer_scythe"), FARMER_SCYTHE);
 		Registry.register(Registries.ENTITY_TYPE, new Identifier(MOD_ID, "ice_spike"), ICE_SPIKE);
 		Registry.register(Registries.ENTITY_TYPE, new Identifier(MOD_ID, "toxic_orb"), TOXIC_ORB);
 		Registry.register(Registries.ENTITY_TYPE, new Identifier(MOD_ID, "withering_minion"), WITHERING_MINION);
@@ -127,6 +131,7 @@ public class ScytheMod implements ModInitializer {
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "withering_essence"), WITHERING_ESSENCE);
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "golden_essence"), GOLDEN_ESSENCE);
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "frozen_essence"), FROZEN_ESSENCE);
+		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "farmer_essence"), FARMER_ESSENCE);
 		Registry.register(Registries.ITEM, new Identifier(MOD_ID, "frozen_heart"), FROZEN_HEART);
 
 		Registry.register(Registries.STATUS_EFFECT, new Identifier(MOD_ID, "bleeding"), BLEEDING);
@@ -150,11 +155,13 @@ public class ScytheMod implements ModInitializer {
 							entries.add(WITHERING_SCYTHE);
 							entries.add(GOLDEN_SCYTHE);
 							entries.add(FROZEN_SCYTHE);
+							entries.add(FARMER_SCYTHE);
 							entries.add(BLOODY_ESSENCE);
 							entries.add(TOXIC_ESSENCE);
 							entries.add(WITHERING_ESSENCE);
 							entries.add(GOLDEN_ESSENCE);
 							entries.add(FROZEN_ESSENCE);
+							entries.add(FARMER_ESSENCE);
 							entries.add(FROZEN_HEART);
 						})
 						.build()
