@@ -13,6 +13,7 @@ import com.shipovskijkorp.scythes.mod.item.ScytheMaterial;
 import com.shipovskijkorp.scythes.mod.network.ModPackets;
 import com.shipovskijkorp.scythes.mod.network.ScytheAbilityC2SPacket;
 import com.shipovskijkorp.scythes.mod.platform.fabric.FabricServerHooks;
+import com.shipovskijkorp.scythes.mod.recipe.FireEssenceRecipe;
 import com.shipovskijkorp.scythes.mod.recipe.ToxicEssenceRecipe;
 import java.util.function.Function;
 import net.fabricmc.api.ModInitializer;
@@ -55,6 +56,8 @@ public class ScytheMod implements ModInitializer {
     public static final Item FROZEN_SCYTHE = registerItem("frozen_scythe", FrozenScytheItem::new, scytheSettings("frozen_scythe"));
     public static final Item FARMER_SCYTHE = registerItem("farmer_scythe", FarmerScytheItem::new,
             ScytheMaterial.configureBase(itemSettings("farmer_scythe")));
+    public static final Item FIRE_SCYTHE = registerItem("fire_scythe", ScytheSwordItem::new, scytheSettings("fire_scythe"));
+    public static final Item GUIDE_BOOK = registerItem("guide_book", GuideBookItem::new, itemSettings("guide_book").stacksTo(1));
 
     public static final EntityType<ToxicOrbEntity> TOXIC_ORB = EntityType.Builder
             .<ToxicOrbEntity>of(ToxicOrbEntity::new, MobCategory.MISC)
@@ -82,7 +85,8 @@ public class ScytheMod implements ModInitializer {
     public static final Item WITHERING_ESSENCE = registerItem("withering_essence", Item::new, itemSettings("withering_essence"));
     public static final Item GOLDEN_ESSENCE = registerItem("golden_essence", Item::new, itemSettings("golden_essence"));
     public static final Item FROZEN_ESSENCE = registerItem("frozen_essence", Item::new, itemSettings("frozen_essence"));
-    public static final Item FARMER_ESSENCE = registerItem("farmer_essence", Item::new, itemSettings("farmer_essence"));
+        public static final Item FARMER_ESSENCE = registerItem("farmer_essence", Item::new, itemSettings("farmer_essence"));
+    public static final Item FIRE_ESSENCE = registerItem("fire_essence", Item::new, itemSettings("fire_essence"));
     public static final Item FROZEN_HEART = registerItem(
             "frozen_heart",
             FrozenHeartItem::new,
@@ -95,12 +99,14 @@ public class ScytheMod implements ModInitializer {
 
     public static final RecipeSerializer<ToxicEssenceRecipe> TOXIC_ESSENCE_RECIPE_SERIALIZER =
             new RecipeSerializer<>(ToxicEssenceRecipe.CODEC, ToxicEssenceRecipe.STREAM_CODEC);
+    public static final RecipeSerializer<FireEssenceRecipe> FIRE_ESSENCE_RECIPE_SERIALIZER =
+            new RecipeSerializer<>(FireEssenceRecipe.CODEC, FireEssenceRecipe.STREAM_CODEC);
 
     public static final Identifier SCYTHE_ITEM_GROUP_ID = id("scythes");
     public static CreativeModeTab SCYTHE_ITEM_GROUP;
 
     private static final Item[] TAB_ICON_ITEMS = new Item[] {
-            BLOODY_SCYTHE, TOXIC_SCYTHE, WITHERING_SCYTHE, GOLDEN_SCYTHE, FROZEN_SCYTHE, FARMER_SCYTHE
+            BLOODY_SCYTHE, TOXIC_SCYTHE, WITHERING_SCYTHE, GOLDEN_SCYTHE, FROZEN_SCYTHE, FARMER_SCYTHE, FIRE_SCYTHE
     };
 
     public static final Holder<MobEffect> BLEEDING =
@@ -126,6 +132,7 @@ public class ScytheMod implements ModInitializer {
         Registry.register(BuiltInRegistries.ENTITY_TYPE, id("ice_spike"), ICE_SPIKE);
         FabricDefaultAttributeRegistry.register(WITHERING_MINION, WitheringMinionEntity.createAttributes());
         Registry.register(BuiltInRegistries.RECIPE_SERIALIZER, id("craft_toxic_essence"), TOXIC_ESSENCE_RECIPE_SERIALIZER);
+        Registry.register(BuiltInRegistries.RECIPE_SERIALIZER, id("craft_fire_essence"), FIRE_ESSENCE_RECIPE_SERIALIZER);
         ModPackets.registerPayloadTypes();
 
         SCYTHE_ITEM_GROUP = Registry.register(
@@ -135,18 +142,21 @@ public class ScytheMod implements ModInitializer {
                         .icon(() -> new ItemStack(BLOODY_SCYTHE))
                         .title(Component.translatable("itemGroup." + MOD_ID + ".scythes"))
                         .displayItems((displayContext, entries) -> {
+                            entries.accept(GUIDE_BOOK);
                             entries.accept(BLOODY_SCYTHE);
                             entries.accept(TOXIC_SCYTHE);
                             entries.accept(WITHERING_SCYTHE);
                             entries.accept(GOLDEN_SCYTHE);
                             entries.accept(FROZEN_SCYTHE);
                             entries.accept(FARMER_SCYTHE);
+                            entries.accept(FIRE_SCYTHE);
                             entries.accept(BLOODY_ESSENCE);
                             entries.accept(TOXIC_ESSENCE);
                             entries.accept(WITHERING_ESSENCE);
                             entries.accept(GOLDEN_ESSENCE);
                             entries.accept(FROZEN_ESSENCE);
                             entries.accept(FARMER_ESSENCE);
+                            entries.accept(FIRE_ESSENCE);
                             entries.accept(FROZEN_HEART);
                         })
                         .build()

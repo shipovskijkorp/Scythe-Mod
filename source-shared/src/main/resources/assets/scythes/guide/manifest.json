@@ -1,0 +1,13 @@
+{
+  "format": 1,
+  "welcome": "welcome",
+  "entries": [
+    {"id": "bloody_scythe", "page": "bloody_scythe", "item": "scythes:bloody_scythe", "colour": "#A73535"},
+    {"id": "toxic_scythe", "page": "toxic_scythe", "item": "scythes:toxic_scythe", "colour": "#75B84B"},
+    {"id": "withering_scythe", "page": "withering_scythe", "item": "scythes:withering_scythe", "colour": "#80658F"},
+    {"id": "golden_scythe", "page": "golden_scythe", "item": "scythes:golden_scythe", "colour": "#D9A928"},
+    {"id": "frozen_scythe", "page": "frozen_scythe", "item": "scythes:frozen_scythe", "colour": "#76CFE3"},
+    {"id": "farmer_scythe", "page": "farmer_scythe", "item": "scythes:farmer_scythe", "colour": "#7BAE48"},
+    {"id": "fire_scythe", "page": "fire_scythe", "item": "scythes:fire_scythe", "colour": "#E56B2D"}
+  ]
+}

@@ -395,6 +395,7 @@ public final class ScytheBalance {
         private Crafting() {}
 
         public static final int TOXIC_ESSENCE_OUTPUT_COUNT = 1;
+        public static final int FIRE_ESSENCE_OUTPUT_COUNT = 1;
     }
 
     /** Progression tuning. */

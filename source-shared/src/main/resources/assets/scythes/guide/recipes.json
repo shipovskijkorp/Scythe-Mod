@@ -1,0 +1,109 @@
+{
+  "format": 1,
+  "recipes": {
+    "bloody_scythe": {
+      "ingredients": [
+        {"item":"minecraft:netherite_ingot"},{"item":"minecraft:netherite_ingot"},{},
+        {"item":"minecraft:stick"},{},{"item":"scythes:bloody_essence"},
+        {"item":"minecraft:stick"},{},{}
+      ],
+      "output":{"item":"scythes:bloody_scythe"}
+    },
+    "toxic_essence": {
+      "ingredients": [
+        {"item":"minecraft:spider_eye"},{"item":"minecraft:potion","name":"strong_poison"},{"item":"minecraft:spider_eye"},
+        {"item":"minecraft:potion","name":"strong_poison"},{"item":"minecraft:pufferfish"},{"item":"minecraft:potion","name":"strong_poison"},
+        {"item":"minecraft:spider_eye"},{"item":"minecraft:potion","name":"strong_poison"},{"item":"minecraft:spider_eye"}
+      ],
+      "output":{"item":"scythes:toxic_essence"}
+    },
+    "toxic_scythe": {
+      "ingredients": [
+        {"item":"minecraft:netherite_ingot"},{"item":"minecraft:netherite_ingot"},{},
+        {"item":"minecraft:stick"},{},{"item":"scythes:toxic_essence"},
+        {"item":"minecraft:stick"},{},{}
+      ],
+      "output":{"item":"scythes:toxic_scythe"}
+    },
+    "withering_essence": {
+      "ingredients": [
+        {"item":"minecraft:bone"},{"item":"minecraft:netherite_ingot"},{"item":"minecraft:bone"},
+        {"item":"minecraft:wither_skeleton_skull"},{"item":"minecraft:nether_star"},{"item":"minecraft:wither_skeleton_skull"},
+        {"item":"minecraft:bone"},{"item":"minecraft:netherite_ingot"},{"item":"minecraft:bone"}
+      ],
+      "output":{"item":"scythes:withering_essence"}
+    },
+    "withering_scythe": {
+      "ingredients": [
+        {"item":"minecraft:netherite_ingot"},{"item":"minecraft:netherite_ingot"},{},
+        {"item":"minecraft:stick"},{},{"item":"scythes:withering_essence"},
+        {"item":"minecraft:stick"},{},{}
+      ],
+      "output":{"item":"scythes:withering_scythe"}
+    },
+    "golden_essence": {
+      "ingredients": [
+        {"item":"minecraft:gold_nugget"},{"item":"minecraft:gold_block"},{"item":"minecraft:gold_nugget"},
+        {"item":"minecraft:gold_block"},{"item":"minecraft:nether_star"},{"item":"minecraft:gold_block"},
+        {"item":"minecraft:gold_nugget"},{"item":"minecraft:gold_block"},{"item":"minecraft:gold_nugget"}
+      ],
+      "output":{"item":"scythes:golden_essence"}
+    },
+    "golden_scythe": {
+      "ingredients": [
+        {"item":"minecraft:netherite_ingot"},{"item":"minecraft:netherite_ingot"},{},
+        {"item":"minecraft:stick"},{},{"item":"scythes:golden_essence"},
+        {"item":"minecraft:stick"},{},{}
+      ],
+      "output":{"item":"scythes:golden_scythe"}
+    },
+    "frozen_essence": {
+      "ingredients": [
+        {"item":"minecraft:powder_snow_bucket"},{"item":"minecraft:blue_ice"},{"item":"minecraft:powder_snow_bucket"},
+        {"item":"minecraft:blue_ice"},{"item":"scythes:frozen_heart"},{"item":"minecraft:blue_ice"},
+        {"item":"minecraft:powder_snow_bucket"},{"item":"minecraft:blue_ice"},{"item":"minecraft:powder_snow_bucket"}
+      ],
+      "output":{"item":"scythes:frozen_essence"}
+    },
+    "frozen_scythe": {
+      "ingredients": [
+        {"item":"minecraft:netherite_ingot"},{"item":"minecraft:netherite_ingot"},{},
+        {"item":"minecraft:stick"},{},{"item":"scythes:frozen_essence"},
+        {"item":"minecraft:stick"},{},{}
+      ],
+      "output":{"item":"scythes:frozen_scythe"}
+    },
+    "farmer_essence": {
+      "ingredients": [
+        {"item":"minecraft:ender_pearl"},{"item":"minecraft:beetroot"},{"item":"minecraft:ender_pearl"},
+        {"item":"minecraft:carrot"},{"item":"minecraft:chorus_fruit"},{"item":"minecraft:potato"},
+        {"item":"minecraft:ender_pearl"},{"item":"minecraft:wheat"},{"item":"minecraft:ender_pearl"}
+      ],
+      "output":{"item":"scythes:farmer_essence"}
+    },
+    "farmer_scythe": {
+      "ingredients": [
+        {"item":"minecraft:netherite_ingot"},{"item":"minecraft:netherite_ingot"},{},
+        {"item":"minecraft:stick"},{},{"item":"scythes:farmer_essence"},
+        {"item":"minecraft:stick"},{},{}
+      ],
+      "output":{"item":"scythes:farmer_scythe"}
+    },
+    "fire_essence": {
+      "ingredients": [
+        {"item":"minecraft:blaze_powder"},{"item":"minecraft:fire_charge"},{"item":"minecraft:blaze_powder"},
+        {"item":"minecraft:lava_bucket"},{"item":"minecraft:tnt"},{"item":"minecraft:lava_bucket"},
+        {"item":"minecraft:firework_rocket","name":"flight_one_firework"},{"item":"minecraft:firework_rocket","name":"flight_one_firework"},{"item":"minecraft:firework_rocket","name":"flight_one_firework"}
+      ],
+      "output":{"item":"scythes:fire_essence"}
+    },
+    "fire_scythe": {
+      "ingredients": [
+        {"item":"minecraft:netherite_ingot"},{"item":"minecraft:netherite_ingot"},{},
+        {"item":"minecraft:stick"},{},{"item":"scythes:fire_essence"},
+        {"item":"minecraft:stick"},{},{}
+      ],
+      "output":{"item":"scythes:fire_scythe"}
+    }
+  }
+}

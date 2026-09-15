@@ -13,12 +13,15 @@ import com.shipovskijkorp.scythes.mod.item.FarmerScytheItem;
 import com.shipovskijkorp.scythes.mod.item.FrozenHeartItem;
 import com.shipovskijkorp.scythes.mod.item.FrozenScytheItem;
 import com.shipovskijkorp.scythes.mod.item.GoldenScytheItem;
+import com.shipovskijkorp.scythes.mod.item.GuideBookItem;
 import com.shipovskijkorp.scythes.mod.item.ScytheMaterial;
+import com.shipovskijkorp.scythes.mod.item.ScytheSwordItem;
 import com.shipovskijkorp.scythes.mod.item.ToxicScytheItem;
 import com.shipovskijkorp.scythes.mod.item.WitheringScytheItem;
 import com.shipovskijkorp.scythes.mod.network.ModPackets;
 import com.shipovskijkorp.scythes.mod.network.ScytheAbilityC2SPacket;
 import com.shipovskijkorp.scythes.mod.platform.fabric.FabricServerHooks;
+import com.shipovskijkorp.scythes.mod.recipe.FireEssenceRecipe;
 import com.shipovskijkorp.scythes.mod.recipe.ToxicEssenceRecipe;
 import java.util.function.Function;
 import net.fabricmc.api.ModInitializer;
@@ -60,6 +63,8 @@ public class ScytheMod implements ModInitializer {
     public static final Item FROZEN_SCYTHE = registerItem("frozen_scythe", FrozenScytheItem::new, scytheSettings("frozen_scythe"));
     public static final Item FARMER_SCYTHE = registerItem("farmer_scythe", FarmerScytheItem::new,
             ScytheMaterial.configureBase(itemSettings("farmer_scythe")));
+    public static final Item FIRE_SCYTHE = registerItem("fire_scythe", ScytheSwordItem::new, scytheSettings("fire_scythe"));
+    public static final Item GUIDE_BOOK = registerItem("guide_book", GuideBookItem::new, itemSettings("guide_book").maxCount(1));
 
     private static final RegistryKey<EntityType<?>> TOXIC_ORB_KEY = RegistryKey.of(RegistryKeys.ENTITY_TYPE, id("toxic_orb"));
     private static final RegistryKey<EntityType<?>> ICE_SPIKE_KEY = RegistryKey.of(RegistryKeys.ENTITY_TYPE, id("ice_spike"));
@@ -92,6 +97,7 @@ public class ScytheMod implements ModInitializer {
     public static final Item GOLDEN_ESSENCE = registerItem("golden_essence", Item::new, itemSettings("golden_essence"));
     public static final Item FROZEN_ESSENCE = registerItem("frozen_essence", Item::new, itemSettings("frozen_essence"));
     public static final Item FARMER_ESSENCE = registerItem("farmer_essence", Item::new, itemSettings("farmer_essence"));
+    public static final Item FIRE_ESSENCE = registerItem("fire_essence", Item::new, itemSettings("fire_essence"));
 
     private static final FoodComponent FROZEN_HEART_FOOD = new FoodComponent.Builder()
             .nutrition(ScytheBalance.FrozenHeart.NUTRITION)
@@ -106,12 +112,14 @@ public class ScytheMod implements ModInitializer {
 
     public static final SpecialCraftingRecipe.SpecialRecipeSerializer<ToxicEssenceRecipe> TOXIC_ESSENCE_RECIPE_SERIALIZER =
             new SpecialCraftingRecipe.SpecialRecipeSerializer<>(ToxicEssenceRecipe::new);
+    public static final SpecialCraftingRecipe.SpecialRecipeSerializer<FireEssenceRecipe> FIRE_ESSENCE_RECIPE_SERIALIZER =
+            new SpecialCraftingRecipe.SpecialRecipeSerializer<>(FireEssenceRecipe::new);
 
     public static final Identifier SCYTHE_ITEM_GROUP_ID = id("scythes");
     public static ItemGroup SCYTHE_ITEM_GROUP;
 
     private static final Item[] TAB_ICON_ITEMS = new Item[] {
-            BLOODY_SCYTHE, TOXIC_SCYTHE, WITHERING_SCYTHE, GOLDEN_SCYTHE, FROZEN_SCYTHE, FARMER_SCYTHE
+            BLOODY_SCYTHE, TOXIC_SCYTHE, WITHERING_SCYTHE, GOLDEN_SCYTHE, FROZEN_SCYTHE, FARMER_SCYTHE, FIRE_SCYTHE
     };
 
     public static final RegistryEntry<StatusEffect> BLEEDING =
@@ -133,6 +141,7 @@ public class ScytheMod implements ModInitializer {
         Registry.register(Registries.ENTITY_TYPE, WITHERING_MINION_KEY, WITHERING_MINION);
         FabricDefaultAttributeRegistry.register(WITHERING_MINION, WitheringMinionEntity.createAttributes());
         Registry.register(Registries.RECIPE_SERIALIZER, id("craft_toxic_essence"), TOXIC_ESSENCE_RECIPE_SERIALIZER);
+        Registry.register(Registries.RECIPE_SERIALIZER, id("craft_fire_essence"), FIRE_ESSENCE_RECIPE_SERIALIZER);
         ModPackets.register();
 
         SCYTHE_ITEM_GROUP = Registry.register(
@@ -142,18 +151,21 @@ public class ScytheMod implements ModInitializer {
                         .icon(() -> new ItemStack(BLOODY_SCYTHE))
                         .displayName(Text.translatable("itemGroup." + MOD_ID + ".scythes"))
                         .entries((displayContext, entries) -> {
+                            entries.add(GUIDE_BOOK);
                             entries.add(BLOODY_SCYTHE);
                             entries.add(TOXIC_SCYTHE);
                             entries.add(WITHERING_SCYTHE);
                             entries.add(GOLDEN_SCYTHE);
                             entries.add(FROZEN_SCYTHE);
                             entries.add(FARMER_SCYTHE);
+							entries.add(FIRE_SCYTHE);
                             entries.add(BLOODY_ESSENCE);
                             entries.add(TOXIC_ESSENCE);
                             entries.add(WITHERING_ESSENCE);
                             entries.add(GOLDEN_ESSENCE);
                             entries.add(FROZEN_ESSENCE);
                             entries.add(FARMER_ESSENCE);
+							entries.add(FIRE_ESSENCE);
                             entries.add(FROZEN_HEART);
                         })
                         .build()

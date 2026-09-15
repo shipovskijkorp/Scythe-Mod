@@ -1,7 +1,9 @@
 package com.shipovskijkorp.scythes.mod.client;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.client.guide.GuideScreen;
 import com.shipovskijkorp.scythes.mod.item.ScytheSwordItem;
+import com.shipovskijkorp.scythes.mod.item.GuideBookItem;
 import com.shipovskijkorp.scythes.mod.item.FarmerScytheItem;
 import com.shipovskijkorp.scythes.mod.network.ModPackets;
 import net.fabricmc.api.ClientModInitializer;
@@ -41,6 +43,7 @@ public class ScytheModClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        GuideBookItem.installClientOpener(GuideScreen::open);
         ScytheSwordItem.installTooltipAppender(ScytheTooltips::append);
         FarmerScytheItem.installTooltipAppender(ScytheTooltips::append);
 

@@ -23,16 +23,21 @@ public class ScythesJeiPlugin implements IModPlugin {
 
     @Override
     public void registerCategories(IRecipeCategoryRegistration registration) {
-        registration.addRecipeCategories(new ToxicEssenceRecipeCategory(registration.getJeiHelpers().getGuiHelper()));
+        registration.addRecipeCategories(
+                new ToxicEssenceRecipeCategory(registration.getJeiHelpers().getGuiHelper()),
+                new FireEssenceRecipeCategory(registration.getJeiHelpers().getGuiHelper())
+        );
     }
 
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
         registration.addRecipes(ToxicEssenceRecipeCategory.RECIPE_TYPE, List.of(new ToxicEssenceJeiRecipe()));
+        registration.addRecipes(FireEssenceRecipeCategory.RECIPE_TYPE, List.of(new FireEssenceJeiRecipe()));
     }
 
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
         registration.addRecipeCatalyst(new ItemStack(Items.CRAFTING_TABLE), ToxicEssenceRecipeCategory.RECIPE_TYPE);
+        registration.addRecipeCatalyst(new ItemStack(Items.CRAFTING_TABLE), FireEssenceRecipeCategory.RECIPE_TYPE);
     }
 }

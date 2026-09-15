@@ -1,0 +1,24 @@
+{
+  "format": 2,
+  "placeholder": "{{sc_text:<index>}}",
+  "templates": {
+    "welcome": {
+      "slots": 6,
+      "template": "# {{sc_text:0}}\n{{sc_text:1}}\n\n## {{sc_text:2}}\n{{sc_text:3}}\n<new_page/>\n## {{sc_text:4}}\n<scythe_index/>\n\n{{sc_text:5}}"
+    },
+    "element": {
+      "slots": 19,
+      "template": "# {{sc_text:0}}\n{{sc_text:1}}\n<new_page/>\n## {{sc_text:2}}\n{{sc_text:3}}\n<recipe:{{sc_text:4}}/>\n<new_page/>\n## {{sc_text:5}}\n{{sc_text:6}}\n<recipe:{{sc_text:7}}/>\n<new_page/>\n## {{sc_text:8}}\n{{sc_text:9}}\n<recipe:{{sc_text:10}}/>\n<new_page/>\n## {{sc_text:11}}\n{{sc_text:12}}\n<new_page/>\n## {{sc_text:13}}\n{{sc_text:14}}\n<new_page/>\n## {{sc_text:15}}\n{{sc_text:16}}\n<new_page/>\n## {{sc_text:17}}\n{{sc_text:18}}"
+    }
+  },
+  "pages": {
+    "welcome": "welcome",
+    "bloody_scythe": "element",
+    "toxic_scythe": "element",
+    "withering_scythe": "element",
+    "golden_scythe": "element",
+    "frozen_scythe": "element",
+    "farmer_scythe": "element",
+    "fire_scythe": "element"
+  }
+}
