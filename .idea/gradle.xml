@@ -23,6 +23,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$/builds/legacy" />
+            <option value="$PROJECT_DIR$/builds/legacy/targets/1.20.1-fabric" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="true" />

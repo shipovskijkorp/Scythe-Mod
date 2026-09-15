@@ -14,8 +14,6 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.SwordItem;
-import net.minecraft.item.ToolMaterials;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -32,10 +30,7 @@ import org.jetbrains.annotations.Nullable;
 public class FrozenScytheItem extends ScytheSwordItem {
 
     public FrozenScytheItem(Settings settings) {
-        super(
-                ToolMaterials.NETHERITE,
-                settings.attributeModifiers(SwordItem.createAttributeModifiers(ToolMaterials.NETHERITE, 4, -2.8F))
-        );
+        super(settings);
     }
 
     @Override
