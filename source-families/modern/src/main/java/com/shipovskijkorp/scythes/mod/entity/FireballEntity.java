@@ -96,7 +96,11 @@ public final class FireballEntity extends ThrownItemEntity {
 //? } else {
         if (lockedTarget.getWorld() != world()) return;
 //? }
-        Vec3d desired = lockedTarget.getPos().add(0.0D, lockedTarget.getHeight() * 0.5D, 0.0D).subtract(getPos());
+        Vec3d desired = new Vec3d(
+                lockedTarget.getX() - getX(),
+                lockedTarget.getY() + lockedTarget.getHeight() * 0.5D - getY(),
+                lockedTarget.getZ() - getZ()
+        );
         if (desired.lengthSquared() < 1.0E-6D) return;
         desired = desired.normalize().multiply(ScytheBalance.Fire.FIREBALL_SPEED);
         Vec3d current = getVelocity();

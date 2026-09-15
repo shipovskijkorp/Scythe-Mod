@@ -127,8 +127,8 @@ public class ContractChecks {
         check(Probe.calls == 0, "dead player cannot activate");
         p.alive = true; p.off = new ItemStack(new Item()); Probe.calls = 0; ScytheAbilityHandler.activate(p);
         check(Probe.calls == 0, "non-scythe ignored");
-        Item[] scythes = {new WitheringScytheItem(), new GoldenScytheItem(), new FrozenScytheItem(), new FarmerScytheItem()};
-        String[] skills = {"WitheringAura", "GoldenRain", "FrozenStorm", "FarmerGrowth"};
+        Item[] scythes = {new WitheringScytheItem(), new GoldenScytheItem(), new FrozenScytheItem(), new FarmerScytheItem(), new FireScytheItem()};
+        String[] skills = {"WitheringAura", "GoldenRain", "FrozenStorm", "FarmerGrowth", "FireBurst"};
         for (int i = 0; i < scythes.length; i++) {
             p.main = new ItemStack(scythes[i]); Probe.calls = 0; ScytheAbilityHandler.activate(p);
             check(Probe.calls == 1 && Probe.last.equals(skills[i]), "skill routing " + skills[i]);
@@ -194,11 +194,11 @@ def main():
  public Clock level(){return clock;} public Clock getWorld(){return clock;} public Clock getEntityWorld(){return clock;}
 }'''.replace('PLAYER_SHORT', short_player).replace('STACK', stack).replace('ITEM', item)
             write_class(fixture, player, player_body)
-            for kind in ('Blood', 'Toxic', 'Withering', 'Golden', 'Frozen', 'Farmer'):
+            for kind in ('Blood', 'Toxic', 'Withering', 'Golden', 'Frozen', 'Farmer', 'Fire'):
                 write_class(fixture, PACKAGE + '.item.' + kind + 'ScytheItem',
                             f'public class {kind}ScytheItem extends {item} {{}}')
             write_class(fixture, PACKAGE + '.ability.Probe', 'public class Probe {public static int calls; public static String last;}')
-            for kind in ('BloodHarvest', 'ToxicAura', 'WitheringAura', 'GoldenRain', 'FrozenStorm', 'FarmerGrowth'):
+            for kind in ('BloodHarvest', 'ToxicAura', 'WitheringAura', 'GoldenRain', 'FrozenStorm', 'FarmerGrowth', 'FireBurst'):
                 write_class(fixture, PACKAGE + '.ability.' + kind + 'Ability',
                             f'public class {kind}Ability {{public static void tryActivate({player} p) {{Probe.calls++; Probe.last="{kind}";}}}}')
             text = HARNESS.replace('PLAYER_SHORT', short_player).replace('ITEMSTACK', stack).replace('import PLAYER;', 'import ' + player + ';').replace('ITEM;', item + ';')

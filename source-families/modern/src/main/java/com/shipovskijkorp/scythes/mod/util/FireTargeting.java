@@ -21,7 +21,11 @@ public final class FireTargeting {
     public static LivingEntity findLockTarget(PlayerEntity player) {
         double range = ScytheBalance.Fire.FIREBALL_LOCK_RANGE;
         Box box = player.getBoundingBox().expand(range);
+//? if >=1.21.11 {
+        List<LivingEntity> candidates = player.getEntityWorld().getEntitiesByClass(
+//? } else {
         List<LivingEntity> candidates = player.getWorld().getEntitiesByClass(
+//? }
                 LivingEntity.class,
                 box,
                 target -> isValidTarget(player, target) && target.squaredDistanceTo(player) <= range * range
@@ -35,7 +39,7 @@ public final class FireTargeting {
         double bestDistance = Double.MAX_VALUE;
 
         for (LivingEntity target : candidates) {
-            Vec3d point = target.getPos().add(0.0D, target.getHeight() * 0.5D, 0.0D);
+            Vec3d point = new Vec3d(target.getX(), target.getY() + target.getHeight() * 0.5D, target.getZ());
             Vec3d delta = point.subtract(eye);
             double distance = delta.lengthSquared();
             if (distance <= 1.0E-6D) continue;
