@@ -1,0 +1,34 @@
+def model = gradle.ext.scytheDescriptor
+def repositoryRoot = gradle.ext.scytheRepositoryRoot
+// Plugin is declared apply-false in the family bootstrap; choose by family toolchain.
+ext.scytheLoomPlugin = rootProject.findProperty('scythe_loom_plugin') ?: 'fabric-loom'
+
+subprojects { targetProject ->
+    def definition = model.targets[targetProject.name]
+    if (definition == null) throw new GradleException("Unconfigured target: ${targetProject.path}")
+    targetProject.ext.scytheTarget = definition
+    def adapter = new File(repositoryRoot, "build-logic/${definition['source.platform']}-target.gradle")
+    if (!adapter.isFile()) throw new GradleException("Loader adapter not implemented: ${definition['source.platform']}")
+    targetProject.apply from: adapter
+    targetProject.apply from: new File(repositoryRoot, 'build-logic/common-target.gradle')
+}
+
+def targetTasks = { String taskName -> model.targets.keySet().collect { ":${it}:${taskName}" } }
+tasks.named('build') { dependsOn targetTasks('build') }
+tasks.named('clean') { dependsOn targetTasks('clean') }
+tasks.register('buildAndCollect') {
+    group = 'build'
+    description = 'Build every target in this family and collect its loader-qualified release JAR'
+    dependsOn targetTasks('buildAndCollect')
+}
+tasks.register('materializeSource') {
+    group = 'build setup'
+    dependsOn targetTasks('prepareEffectiveSource')
+}
+['Client', 'Server'].each { side ->
+    tasks.register("runActive${side}") {
+        group = 'application'
+        description = "Run ${model.vcsTarget} ${side.toLowerCase()}"
+        dependsOn ":${model.vcsTarget}:run${side}"
+    }
+}

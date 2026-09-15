@@ -1,6 +1,7 @@
 package com.shipovskijkorp.scythes.mod.item;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
@@ -9,8 +10,6 @@ import net.minecraft.world.level.Level;
 
 /** Edible frozen heart that freezes its consumer for three seconds. */
 public final class FrozenHeartItem extends Item {
-
-    private static final int FREEZING_DURATION_TICKS = 3 * 20;
 
     public FrozenHeartItem(Properties properties) {
         super(properties);
@@ -23,8 +22,8 @@ public final class FrozenHeartItem extends Item {
         if (!level.isClientSide()) {
             user.addEffect(new MobEffectInstance(
                     ScytheMod.FREEZING,
-                    FREEZING_DURATION_TICKS,
-                    0,
+                    ScytheBalance.FrozenHeart.FREEZING_DURATION_TICKS,
+                    ScytheBalance.FrozenHeart.FREEZING_AMPLIFIER,
                     false,
                     true,
                     true

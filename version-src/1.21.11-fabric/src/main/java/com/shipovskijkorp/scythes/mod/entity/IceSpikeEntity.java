@@ -2,6 +2,7 @@ package com.shipovskijkorp.scythes.mod.entity;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
 import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -21,10 +22,6 @@ import net.minecraft.world.World;
 
 /** Arrow-like projectile fired by the Frost Scythe. */
 public final class IceSpikeEntity extends PersistentProjectileEntity {
-
-    public static final float HIT_DAMAGE = 10.0F;
-    public static final int FREEZING_TICKS = 30;
-    public static final int MAX_LIFETIME_TICKS = 20 * 10;
 
     public IceSpikeEntity(EntityType<? extends IceSpikeEntity> entityType, World world) {
         super(entityType, world);
@@ -75,11 +72,11 @@ public final class IceSpikeEntity extends PersistentProjectileEntity {
 
         if (hitEntity instanceof LivingEntity target) {
             Entity attacker = owner != null ? owner : this;
-            target.damage(serverWorld, getDamageSources().arrow(this, attacker), HIT_DAMAGE);
+            target.damage(serverWorld, getDamageSources().arrow(this, attacker), ScytheBalance.IceSpike.HIT_DAMAGE);
             target.addStatusEffect(new StatusEffectInstance(
                     ScytheMod.FREEZING,
-                    FREEZING_TICKS,
-                    0,
+                    ScytheBalance.IceSpike.FREEZING_TICKS,
+                    ScytheBalance.IceSpike.FREEZING_AMPLIFIER,
                     false,
                     true,
                     true
@@ -119,7 +116,7 @@ public final class IceSpikeEntity extends PersistentProjectileEntity {
             );
         }
 
-        if (!getEntityWorld().isClient() && age > MAX_LIFETIME_TICKS) {
+        if (!getEntityWorld().isClient() && age > ScytheBalance.IceSpike.MAX_LIFETIME_TICKS) {
             discard();
         }
     }

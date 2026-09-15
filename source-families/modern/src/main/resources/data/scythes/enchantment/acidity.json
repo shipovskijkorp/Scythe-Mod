@@ -4,17 +4,17 @@
   },
   "supported_items": "#scythes:enchantable/toxic_scythe",
   "primary_items": "#scythes:enchantable/toxic_scythe",
-  "weight": 5,
-  "max_level": 3,
+  "weight": "${balance:Enchantments.ACIDITY_WEIGHT}",
+  "max_level": "${balance:Enchantments.ACIDITY_MAX_LEVEL}",
   "min_cost": {
-    "base": 8,
-    "per_level_above_first": 12
+    "base": "${balance:Enchantments.ACIDITY_MIN_COST}",
+    "per_level_above_first": "${balance:Enchantments.ACIDITY_COST_PER_LEVEL}"
   },
   "max_cost": {
-    "base": 43,
-    "per_level_above_first": 12
+    "base": "${balance:Enchantments.ACIDITY_MAX_COST}",
+    "per_level_above_first": "${balance:Enchantments.ACIDITY_COST_PER_LEVEL}"
   },
-  "anvil_cost": 2,
+  "anvil_cost": "${balance:Enchantments.ACIDITY_ANVIL_COST}",
   "slots": [
     "mainhand"
   ],

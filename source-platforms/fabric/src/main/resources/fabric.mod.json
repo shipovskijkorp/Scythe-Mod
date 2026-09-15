@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "@mod.id@",
+  "version": "@mod.version@",
+  "name": "@mod.name@",
+  "description": "@mod.description@",
+  "authors": "@mod.authors@",
+  "contact": {
+    "homepage": "@mod.homepage@",
+    "sources": "@mod.sources@"
+  },
+  "license": "@mod.license@",
+  "icon": "assets/scythes/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.shipovskijkorp.scythes.mod.ScytheMod"
+    ],
+    "client": [
+      "com.shipovskijkorp.scythes.mod.client.ScytheModClient"
+    ],
+    "jei_mod_plugin": [
+      "com.shipovskijkorp.scythes.mod.compat.jei.ScythesJeiPlugin"
+    ]
+  },
+  "mixins": [
+    "scythes.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": "@meta.loader_min@",
+    "minecraft": "@meta.minecraft@",
+    "java": "@meta.java_min@",
+    "fabric-api": "@meta.fabric_api_min@"
+  },
+  "suggests": {
+    "jei": "*"
+  }
+}

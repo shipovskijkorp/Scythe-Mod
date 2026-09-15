@@ -1,6 +1,7 @@
 package com.shipovskijkorp.scythes.mod.effect;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.util.ScytheDamageTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffect;
@@ -13,10 +14,6 @@ import net.minecraft.world.entity.LivingEntity;
  * duration-based periodic damage used by the 1.20.1 implementation.
  */
 public final class FreezingEffect extends MobEffect {
-
-    public static final int DAMAGE_INTERVAL_TICKS = 20;
-    public static final float DAMAGE_PER_PROC = 1.0F;
-    public static final float DAMAGE_CHANCE = 0.60F;
 
     public FreezingEffect() {
         super(MobEffectCategory.HARMFUL, 0x8FD8F4);
@@ -35,9 +32,9 @@ public final class FreezingEffect extends MobEffect {
 
         MobEffectInstance instance = entity.getEffect(ScytheMod.FREEZING);
         if (instance != null
-                && instance.getDuration() % DAMAGE_INTERVAL_TICKS == 0
-                && entity.getRandom().nextFloat() < DAMAGE_CHANCE) {
-            entity.hurtServer(level, ScytheDamageTypes.freezing(level), DAMAGE_PER_PROC);
+                && instance.getDuration() % ScytheBalance.Freezing.DAMAGE_INTERVAL_TICKS == 0
+                && entity.getRandom().nextFloat() < ScytheBalance.Freezing.DAMAGE_CHANCE) {
+            entity.hurtServer(level, ScytheDamageTypes.freezing(level), ScytheBalance.Freezing.DAMAGE_PER_PROC);
         }
 
         // One tick below the vanilla damage threshold preserves the frosted HUD

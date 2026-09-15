@@ -1,22 +1,21 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.item.ToxicScytheItem;
-import com.shipovskijkorp.scythes.mod.network.ToxicAuraHudS2CPacket;
+import com.shipovskijkorp.scythes.mod.platform.HudSync;
+import com.shipovskijkorp.scythes.mod.platform.HudTransport;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.InteractionHand;
 
 public final class ToxicAuraAbility {
 
     private ToxicAuraAbility() {
     }
-
-    public static final int AURA_COOLDOWN_TICKS = 20 * 60;
-    public static final int AURA_DURABILITY_COST = BloodHarvestAbility.DURABILITY_COST;
 
     public static void tryActivate(ServerPlayer player) {
         InteractionHand hand = getHeldToxicScytheHand(player);
@@ -30,25 +29,30 @@ public final class ToxicAuraAbility {
             return;
         }
 
-        int cooldownLeft = ToxicScytheCooldowns.getAuraTicksLeft(player);
+        int cooldownLeft = ScytheCooldowns.remaining(player, ScytheCooldowns.Skill.TOXIC_AURA);
         if (cooldownLeft > 0) {
             player.sendOverlayMessage(Component.translatable("message.scythes.toxic_aura.cooldown", Math.max(1, cooldownLeft / 20)));
             return;
         }
 
         ItemStack stack = player.getItemInHand(hand);
-        if (!ToxicScytheItem.hasEnoughDurability(stack, AURA_DURABILITY_COST)) {
+        if (!ToxicScytheItem.hasEnoughDurability(stack, ScytheBalance.ToxicAura.AURA_DURABILITY_COST)) {
             player.sendOverlayMessage(Component.translatable("message.scythes.scythe_ability.no_durability"));
             return;
         }
 
-        if (AURA_DURABILITY_COST > 0) {
-            stack.hurtAndBreak(AURA_DURABILITY_COST, player, hand == InteractionHand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
+        if (ScytheBalance.ToxicAura.AURA_DURABILITY_COST > 0) {
+            stack.hurtAndBreak(ScytheBalance.ToxicAura.AURA_DURABILITY_COST, player, hand == InteractionHand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
         }
 
+//? if >=26.2 {
+        int acidityLevel = ToxicScytheItem.getAcidityLevel(player, stack);
+        int auraTicks = ToxicAuraTracker.start(player, acidityLevel);
+//? } else {
         int auraTicks = ToxicAuraTracker.start(player, ToxicScytheItem.getAcidityLevel(player, stack));
-        ToxicAuraHudS2CPacket.sendTicks(player, auraTicks);
-        ToxicScytheCooldowns.setAuraCooldown(player, AURA_COOLDOWN_TICKS);
+//? }
+        HudSync.start(player, HudTransport.Timer.TOXIC_AURA, auraTicks);
+        ScytheCooldowns.start(player, ScytheCooldowns.Skill.TOXIC_AURA, ScytheBalance.ToxicAura.AURA_COOLDOWN_TICKS);
         ScytheAdvancementTracker.markToxicActive(player);
 
         player.level().playSound(

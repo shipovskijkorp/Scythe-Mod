@@ -1,6 +1,7 @@
 package com.shipovskijkorp.scythes.mod;
 
 import com.shipovskijkorp.scythes.mod.ability.*;
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.effect.BleedingEffect;
 import com.shipovskijkorp.scythes.mod.effect.FreezingEffect;
 import com.shipovskijkorp.scythes.mod.effect.NoJumpEffect;
@@ -15,11 +16,11 @@ import com.shipovskijkorp.scythes.mod.item.ToxicScytheItem;
 import com.shipovskijkorp.scythes.mod.item.WitheringScytheItem;
 import com.shipovskijkorp.scythes.mod.network.ModPackets;
 import com.shipovskijkorp.scythes.mod.network.ScytheAbilityC2SPacket;
+import com.shipovskijkorp.scythes.mod.platform.fabric.FabricServerHooks;
 import com.shipovskijkorp.scythes.mod.recipe.ToxicEssenceRecipe;
+import java.util.function.Function;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.component.type.FoodComponent;
@@ -38,14 +39,10 @@ import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.function.Function;
 
 public class ScytheMod implements ModInitializer {
 
@@ -66,23 +63,23 @@ public class ScytheMod implements ModInitializer {
 
     public static final EntityType<ToxicOrbEntity> TOXIC_ORB = FabricEntityTypeBuilder
             .<ToxicOrbEntity>create(SpawnGroup.MISC, ToxicOrbEntity::new)
-            .dimensions(EntityDimensions.fixed(0.35F, 0.35F))
-            .trackRangeBlocks(4)
-            .trackedUpdateRate(10)
+            .dimensions(EntityDimensions.fixed(ScytheBalance.ToxicOrb.WIDTH, ScytheBalance.ToxicOrb.HEIGHT))
+            .trackRangeBlocks(ScytheBalance.ToxicOrb.TRACKING_RANGE)
+            .trackedUpdateRate(ScytheBalance.ToxicOrb.UPDATE_INTERVAL)
             .build(TOXIC_ORB_KEY);
 
     public static final EntityType<IceSpikeEntity> ICE_SPIKE = FabricEntityTypeBuilder
             .<IceSpikeEntity>create(SpawnGroup.MISC, IceSpikeEntity::new)
-            .dimensions(EntityDimensions.fixed(0.5F, 0.5F))
-            .trackRangeBlocks(8)
-            .trackedUpdateRate(10)
+            .dimensions(EntityDimensions.fixed(ScytheBalance.IceSpike.WIDTH, ScytheBalance.IceSpike.HEIGHT))
+            .trackRangeBlocks(ScytheBalance.IceSpike.TRACKING_RANGE)
+            .trackedUpdateRate(ScytheBalance.IceSpike.UPDATE_INTERVAL)
             .build(ICE_SPIKE_KEY);
 
     public static final EntityType<WitheringMinionEntity> WITHERING_MINION = FabricEntityTypeBuilder
             .<WitheringMinionEntity>create(SpawnGroup.MONSTER, WitheringMinionEntity::new)
-            .dimensions(EntityDimensions.fixed(0.7F, 2.4F))
-            .trackRangeBlocks(8)
-            .trackedUpdateRate(3)
+            .dimensions(EntityDimensions.fixed(ScytheBalance.Minion.WIDTH, ScytheBalance.Minion.HEIGHT))
+            .trackRangeBlocks(ScytheBalance.Minion.TRACKING_RANGE)
+            .trackedUpdateRate(ScytheBalance.Minion.UPDATE_INTERVAL)
             .build(WITHERING_MINION_KEY);
 
     public static final Item BLOODY_ESSENCE = registerItem("bloody_essence", Item::new, itemSettings("bloody_essence"));
@@ -92,8 +89,8 @@ public class ScytheMod implements ModInitializer {
     public static final Item FROZEN_ESSENCE = registerItem("frozen_essence", Item::new, itemSettings("frozen_essence"));
 
     private static final FoodComponent FROZEN_HEART_FOOD = new FoodComponent.Builder()
-            .nutrition(3)
-            .saturationModifier(0.3F)
+            .nutrition(ScytheBalance.FrozenHeart.NUTRITION)
+            .saturationModifier(ScytheBalance.FrozenHeart.SATURATION_MODIFIER)
             .alwaysEdible()
             .build();
     public static final Item FROZEN_HEART = registerItem(
@@ -111,7 +108,6 @@ public class ScytheMod implements ModInitializer {
     private static final Item[] TAB_ICON_ITEMS = new Item[] {
             BLOODY_SCYTHE, TOXIC_SCYTHE, WITHERING_SCYTHE, GOLDEN_SCYTHE, FROZEN_SCYTHE
     };
-    private static final long TAB_ICON_INTERVAL_MS = 1200L;
 
     public static final RegistryEntry<StatusEffect> BLEEDING =
             Registry.registerReference(Registries.STATUS_EFFECT, id("bleeding"), new BleedingEffect());
@@ -157,31 +153,7 @@ public class ScytheMod implements ModInitializer {
         );
 
         ScytheAbilityC2SPacket.register();
-        PlagueScytheMigrationHandler.register();
-        WelcomeAdvancementHandler.register();
-        BloodHarvestKillHandler.register();
-        WitheringSoulHandler.register();
-        BloodyEssenceDropHandler.register();
-        FrozenHeartDropHandler.register();
-
-        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
-            ServerPlayerEntity player = handler.player;
-            server.execute(() -> {
-                BloodHarvestTracker.clear(player);
-                BloodScytheCooldowns.clear(player);
-                BloodScytheVampirism.clear(player);
-                ToxicAuraTracker.clear(player);
-                ToxicScytheCooldowns.clear(player);
-                WitheringAuraTracker.clear(player);
-                WitheringScytheCooldowns.clear(player);
-                GoldenScytheCooldowns.clear(player);
-                FrozenScytheCooldowns.clear(player);
-                GoldenLootMarkTracker.clearOwner(player);
-                ScytheAdvancementTracker.clear(player);
-            });
-        });
-
-        ServerTickEvents.END_SERVER_TICK.register(this::tickServer);
+        FabricServerHooks.register();
 
         LOGGER.info("ScytheMod 4.0 initialized successfully for Minecraft 1.21.11");
     }
@@ -213,17 +185,8 @@ public class ScytheMod implements ModInitializer {
     }
 
     public static ItemStack createRotatingTabIcon() {
-        int index = (int) ((System.currentTimeMillis() / TAB_ICON_INTERVAL_MS) % TAB_ICON_ITEMS.length);
+        int index = (int) ((System.currentTimeMillis() / ScytheBalance.Presentation.TAB_ICON_INTERVAL_MS) % TAB_ICON_ITEMS.length);
         return new ItemStack(TAB_ICON_ITEMS[index]);
     }
 
-    private void tickServer(MinecraftServer server) {
-        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-            BloodHarvestTracker.tick(player);
-            ToxicAuraTracker.tick(player);
-            WitheringAuraTracker.tick(player);
-            PlagueScytheMigrationHandler.migratePlayer(player);
-        }
-        GoldenLootMarkTracker.tick(server);
-    }
 }

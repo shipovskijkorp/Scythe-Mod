@@ -1,6 +1,7 @@
 package com.shipovskijkorp.scythes.mod.recipe;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.PotionContentsComponent;
 import net.minecraft.item.ItemStack;
@@ -38,7 +39,7 @@ public class ToxicEssenceRecipe extends SpecialCraftingRecipe {
 
     @Override
     public ItemStack craft(CraftingRecipeInput input, RegistryWrapper.WrapperLookup registries) {
-        return new ItemStack(ScytheMod.TOXIC_ESSENCE);
+        return new ItemStack(ScytheMod.TOXIC_ESSENCE, ScytheBalance.Crafting.TOXIC_ESSENCE_OUTPUT_COUNT);
     }
 
     public boolean fits(int width, int height) {

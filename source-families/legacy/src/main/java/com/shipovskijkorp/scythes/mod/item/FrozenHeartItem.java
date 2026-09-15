@@ -1,6 +1,7 @@
 package com.shipovskijkorp.scythes.mod.item;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.item.Item;
@@ -9,8 +10,6 @@ import net.minecraft.world.World;
 
 /** Edible frozen heart with custom and vanilla freezing effects. */
 public final class FrozenHeartItem extends Item {
-
-    private static final int FREEZING_DURATION_TICKS = 3 * 20;
 
     public FrozenHeartItem(Settings settings) {
         super(settings);
@@ -23,8 +22,8 @@ public final class FrozenHeartItem extends Item {
         if (!world.isClient) {
             user.addStatusEffect(new StatusEffectInstance(
                     ScytheMod.FREEZING,
-                    FREEZING_DURATION_TICKS,
-                    0,
+                    ScytheBalance.FrozenHeart.FREEZING_DURATION_TICKS,
+                    ScytheBalance.FrozenHeart.FREEZING_AMPLIFIER,
                     false,
                     true,
                     true

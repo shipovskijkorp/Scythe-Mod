@@ -1,13 +1,20 @@
 package com.shipovskijkorp.scythes.mod.util;
 
+import net.minecraft.core.Holder;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+//? if >=26.2 {
+//? } else {
+import net.minecraft.world.entity.EntityType;
+//? }
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.effect.MobEffect;
-import net.minecraft.core.Holder;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.animal.equine.AbstractHorse;
-import net.minecraft.world.entity.EntityType;
+//? if >=26.2 {
+import net.minecraft.world.entity.npc.villager.Villager;
+//? } else {
+//? }
 import net.minecraft.world.item.ItemStack;
 
 public final class ScytheCombatUtil {
@@ -26,7 +33,11 @@ public final class ScytheCombatUtil {
         if (target == owner) return true;
         if (!target.isAlive()) return true;
         if (target.isSpectator()) return true;
+//? if >=26.2 {
+        if (target instanceof Villager) return true;
+//? } else {
         if (target.getType() == EntityType.VILLAGER) return true;
+//? }
         if (target instanceof TamableAnimal tameable && tameable.isTame()) return true;
         if (target instanceof AbstractHorse horse && horse.isTamed()) return true;
         return owner != null && owner.isAlliedTo(target);

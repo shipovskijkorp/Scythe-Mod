@@ -1,9 +1,9 @@
 package com.shipovskijkorp.scythes.mod.mixin;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
-import com.shipovskijkorp.scythes.mod.effect.FreezingEffect;
-import com.shipovskijkorp.scythes.mod.util.ScytheDamageTypes;
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.util.FreezingRenderState;
+import com.shipovskijkorp.scythes.mod.util.ScytheDamageTypes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
@@ -51,13 +51,13 @@ public abstract class FreezingLivingEntityMixin implements FreezingRenderState {
         }
 
         scythes$freezingDamageTicks++;
-        if (scythes$freezingDamageTicks < FreezingEffect.DAMAGE_INTERVAL_TICKS) {
+        if (scythes$freezingDamageTicks < ScytheBalance.Freezing.DAMAGE_INTERVAL_TICKS) {
             return;
         }
 
         scythes$freezingDamageTicks = 0;
-        if (self.getRandom().nextFloat() < FreezingEffect.DAMAGE_CHANCE) {
-            self.damage(world, ScytheDamageTypes.freezing(world), FreezingEffect.DAMAGE_PER_PROC);
+        if (self.getRandom().nextFloat() < ScytheBalance.Freezing.DAMAGE_CHANCE) {
+            self.damage(world, ScytheDamageTypes.freezing(world), ScytheBalance.Freezing.DAMAGE_PER_PROC);
         }
     }
 

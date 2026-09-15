@@ -1,0 +1,29 @@
+// Only this adapter knows Fabric/Loom dependency configurations.
+apply plugin: rootProject.ext.scytheLoomPlugin
+apply plugin: 'maven-publish'
+
+def cfg = ext.scytheTarget
+def remapped = rootProject.ext.scytheLoomPlugin == 'fabric-loom'
+ext.scytheReleaseTask = remapped ? 'remapJar' : 'jar'
+
+repositories {
+    exclusiveContent {
+        forRepository { maven { name = 'Modrinth'; url = 'https://api.modrinth.com/maven' } }
+        filter { includeGroup 'maven.modrinth' }
+    }
+}
+dependencies {
+    add('minecraft', "com.mojang:minecraft:${cfg['deps.minecraft']}")
+    if (remapped) add('mappings', "net.fabricmc:yarn:${cfg['deps.yarn']}:v2")
+    add(remapped ? 'modImplementation' : 'implementation', "net.fabricmc:fabric-loader:${cfg['deps.loader']}")
+    add(remapped ? 'modImplementation' : 'implementation', "net.fabricmc.fabric-api:fabric-api:${cfg['deps.fabric_api']}")
+    def jeiCoordinate = remapped ? "${cfg['deps.jei']}-fabric,${cfg['deps.minecraft']}" : cfg['deps.jei']
+    add(remapped ? 'modCompileOnly' : 'compileOnly', "maven.modrinth:jei:${jeiCoordinate}")
+    add(remapped ? 'modRuntimeOnly' : 'runtimeOnly', "maven.modrinth:jei:${jeiCoordinate}")
+}
+fabricApi { configureDataGeneration { client = true } }
+loom {
+    runs {
+        configureEach { ideConfigGenerated = false }
+    }
+}

@@ -2,6 +2,7 @@ package com.shipovskijkorp.scythes.mod.entity;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
 import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
@@ -21,10 +22,6 @@ import net.minecraft.world.phys.EntityHitResult;
 
 /** Arrow-like ice projectile fired by the Frozen Scythe. */
 public final class IceSpikeEntity extends AbstractArrow {
-
-    public static final float HIT_DAMAGE = 10.0F;
-    public static final int FREEZING_TICKS = 30;
-    public static final int MAX_LIFETIME_TICKS = 20 * 10;
 
     public IceSpikeEntity(EntityType<? extends IceSpikeEntity> entityType, Level level) {
         super(entityType, level);
@@ -66,11 +63,11 @@ public final class IceSpikeEntity extends AbstractArrow {
         Entity ownerEntity = getOwner();
         if (hit instanceof LivingEntity target) {
             Entity attacker = ownerEntity != null ? ownerEntity : this;
-            target.hurtServer(serverLevel, damageSources().arrow(this, attacker), HIT_DAMAGE);
+            target.hurtServer(serverLevel, damageSources().arrow(this, attacker), ScytheBalance.IceSpike.HIT_DAMAGE);
             target.addEffect(new MobEffectInstance(
                     ScytheMod.FREEZING,
-                    FREEZING_TICKS,
-                    0,
+                    ScytheBalance.IceSpike.FREEZING_TICKS,
+                    ScytheBalance.IceSpike.FREEZING_AMPLIFIER,
                     false,
                     true,
                     true
@@ -108,7 +105,7 @@ public final class IceSpikeEntity extends AbstractArrow {
                     0.0D,
                     0.0D
             );
-        } else if (!level().isClientSide() && tickCount > MAX_LIFETIME_TICKS) {
+        } else if (!level().isClientSide() && tickCount > ScytheBalance.IceSpike.MAX_LIFETIME_TICKS) {
             discard();
         }
     }

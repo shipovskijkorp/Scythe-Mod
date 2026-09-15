@@ -1,0 +1,83 @@
+// Loader-independent source staging, Java target, packaging and publication.
+def cfg = ext.scytheTarget
+def repositoryRoot = gradle.ext.scytheRepositoryRoot
+def pythonCommand = gradle.ext.scythePythonCommand
+def sourceTool = new File(repositoryRoot, 'scripts/source_layout.py')
+def targetConfig = rootProject.file('targets.properties')
+def targetName = project.name
+def javaVersion = Integer.parseInt(cfg['java.version'])
+def loader = cfg['source.platform']
+def archiveName = "${cfg['mod.archive_name']}-${loader}"
+
+group = cfg['mod.group']
+version = cfg['artifact.version']
+base { archivesName = archiveName }
+
+def effective = layout.buildDirectory.dir("effective-source/${targetName}")
+def effectiveDir = effective.get().asFile
+def prepareArguments = [sourceTool.absolutePath, targetName,
+        '--config', targetConfig.absolutePath, '--output', effectiveDir.absolutePath]
+
+def prepareSource = tasks.register('prepareEffectiveSource', Exec) {
+    group = 'build setup'
+    description = "Materialize five-layer sources and resource templates for ${targetName}"
+    inputs.files(new File(repositoryRoot, 'build-config/common.properties'), targetConfig)
+    inputs.files(fileTree(new File(repositoryRoot, 'scripts')) { include '*.py' })
+    cfg.layers.each { inputs.dir(new File(repositoryRoot, it)) }
+    outputs.dir(effective)
+    workingDir repositoryRoot
+    commandLine pythonCommand + prepareArguments
+}
+
+// The IDE must see real sources on the first Gradle import, not only after a build.
+// A content fingerprint avoids rewriting unchanged source files on later syncs.
+if (System.getProperty('idea.active') == 'true') {
+    gradle.ext.scytheRunPython(prepareArguments + ['--if-stale'])
+}
+sourceSets {
+    main {
+        java.setSrcDirs([new File(effectiveDir, 'src/main/java')])
+        resources.setSrcDirs([new File(effectiveDir, 'src/main/resources')])
+    }
+}
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(javaVersion) }
+    withSourcesJar()
+}
+tasks.withType(JavaCompile).configureEach {
+    options.release = javaVersion
+    options.encoding = 'UTF-8'
+}
+tasks.named('compileJava') { dependsOn prepareSource }
+tasks.named('processResources') { dependsOn prepareSource }
+tasks.named('sourcesJar') { dependsOn prepareSource }
+tasks.matching { it.name in ['runClient', 'runServer', 'runDatagen'] }.configureEach {
+    dependsOn prepareSource
+}
+tasks.named('jar') {
+    from(new File(repositoryRoot, 'LICENSE')) { rename { "${it}_${archiveName}" } }
+}
+tasks.register('materializeSource') {
+    group = 'build setup'
+    dependsOn prepareSource
+}
+def releaseArtifact = tasks.named(ext.scytheReleaseTask)
+def releaseFile = releaseArtifact.flatMap { it.archiveFile }
+tasks.register('buildAndCollect') {
+    group = 'build'
+    dependsOn tasks.named('build')
+    inputs.file(releaseFile)
+    outputs.file(releaseFile.map { new File(repositoryRoot, "build/release/${it.asFile.name}") })
+    doLast {
+        project.copy { from releaseFile; into new File(repositoryRoot, 'build/release') }
+    }
+}
+publishing {
+    publications {
+        create('mavenJava', MavenPublication) {
+            artifactId = archiveName
+            from components.java
+        }
+    }
+}
+logger.lifecycle("ScytheMod ${targetName}: target Java ${javaVersion}; loader ${loader}")

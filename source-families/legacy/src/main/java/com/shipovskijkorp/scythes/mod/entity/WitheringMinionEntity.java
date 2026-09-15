@@ -1,6 +1,9 @@
 package com.shipovskijkorp.scythes.mod.entity;
 
 import com.shipovskijkorp.scythes.mod.ability.WitheringMinionManager;
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
+import java.util.EnumSet;
+import java.util.UUID;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
@@ -10,10 +13,10 @@ import net.minecraft.entity.ai.goal.LookAtEntityGoal;
 import net.minecraft.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.entity.ai.goal.SwimGoal;
 import net.minecraft.entity.ai.goal.WanderAroundFarGoal;
-import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.mob.WitherSkeletonEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -28,22 +31,10 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.EnumSet;
-import java.util.UUID;
-
 public class WitheringMinionEntity extends WitherSkeletonEntity {
 
     private static final String OWNER_KEY = "Owner";
     private static final String LIFE_TICKS_KEY = "LifeTicks";
-
-    public static final float MAX_HEALTH = 20.0F;
-    public static final double ARMOR = 14.0D;
-    public static final int LIFETIME_TICKS = 20 * 60 * 15;
-    public static final int REGEN_IDLE_TICKS = 20 * 5;
-    public static final int REGEN_INTERVAL_TICKS = 20;
-    public static final float REGEN_HEALTH_PER_TICK = 1.0F;
-    public static final int REGEN_DURABILITY_COST = 1;
-    private static final double OWNER_TELEPORT_DISTANCE_SQUARED = 12.0D * 12.0D;
 
     @Nullable
     private UUID ownerUuid;
@@ -58,20 +49,20 @@ public class WitheringMinionEntity extends WitherSkeletonEntity {
 
     public static DefaultAttributeContainer.Builder createAttributes() {
         return HostileEntity.createHostileAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, MAX_HEALTH)
-                .add(EntityAttributes.GENERIC_ARMOR, ARMOR)
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.25D)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 4.0D)
-                .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 32.0D);
+                .add(EntityAttributes.GENERIC_MAX_HEALTH, ScytheBalance.Minion.MAX_HEALTH)
+                .add(EntityAttributes.GENERIC_ARMOR, ScytheBalance.Minion.ARMOR)
+                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, ScytheBalance.Minion.MOVEMENT_SPEED)
+                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, ScytheBalance.Minion.ATTACK_DAMAGE)
+                .add(EntityAttributes.GENERIC_FOLLOW_RANGE, ScytheBalance.Minion.FOLLOW_RANGE);
     }
 
     @Override
     protected void initGoals() {
         this.goalSelector.add(1, new SwimGoal(this));
-        this.goalSelector.add(2, new MeleeAttackGoal(this, 1.2D, true));
-        this.goalSelector.add(3, new FollowOwnerLikeWolfGoal(this, 1.15D, 5.0F, 2.5F));
-        this.goalSelector.add(7, new WanderAroundFarGoal(this, 0.8D));
-        this.goalSelector.add(8, new LookAtEntityGoal(this, PlayerEntity.class, 8.0F));
+        this.goalSelector.add(2, new MeleeAttackGoal(this, ScytheBalance.Minion.MELEE_SPEED, true));
+        this.goalSelector.add(3, new FollowOwnerLikeWolfGoal(this, ScytheBalance.Minion.FOLLOW_SPEED, ScytheBalance.Minion.FOLLOW_START_DISTANCE, ScytheBalance.Minion.FOLLOW_STOP_DISTANCE));
+        this.goalSelector.add(7, new WanderAroundFarGoal(this, ScytheBalance.Minion.WANDER_SPEED));
+        this.goalSelector.add(8, new LookAtEntityGoal(this, PlayerEntity.class, ScytheBalance.Minion.LOOK_DISTANCE));
         this.goalSelector.add(8, new LookAroundGoal(this));
     }
 
@@ -81,10 +72,10 @@ public class WitheringMinionEntity extends WitherSkeletonEntity {
         this.lastDamageWorldTick = getWorld().getTime();
         this.setCustomNameVisible(false);
         this.setPersistent();
-        this.setHealth(MAX_HEALTH);
-        setAttributeBase(EntityAttributes.GENERIC_MAX_HEALTH, MAX_HEALTH);
-        setAttributeBase(EntityAttributes.GENERIC_ARMOR, ARMOR);
-        this.setHealth(MAX_HEALTH);
+        this.setHealth(ScytheBalance.Minion.MAX_HEALTH);
+        setAttributeBase(EntityAttributes.GENERIC_MAX_HEALTH, ScytheBalance.Minion.MAX_HEALTH);
+        setAttributeBase(EntityAttributes.GENERIC_ARMOR, ScytheBalance.Minion.ARMOR);
+        this.setHealth(ScytheBalance.Minion.MAX_HEALTH);
         this.equipStack(EquipmentSlot.MAINHAND, new ItemStack(Items.NETHERITE_SWORD));
         this.setEquipmentDropChance(EquipmentSlot.MAINHAND, 0.0F);
     }
@@ -105,12 +96,12 @@ public class WitheringMinionEntity extends WitherSkeletonEntity {
         }
 
         lifeTicks++;
-        if (lifeTicks >= LIFETIME_TICKS || getOwnerPlayer() == null) {
+        if (lifeTicks >= ScytheBalance.Minion.LIFETIME_TICKS || getOwnerPlayer() == null) {
             discard();
             return;
         }
 
-        if (age % 10 == 0) {
+        if (age % ScytheBalance.Minion.AI_UPDATE_INTERVAL_TICKS == 0) {
             updateDogLikeTarget();
         }
 
@@ -127,17 +118,17 @@ public class WitheringMinionEntity extends WitherSkeletonEntity {
     }
 
     private void tryPassiveRegeneration() {
-        if (age % REGEN_INTERVAL_TICKS != 0) return;
+        if (age % ScytheBalance.Minion.REGEN_INTERVAL_TICKS != 0) return;
         if (getHealth() >= getMaxHealth()) return;
 
         long now = getWorld().getTime();
-        if (now - lastDamageWorldTick < REGEN_IDLE_TICKS) return;
+        if (now - lastDamageWorldTick < ScytheBalance.Minion.REGEN_IDLE_TICKS) return;
 
         ServerPlayerEntity owner = getOwnerPlayer();
         if (owner == null) return;
 
-        if (WitheringMinionManager.damageOwnerScytheForMinionRegen(owner, REGEN_DURABILITY_COST)) {
-            heal(REGEN_HEALTH_PER_TICK);
+        if (WitheringMinionManager.damageOwnerScytheForMinionRegen(owner, ScytheBalance.Minion.REGEN_DURABILITY_COST)) {
+            heal(ScytheBalance.Minion.REGEN_HEALTH_PER_TICK);
         }
     }
 
@@ -195,7 +186,7 @@ public class WitheringMinionEntity extends WitherSkeletonEntity {
     }
 
     private boolean shouldTeleportToOwner(ServerPlayerEntity owner) {
-        return this.squaredDistanceTo(owner) >= OWNER_TELEPORT_DISTANCE_SQUARED;
+        return this.squaredDistanceTo(owner) >= ScytheBalance.Minion.OWNER_TELEPORT_DISTANCE_SQUARED;
     }
 
     private boolean tryTeleportNearOwner(ServerPlayerEntity owner) {
@@ -203,12 +194,12 @@ public class WitheringMinionEntity extends WitherSkeletonEntity {
         int ownerY = MathHelper.floor(owner.getY());
         int ownerZ = MathHelper.floor(owner.getZ());
 
-        for (int i = 0; i < 10; i++) {
-            int dx = this.getRandom().nextInt(7) - 3;
-            int dy = this.getRandom().nextInt(3) - 1;
-            int dz = this.getRandom().nextInt(7) - 3;
+        for (int i = 0; i < ScytheBalance.Minion.CLASSIC_TELEPORT_ATTEMPTS; i++) {
+            int dx = this.getRandom().nextInt(2 * ScytheBalance.Minion.CLASSIC_TELEPORT_RADIUS + 1) - ScytheBalance.Minion.CLASSIC_TELEPORT_RADIUS;
+            int dy = this.getRandom().nextInt(2 * ScytheBalance.Minion.CLASSIC_TELEPORT_VERTICAL_RADIUS + 1) - ScytheBalance.Minion.CLASSIC_TELEPORT_VERTICAL_RADIUS;
+            int dz = this.getRandom().nextInt(2 * ScytheBalance.Minion.CLASSIC_TELEPORT_RADIUS + 1) - ScytheBalance.Minion.CLASSIC_TELEPORT_RADIUS;
 
-            if (Math.abs(dx) < 2 && Math.abs(dz) < 2) {
+            if (Math.abs(dx) < ScytheBalance.Minion.TELEPORT_MIN_OFFSET && Math.abs(dz) < ScytheBalance.Minion.TELEPORT_MIN_OFFSET) {
                 continue;
             }
 
@@ -323,12 +314,12 @@ public class WitheringMinionEntity extends WitherSkeletonEntity {
             minion.getLookControl().lookAt(owner, 10.0F, 10.0F);
 
             if (minion.shouldTeleportToOwner(owner) && minion.tryTeleportNearOwner(owner)) {
-                updateCountdownTicks = 10;
+                updateCountdownTicks = ScytheBalance.Minion.AI_UPDATE_INTERVAL_TICKS;
                 return;
             }
 
             if (--updateCountdownTicks <= 0) {
-                updateCountdownTicks = 10;
+                updateCountdownTicks = ScytheBalance.Minion.AI_UPDATE_INTERVAL_TICKS;
                 minion.getNavigation().startMovingTo(owner, speed);
             }
         }

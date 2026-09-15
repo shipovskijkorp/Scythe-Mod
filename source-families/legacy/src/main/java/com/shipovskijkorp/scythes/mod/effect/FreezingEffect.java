@@ -1,5 +1,6 @@
 package com.shipovskijkorp.scythes.mod.effect;
 
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.util.ScytheDamageTypes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
@@ -11,10 +12,6 @@ import net.minecraft.entity.effect.StatusEffectCategory;
  * mixins so the effect works for both players and mobs.
  */
 public final class FreezingEffect extends StatusEffect {
-
-    public static final int DAMAGE_INTERVAL_TICKS = 20;
-    public static final float DAMAGE_PER_PROC = 1.0F;
-    public static final float DAMAGE_CHANCE = 0.60F;
 
     public FreezingEffect() {
         super(StatusEffectCategory.HARMFUL, 0x8FD8F4);
@@ -40,12 +37,12 @@ public final class FreezingEffect extends StatusEffect {
         }
 
         if (entity.getStatusEffect(this) == null
-                || entity.getStatusEffect(this).getDuration() % DAMAGE_INTERVAL_TICKS != 0
-                || entity.getRandom().nextFloat() >= DAMAGE_CHANCE) {
+                || entity.getStatusEffect(this).getDuration() % ScytheBalance.Freezing.DAMAGE_INTERVAL_TICKS != 0
+                || entity.getRandom().nextFloat() >= ScytheBalance.Freezing.DAMAGE_CHANCE) {
             return;
         }
 
         // Intentionally ignores amplifier: every level has the same damage.
-        entity.damage(ScytheDamageTypes.freezing(entity.getWorld()), DAMAGE_PER_PROC);
+        entity.damage(ScytheDamageTypes.freezing(entity.getWorld()), ScytheBalance.Freezing.DAMAGE_PER_PROC);
     }
 }

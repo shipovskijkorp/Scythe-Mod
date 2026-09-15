@@ -1,0 +1,109 @@
+package com.shipovskijkorp.scythes.mod.ability;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import net.minecraft.entity.LivingEntity;
+//? if >=1.21.11 {
+//? } else {
+import net.minecraft.server.MinecraftServer;
+//? }
+import net.minecraft.server.network.ServerPlayerEntity;
+import org.jetbrains.annotations.Nullable;
+
+public final class DamageAttributionTracker {
+
+    private DamageAttributionTracker() {
+    }
+
+    private static final Map<UUID, TrackedSource> BLEEDING = new HashMap<>();
+    private static final Map<UUID, TrackedSource> WITHERING = new HashMap<>();
+
+    public static void recordBleeding(LivingEntity target, ServerPlayerEntity owner, int ticks) {
+        record(BLEEDING, target, owner, ticks);
+    }
+
+    public static void recordWithering(LivingEntity target, ServerPlayerEntity owner, int ticks) {
+        record(WITHERING, target, owner, ticks);
+    }
+
+    @Nullable
+    public static ServerPlayerEntity getBleedingOwner(LivingEntity target) {
+        return getOwner(BLEEDING, target);
+    }
+
+    @Nullable
+    public static ServerPlayerEntity getWitheringOwner(LivingEntity target) {
+        return getOwner(WITHERING, target);
+    }
+
+    public static void clear(LivingEntity target) {
+        BLEEDING.remove(target.getUuid());
+        WITHERING.remove(target.getUuid());
+    }
+
+    private static void record(Map<UUID, TrackedSource> map,
+                               LivingEntity target,
+                               ServerPlayerEntity owner,
+                               int ticks) {
+//? if >=1.21.11 {
+//? } else {
+        if (target.getWorld().isClient) return;
+//? }
+        if (ticks <= 0) return;
+        if (target.getUuid().equals(owner.getUuid())) return;
+
+//? if >=1.21.11 {
+        long expiresAt = owner.getEntityWorld().getTime() + ticks + 20L;
+        map.put(target.getUuid(), new TrackedSource(owner.getUuid(), owner, expiresAt));
+//? } else {
+        long expiresAt = target.getWorld().getTime() + ticks + 20L;
+        map.put(target.getUuid(), new TrackedSource(owner.getUuid(), expiresAt));
+//? }
+    }
+
+    @Nullable
+    private static ServerPlayerEntity getOwner(Map<UUID, TrackedSource> map, LivingEntity target) {
+        TrackedSource tracked = getTracked(map, target);
+        if (tracked == null) return null;
+
+//? if >=1.21.11 {
+        ServerPlayerEntity owner = tracked.owner;
+//? } else {
+        MinecraftServer server = target.getServer();
+        if (server == null) return null;
+
+        ServerPlayerEntity owner = server.getPlayerManager().getPlayer(tracked.ownerUuid);
+//? }
+        if (owner == null || !owner.isAlive() || owner.isSpectator()) {
+            return null;
+        }
+
+        return owner;
+    }
+
+    @Nullable
+    private static TrackedSource getTracked(Map<UUID, TrackedSource> map, LivingEntity target) {
+        TrackedSource tracked = map.get(target.getUuid());
+        if (tracked == null) return null;
+
+//? if >=1.21.11 {
+        ServerPlayerEntity owner = tracked.owner;
+        if (owner == null || owner.getEntityWorld().getTime() > tracked.expiresAt) {
+//? } else {
+        if (target.getWorld().getTime() > tracked.expiresAt) {
+//? }
+            map.remove(target.getUuid());
+            return null;
+        }
+
+        return tracked;
+    }
+
+//? if >=1.21.11 {
+    private record TrackedSource(UUID ownerUuid, ServerPlayerEntity owner, long expiresAt) {
+//? } else {
+    private record TrackedSource(UUID ownerUuid, long expiresAt) {
+//? }
+    }
+}

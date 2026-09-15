@@ -1,40 +1,35 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.item.ToxicScytheItem;
-import com.shipovskijkorp.scythes.mod.network.ToxicAuraHudS2CPacket;
+import com.shipovskijkorp.scythes.mod.platform.HudSync;
+import com.shipovskijkorp.scythes.mod.platform.HudTransport;
 import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
+//? if >=1.21.11 {
+import net.minecraft.server.world.ServerWorld;
+//? } else {
+//? }
 import net.minecraft.util.math.Box;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 public final class ToxicAuraTracker {
 
     private ToxicAuraTracker() {
     }
 
-    public static final int DURATION_TICKS = 20 * 10;
-    public static final double RADIUS = 5.0D;
-    public static final int POISON_TICKS = 20 * 10;
-    public static final int POISON_AMPLIFIER = 1;
-    public static final double PURE_DAMAGE_CHANCE = 0.20D;
-    public static final float PURE_DAMAGE = 1.0F;
-    public static final int ARMOR_DAMAGE_PER_TICK = 1;
-    public static final double NAUSEA_CHANCE = 0.15D;
-    public static final int NAUSEA_TICKS = 20 * 10;
-
     private static final Map<UUID, ToxicAuraState> ACTIVE = new HashMap<>();
 
     public static int start(ServerPlayerEntity player, ItemStack scytheStack) {
-        ACTIVE.put(player.getUuid(), new ToxicAuraState(DURATION_TICKS, ToxicScytheItem.getAcidityLevel(player, scytheStack)));
-        return DURATION_TICKS;
+        ACTIVE.put(player.getUuid(), new ToxicAuraState(ScytheBalance.ToxicAura.DURATION_TICKS, ToxicScytheItem.getAcidityLevel(player, scytheStack)));
+        return ScytheBalance.ToxicAura.DURATION_TICKS;
     }
 
     public static void clear(ServerPlayerEntity player) {
@@ -51,7 +46,7 @@ public final class ToxicAuraTracker {
 
         if (!player.isAlive() || player.isSpectator()) {
             ACTIVE.remove(player.getUuid());
-            ToxicAuraHudS2CPacket.sendStop(player);
+            HudSync.stop(player, HudTransport.Timer.TOXIC_AURA);
             return;
         }
 
@@ -60,31 +55,43 @@ public final class ToxicAuraTracker {
         state.ticksLeft--;
         if (state.ticksLeft <= 0) {
             ACTIVE.remove(player.getUuid());
-            ToxicAuraHudS2CPacket.sendStop(player);
+            HudSync.stop(player, HudTransport.Timer.TOXIC_AURA);
         }
     }
 
     private static void applyAuraTick(ServerPlayerEntity player, int acidityLevel) {
-        Box box = player.getBoundingBox().expand(RADIUS);
+//? if >=1.21.11 {
+        ServerWorld world = (ServerWorld) player.getEntityWorld();
+//? } else {
+//? }
+        Box box = player.getBoundingBox().expand(ScytheBalance.ToxicAura.RADIUS);
         DamageSource damageSource = player.getDamageSources().indirectMagic(player, player);
 
+//? if >=1.21.11 {
+        List<LivingEntity> targets = world.getEntitiesByClass(
+//? } else {
         List<LivingEntity> targets = player.getWorld().getEntitiesByClass(
+//? }
                 LivingEntity.class,
                 box,
                 target -> !ScytheCombatUtil.isInvalidHostileTarget(player, target)
         );
 
         for (LivingEntity target : targets) {
-            ScytheCombatUtil.refreshStatus(target, StatusEffects.POISON, POISON_TICKS, POISON_AMPLIFIER);
-            ScytheAdvancementTracker.recordToxicPoison(player, target, POISON_TICKS);
-            ScytheCombatUtil.damageArmorSet(target, ToxicScytheItem.applyAcidityArmorDamageBonus(ARMOR_DAMAGE_PER_TICK, acidityLevel, player.getRandom()));
+            ScytheCombatUtil.refreshStatus(target, StatusEffects.POISON, ScytheBalance.ToxicAura.POISON_TICKS, ScytheBalance.ToxicAura.POISON_AMPLIFIER);
+            ScytheAdvancementTracker.recordToxicPoison(player, target, ScytheBalance.ToxicAura.POISON_TICKS);
+            ScytheCombatUtil.damageArmorSet(target, ToxicScytheItem.applyAcidityArmorDamageBonus(ScytheBalance.ToxicAura.ARMOR_DAMAGE_PER_TICK, acidityLevel, player.getRandom()));
 
-            if (player.getRandom().nextDouble() < PURE_DAMAGE_CHANCE) {
-                target.damage(damageSource, PURE_DAMAGE);
+            if (player.getRandom().nextDouble() < ScytheBalance.ToxicAura.PURE_DAMAGE_CHANCE) {
+//? if >=1.21.11 {
+                target.damage(world, damageSource, ScytheBalance.ToxicAura.PURE_DAMAGE);
+//? } else {
+                target.damage(damageSource, ScytheBalance.ToxicAura.PURE_DAMAGE);
+//? }
             }
 
-            if (player.getRandom().nextDouble() < NAUSEA_CHANCE) {
-                ScytheCombatUtil.refreshStatus(target, StatusEffects.NAUSEA, NAUSEA_TICKS, 0);
+            if (player.getRandom().nextDouble() < ScytheBalance.ToxicAura.NAUSEA_CHANCE) {
+                ScytheCombatUtil.refreshStatus(target, StatusEffects.NAUSEA, ScytheBalance.ToxicAura.NAUSEA_TICKS, ScytheBalance.ToxicAura.NAUSEA_AMPLIFIER);
             }
         }
     }

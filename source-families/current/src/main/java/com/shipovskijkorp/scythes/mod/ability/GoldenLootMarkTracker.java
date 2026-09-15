@@ -1,6 +1,12 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
 import com.shipovskijkorp.scythes.mod.item.GoldenScytheItem;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -9,19 +15,11 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.AABB;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
 public final class GoldenLootMarkTracker {
 
     private GoldenLootMarkTracker() {
     }
 
-    public static final int MARK_LOOTING_BONUS = 2;
     private static final int PARTICLE_INTERVAL_TICKS = 10;
     private static final int GOLD_MARK_COLOR = 0xFFCC14;
     private static final DustParticleOptions GOLD_MARK_PARTICLE = new DustParticleOptions(GOLD_MARK_COLOR, 1.35F);

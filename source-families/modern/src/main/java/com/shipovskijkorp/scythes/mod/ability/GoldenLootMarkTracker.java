@@ -1,35 +1,44 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
 import com.shipovskijkorp.scythes.mod.item.GoldenScytheItem;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.particle.DustParticleEffect;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Box;
-import org.joml.Vector3f;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.particle.DustParticleEffect;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.Box;
+//? if >=1.21.11 {
+//? } else {
+import org.joml.Vector3f;
+//? }
 
 public final class GoldenLootMarkTracker {
 
     private GoldenLootMarkTracker() {
     }
 
-    public static final int MARK_LOOTING_BONUS = 2;
     private static final int PARTICLE_INTERVAL_TICKS = 10;
+//? if >=1.21.11 {
+    private static final DustParticleEffect GOLD_MARK_PARTICLE = new DustParticleEffect(0xFFCC14, 1.35F);
+//? } else {
     private static final DustParticleEffect GOLD_MARK_PARTICLE = new DustParticleEffect(new Vector3f(1.0F, 0.8F, 0.08F), 1.35F);
+//? }
 
     private static final Map<UUID, Set<UUID>> MARK_OWNERS_BY_TARGET = new HashMap<>();
     private static long nextParticleTick = 0L;
 
     public static boolean mark(LivingEntity target, ServerPlayerEntity owner) {
+//? if >=1.21.11 {
+        if (!(target.getEntityWorld() instanceof ServerWorld)) return false;
+//? } else {
         if (target.getWorld().isClient) return false;
+//? }
         if (!GoldenScytheItem.isValidGoldenTarget(owner, target)) return false;
 
         Set<UUID> owners = MARK_OWNERS_BY_TARGET.computeIfAbsent(target.getUuid(), ignored -> new HashSet<>());
@@ -43,7 +52,11 @@ public final class GoldenLootMarkTracker {
         double maxDistanceSquared = radius * radius;
 
         int marked = 0;
+//? if >=1.21.11 {
+        for (LivingEntity target : owner.getEntityWorld().getEntitiesByClass(
+//? } else {
         for (LivingEntity target : owner.getWorld().getEntitiesByClass(
+//? }
                 LivingEntity.class,
                 box,
                 target -> GoldenScytheItem.isValidGoldenTarget(owner, target)
@@ -107,7 +120,11 @@ public final class GoldenLootMarkTracker {
     }
 
     private static void spawnMarkParticles(LivingEntity target, int count) {
+//? if >=1.21.11 {
+        if (!(target.getEntityWorld() instanceof ServerWorld world)) return;
+//? } else {
         if (!(target.getWorld() instanceof ServerWorld world)) return;
+//? }
 
         world.spawnParticles(
                 GOLD_MARK_PARTICLE,

@@ -1,14 +1,15 @@
 package com.shipovskijkorp.scythes.mod.recipe;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import net.minecraft.inventory.RecipeInputInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.potion.PotionUtil;
 import net.minecraft.potion.Potions;
-import net.minecraft.recipe.book.CraftingRecipeCategory;
 import net.minecraft.recipe.RecipeSerializer;
 import net.minecraft.recipe.SpecialCraftingRecipe;
+import net.minecraft.recipe.book.CraftingRecipeCategory;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
@@ -38,7 +39,7 @@ public class ToxicEssenceRecipe extends SpecialCraftingRecipe {
 
     @Override
     public ItemStack craft(RecipeInputInventory inventory, DynamicRegistryManager registryManager) {
-        return new ItemStack(ScytheMod.TOXIC_ESSENCE);
+        return new ItemStack(ScytheMod.TOXIC_ESSENCE, ScytheBalance.Crafting.TOXIC_ESSENCE_OUTPUT_COUNT);
     }
 
     @Override
@@ -48,7 +49,7 @@ public class ToxicEssenceRecipe extends SpecialCraftingRecipe {
 
     @Override
     public ItemStack getOutput(DynamicRegistryManager registryManager) {
-        return new ItemStack(ScytheMod.TOXIC_ESSENCE);
+        return new ItemStack(ScytheMod.TOXIC_ESSENCE, ScytheBalance.Crafting.TOXIC_ESSENCE_OUTPUT_COUNT);
     }
 
     @Override

@@ -1,27 +1,17 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
-import com.shipovskijkorp.scythes.mod.network.BloodHarvestHudS2CPacket;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.network.chat.Component;
-
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
+import com.shipovskijkorp.scythes.mod.platform.HudSync;
+import com.shipovskijkorp.scythes.mod.platform.HudTransport;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 
 public class BloodHarvestTracker {
-
-    public static final int KILL_WINDOW_TICKS = 20 * 20;
-
-    public static final int SUCCESS_BUFF_TICKS = 20 * 16;
-    public static final int SUCCESS_SPEED_AMPLIFIER = 1;
-    public static final int SUCCESS_STRENGTH_AMPLIFIER = 1;
-    public static final int SUCCESS_REGEN_AMPLIFIER = 1;
-
-    public static final int FAILURE_DEBUFF_TICKS = 150;
-    public static final int FAILURE_SLOWNESS_AMPLIFIER = 1;
-    public static final int FAILURE_WEAKNESS_AMPLIFIER = 1;
 
     private static final Map<UUID, Integer> ACTIVE = new HashMap<>();
 
@@ -36,8 +26,8 @@ public class BloodHarvestTracker {
     }
 
     public static int start(ServerPlayer player) {
-        ACTIVE.put(player.getUUID(), KILL_WINDOW_TICKS);
-        return KILL_WINDOW_TICKS;
+        ACTIVE.put(player.getUUID(), ScytheBalance.BloodHarvest.KILL_WINDOW_TICKS);
+        return ScytheBalance.BloodHarvest.KILL_WINDOW_TICKS;
     }
 
     public static boolean isActive(ServerPlayer player) {
@@ -52,7 +42,7 @@ public class BloodHarvestTracker {
         // если владелец мёртв/спектатор — закрываем окно без "провала" (это не честно наказывать за смерть)
         if (!player.isAlive() || player.isSpectator()) {
             ACTIVE.remove(id);
-            BloodHarvestHudS2CPacket.sendStop(player);
+            HudSync.stop(player, HudTransport.Timer.BLOOD_HARVEST);
             return;
         }
 
@@ -60,13 +50,13 @@ public class BloodHarvestTracker {
         if (time <= 0) {
             ACTIVE.remove(id);
 
-            player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, FAILURE_DEBUFF_TICKS, FAILURE_SLOWNESS_AMPLIFIER));
-            player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, FAILURE_DEBUFF_TICKS, FAILURE_WEAKNESS_AMPLIFIER));
-            player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, FAILURE_DEBUFF_TICKS, 0));
+            player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, ScytheBalance.BloodHarvest.FAILURE_DEBUFF_TICKS, ScytheBalance.BloodHarvest.FAILURE_SLOWNESS_AMPLIFIER));
+            player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, ScytheBalance.BloodHarvest.FAILURE_DEBUFF_TICKS, ScytheBalance.BloodHarvest.FAILURE_WEAKNESS_AMPLIFIER));
+            player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, ScytheBalance.BloodHarvest.FAILURE_DEBUFF_TICKS, ScytheBalance.BloodHarvest.FAILURE_BLINDNESS_AMPLIFIER));
 
             player.sendOverlayMessage(Component.translatable("message.scythes.blood_harvest.failed"));
 
-            BloodHarvestHudS2CPacket.sendStop(player);
+            HudSync.stop(player, HudTransport.Timer.BLOOD_HARVEST);
         } else {
             ACTIVE.put(id, time);
         }
@@ -78,11 +68,11 @@ public class BloodHarvestTracker {
 
         ACTIVE.remove(player.getUUID());
 
-        player.addEffect(new MobEffectInstance(MobEffects.SPEED, SUCCESS_BUFF_TICKS, SUCCESS_SPEED_AMPLIFIER, false, true, true));
-        player.addEffect(new MobEffectInstance(MobEffects.STRENGTH, SUCCESS_BUFF_TICKS, SUCCESS_STRENGTH_AMPLIFIER, false, true, true));
-        player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, SUCCESS_BUFF_TICKS, SUCCESS_REGEN_AMPLIFIER, false, true, true));
+        player.addEffect(new MobEffectInstance(MobEffects.SPEED, ScytheBalance.BloodHarvest.SUCCESS_BUFF_TICKS, ScytheBalance.BloodHarvest.SUCCESS_SPEED_AMPLIFIER, false, true, true));
+        player.addEffect(new MobEffectInstance(MobEffects.STRENGTH, ScytheBalance.BloodHarvest.SUCCESS_BUFF_TICKS, ScytheBalance.BloodHarvest.SUCCESS_STRENGTH_AMPLIFIER, false, true, true));
+        player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, ScytheBalance.BloodHarvest.SUCCESS_BUFF_TICKS, ScytheBalance.BloodHarvest.SUCCESS_REGEN_AMPLIFIER, false, true, true));
         player.sendOverlayMessage(Component.translatable("message.scythes.blood_harvest.perfect"));
 
-        BloodHarvestHudS2CPacket.sendStop(player);
+        HudSync.stop(player, HudTransport.Timer.BLOOD_HARVEST);
     }
 }

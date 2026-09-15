@@ -1,7 +1,9 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.item.WitheringScytheItem;
-import com.shipovskijkorp.scythes.mod.network.WitheringAuraHudS2CPacket;
+import com.shipovskijkorp.scythes.mod.platform.HudSync;
+import com.shipovskijkorp.scythes.mod.platform.HudTransport;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -15,9 +17,6 @@ public final class WitheringAuraAbility {
     private WitheringAuraAbility() {
     }
 
-    public static final int AURA_COOLDOWN_TICKS = 20 * 60;
-    public static final int AURA_DURABILITY_COST = 100;
-
     public static void tryActivate(ServerPlayerEntity player) {
         Hand hand = getHeldWitheringScytheHand(player);
         if (hand == null) {
@@ -30,26 +29,30 @@ public final class WitheringAuraAbility {
             return;
         }
 
-        int cooldownLeft = WitheringScytheCooldowns.getAuraTicksLeft(player);
+        int cooldownLeft = ScytheCooldowns.remaining(player, ScytheCooldowns.Skill.WITHERING_AURA);
         if (cooldownLeft > 0) {
             player.sendMessage(Text.translatable("message.scythes.withering_aura.cooldown", Math.max(1, cooldownLeft / 20)), true);
             return;
         }
 
         ItemStack stack = player.getStackInHand(hand);
-        if (!WitheringScytheItem.hasEnoughDurability(stack, AURA_DURABILITY_COST)) {
+        if (!WitheringScytheItem.hasEnoughDurability(stack, ScytheBalance.WitheringAura.AURA_DURABILITY_COST)) {
             player.sendMessage(Text.translatable("message.scythes.scythe_ability.no_durability"), true);
             return;
         }
 
-        stack.damage(AURA_DURABILITY_COST, player, hand == Hand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
+        stack.damage(ScytheBalance.WitheringAura.AURA_DURABILITY_COST, player, hand == Hand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
 
         int auraTicks = WitheringAuraTracker.start(player);
-        WitheringAuraHudS2CPacket.sendTicks(player, auraTicks);
-        WitheringScytheCooldowns.setAuraCooldown(player, AURA_COOLDOWN_TICKS);
+        HudSync.start(player, HudTransport.Timer.WITHERING_AURA, auraTicks);
+        ScytheCooldowns.start(player, ScytheCooldowns.Skill.WITHERING_AURA, ScytheBalance.WitheringAura.AURA_COOLDOWN_TICKS);
         ScytheAdvancementTracker.markWitheringActive(player);
 
+//? if >=1.21.11 {
+        player.getEntityWorld().playSound(
+//? } else {
         player.getWorld().playSound(
+//? }
                 null,
                 player.getX(),
                 player.getY(),

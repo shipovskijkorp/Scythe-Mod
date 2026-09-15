@@ -6,6 +6,7 @@ import com.shipovskijkorp.scythes.mod.ability.GoldenLootMarkTracker;
 import com.shipovskijkorp.scythes.mod.ability.GoldenScytheLootingContext;
 import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
 import com.shipovskijkorp.scythes.mod.ability.WitheringSoulHandler;
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.item.BloodScytheItem;
 import com.shipovskijkorp.scythes.mod.util.ScytheDamageTypes;
 import net.minecraft.entity.Entity;
@@ -59,8 +60,8 @@ public abstract class LivingEntityMixin {
         ServerPlayerEntity player = scythes$getBloodScytheAttacker(source);
         if (player == null) return;
 
-        scythes$bloodDefensePierceQueued = BloodScytheItem.DEFENSE_PIERCE_CHANCE > 0.0D
-                && player.getRandom().nextDouble() < BloodScytheItem.DEFENSE_PIERCE_CHANCE;
+        scythes$bloodDefensePierceQueued = ScytheBalance.Blood.DEFENSE_PIERCE_CHANCE > 0.0D
+                && player.getRandom().nextDouble() < ScytheBalance.Blood.DEFENSE_PIERCE_CHANCE;
     }
 
     @Inject(method = "damage", at = @At("RETURN"))
@@ -83,7 +84,7 @@ public abstract class LivingEntityMixin {
 
         if (scythes$bloodDefensePierceQueued && self.isAlive()) {
             float mitigatedDamage = Math.max(0.0f, amount - baseActualDamage);
-            float bonusDamage = mitigatedDamage * (float) BloodScytheItem.DEFENSE_PIERCE_MITIGATION_IGNORED;
+            float bonusDamage = mitigatedDamage * (float) ScytheBalance.Blood.DEFENSE_PIERCE_MITIGATION_IGNORED;
 
             if (bonusDamage > 0.0f) {
                 float beforeBonus = self.getHealth() + self.getAbsorptionAmount();
@@ -120,7 +121,6 @@ public abstract class LivingEntityMixin {
         WitheringSoulHandler.tryAwardTrackedWitheringDeath(self, source);
         ScytheAdvancementTracker.tryGrantMercilessOnDeath(self, source);
     }
-
 
     @Inject(method = "dropLoot", at = @At("HEAD"))
     private void scythes$enterGoldenLootingContext(DamageSource source, boolean causedByPlayer, CallbackInfo ci) {

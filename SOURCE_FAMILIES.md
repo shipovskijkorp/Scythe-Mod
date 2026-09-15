@@ -1,125 +1,230 @@
-# Scythe Mod build families
+# Source ownership and loader boundaries
 
-Scythe Mod uses independent build families with one authoritative source repository.
-
-Current targets:
-
-- `legacy`: `1.20.1-fabric` (target Java 17; Gradle/Loom on Java 21)
-- `modern`: `1.21.1-fabric`, `1.21.11-fabric` (target Java 21)
-- `current`: `26.1.2-fabric`, `26.2-fabric` (target Java 25; Minecraft 26.1+ Mojang names)
-
-The `modern` and `current` Gradle builds are multi-project builds: every configured target is loaded as its own Gradle subproject while sharing the same wrapper and family source layer. `current` now contains both 26.1.2 and 26.2 as sibling targets using the same Gradle/Loom/toolchain generation.
-
-Each target is materialized in this order:
+## Five layers, not five independent mods
 
 ```text
-source-shared
-  + source-families/<family>
-  + source-platforms/<loader>
-  + version-src/<target>
-  = effective target source tree
+source-shared/
+    + source-families/<family>/
+    + source-platforms/<loader>/
+    + source-family-platforms/<family>/<loader>/
+    + version-src/<target>/
+    = materialized target source
 ```
 
-Later layers override earlier layers by logical path. The generated effective source is build output and is never authoritative source.
+A logical file uses the last applicable layer. The exception is language JSON:
+its entries merge by key, from the broadest to the most specific layer.
 
-## Placement rules
+| Layer | Owns |
+| --- | --- |
+| Shared | Cross-generation code/resources; pure balance, cooldown store and transport contract |
+| Family | Minecraft-version/API adaptation with no direct loader imports |
+| Platform | Loader-specific files usable across all participating generations |
+| Family-platform | Loader hooks whose Minecraft/Fabric API signature is generation-specific |
+| Target | Only irreducible differences for one target |
 
-- `source-shared`: loader-independent code/resources valid for every current target.
-- `source-families/legacy`: Minecraft 1.20.1 generation implementation.
-- `source-families/modern`: implementation shared by the Minecraft 1.21.x targets.
-- `source-families/current`: Minecraft 26.x/Mojang-named implementation shared by current-generation targets.
-- `source-platforms/fabric`: Fabric-specific implementation shared across families where the API and source names are actually compatible.
-- `version-src/<target>`: irreducible target-specific code/resources and metadata such as `fabric.mod.json`.
+Use the narrowest layer that explains a difference. A Fabric event handler for
+both 26.x versions belongs in `source-family-platforms/current/fabric`, not in two
+target directories. Identical files are promoted rather than left shadowing one
+another. The layout validator rejects direct loader imports in shared/family
+code, identical consecutive overrides and identical sibling target overrides.
+It also verifies all conditional sources, resources, balance references and
+entrypoints. `--report` shows target-file and shadowed-path counts for review.
 
-The split deliberately keeps `net.fabricmc` imports out of `source-shared` and every `source-families/*` tree. This keeps future Forge/NeoForge platform layers possible without first untangling Fabric APIs from common gameplay code.
+This refactor deliberately preserves the existing `legacy`, `modern` and `current`
+families. The current family uses the names and toolchain from the supplied 26.x
+branches; earlier families retain their existing Yarn-based setup. Moving a file
+to a loader-independent layer does **not** automatically translate mapping names.
 
-Some Fabric-specific files are duplicated in target overlays when their implementation is generation-specific. The four-layer model intentionally avoids introducing a family+platform cross-layer just for those cases.
+## Small version differences
 
-Small Minecraft API differences may use the Stonecutter-style `//? if ...` directives supported by `scripts/source_layout.py`. Large differences should stay in family/platform/target layers.
+`scripts/source_layout.py` preprocesses a deliberately limited Stonecutter-style
+syntax. There is no hidden dependency on a Stonecutter Gradle plugin.
 
-## Why 26.x is a separate family
+```java
+//? if >=1.21.11 {
+    return player.getEntityWorld().getTime();
+//? } else {
+    return player.getWorld().getTime();
+//? }
+```
 
-Minecraft 26.1+ in the supplied branch no longer uses Yarn mappings and compiles against unobfuscated Mojang names. It also targets Java 25, Fabric Loader 0.19.3, Loom 1.16-SNAPSHOT and Gradle 9.4.1. Fabric API and JEI remain target-specific (26.1.2 uses Fabric API 0.150.0+26.1.2 / JEI 29.6.2.31; 26.2 uses Fabric API 0.152.2+26.2 / JEI 30.2.0.15). Keeping this in `current` avoids contaminating the Java 21/Yarn-based `modern` family with mapping/build-tool conditionals.
+Use short conditional sections for imports, signatures or small API changes.
+Keep materially different implementations separate. Several nearly identical
+1.21.x classes and common Fabric bootstrap/client classes use these branches;
+this avoids maintaining an entire duplicate class for a changed method name.
+All branches are materialized and validated across the configured target matrix.
 
-## Commands
+## One balance table
 
-Build every target:
+`ScytheBalance.java` must exist exactly once, in `source-shared`. It contains 230
+primitive constants and derived values at this refactoring checkpoint. Keep a
+primitive constant declaration on one line and use only literals, references and
+simple arithmetic: the resource generator deliberately rejects arbitrary Java
+expressions rather than executing source code.
+
+Durations use game ticks, distances use blocks, damage/healing use health points,
+and effect amplifiers are zero-based. `TICKS_PER_SECOND` and the vanilla player
+reference attributes describe units/reference values, not global changes to the
+Minecraft simulation. `Base.DURABILITY`, material bonuses and weapon modifiers
+are applied through the appropriate family `ScytheMaterial`/`ScytheSwordItem`.
+
+Balance sections include base stats, Blood/Blood Harvest/Vampirism/Bleeding,
+Toxic/Aura/Orb, Withering/Aura/Minion, Golden/Rain, Frozen/Storm/Ice Spike/Freezing,
+Frozen Heart, Drops, Enchantments, Crafting, Progression and Presentation.
+
+The old classic minion teleport search and the 26.x vertical-search implementation
+remain different algorithms. Their pre-existing parameters have separate explicit
+names (`CLASSIC_TELEPORT_*` versus `TELEPORT_*`) in this same table; the refactor
+does not silently replace one algorithm with the other.
+
+### Resource expressions
+
+A whole JSON placeholder without a formatter expands to a typed JSON value:
+
+```json
+{"max_level": "${balance:Enchantments.ACIDITY_MAX_LEVEL}"}
+```
+
+Inside a language string, use the intended presentation:
+
+```json
+{
+  "example.radius": "Radius: ${balance:GoldenRain.RADIUS|number}",
+  "example.chance": "Chance: ${balance:Blood.BLEEDING_CHANCE|percent}%",
+  "example.cooldown": "Cooldown: ${balance:GoldenRain.COOLDOWN_TICKS|seconds}s",
+  "example.effect": "Slowness ${balance:Blood.BLENDER_SLOWNESS_AMPLIFIER|amplifier}"
+}
+```
+
+Supported formatters are `number`, `percent`, `seconds`, `minutes`, `roman` (an
+actual enchantment level) and `amplifier` (zero-based effect amplifier plus one).
+Templates are expanded only in generated output; clients receive ordinary JSON.
+Explicit effect levels in descriptions are bound too, not left as a literal `II`.
+Existing descriptions that omit a value are not rewritten to invent new text.
+
+Enchantment rarity/anvil-cost combinations must remain representable by the
+legacy rarity enum. The validator checks that constraint, because allowing modern
+JSON and legacy code to disagree would reintroduce gameplay drift. Numeric Java
+balance/resource values are compared by the offline Java checker as well.
+
+### Language deltas
+
+Put common translations in shared, generation-specific changes in family and
+actual one-version differences in the target layer. A later value replaces only
+that key. To remove an inherited entry explicitly, set it to `null` in the delta;
+no `null` values are emitted in the generated language file.
+
+Other resources replace complete files. Recipes, texture data, registry IDs and
+Mixin targets have not been converted into a speculative generic resource DSL.
+
+## Server and client boundaries
+
+`FabricServerHooks` owns Fabric event subscriptions. It calls plain gameplay
+handlers for kills, loot, death, join, disconnect and server ticks. `ScytheLifecycle`
+contains the tick and disconnect logic. Do not subscribe to Fabric events from
+an ability, item, entity or effect implementation.
+
+Ability key packets call `ScytheAbilityHandler.activate(player)`. The server
+selects the held item and executes the matching skill; the client does not supply
+an arbitrary damage amount, target list or cooldown. The main hand retains
+priority, with an offhand fallback only when the main hand is not a scythe.
+
+HUD trackers use `HudSync`, whose implementation is installed by the loader
+bootstrap. `HudTransport<P>` is a tiny loader-independent contract; the Fabric
+implementation owns S2C calls and preserves the existing packet IDs, payloads
+and availability checks. A second installation or use before installation fails
+explicitly. This is an intentional bootstrap error, not a silently dropped HUD.
+
+`CooldownStore<K>` is pure Java, shared by all scythes and all versions. The small
+`ScytheCooldowns` adapter supplies player UUID and game time. Entries are separated
+by owner and skill, expired entries are removed, and disconnect/server-stop hooks
+clean them up. Existing Blood Harvest vanilla item cooldowns and the vampirism
+internal timer remain separate where their semantics differ.
+
+`ScytheTooltips` owns client presentation formerly copied into five item classes.
+The common sword base invokes a delegate installed by the client entrypoint.
+A dedicated server does not install or reference the actual tooltip renderer.
+Client networking registration, keybindings and rendering still belong to the
+loader layer; this refactor does not pretend those are portable without work.
+
+## Build and metadata ownership
 
 ```text
-./build-all.sh
+build-config/common.properties             shared metadata, default build JVM
+build-config/generations.properties        independent build roots
+builds/<family>/targets.properties         targets and dependency overrides
+builds/<family>/gradle.properties          family-specific Loom bootstrap
+builds/<family>/gradle/wrapper/             independent wrapper
+build-logic/family-settings.gradle         resolve matrix, include target projects
+build-logic/family-root.gradle             apply loader adapters and aggregate tasks
+build-logic/common-target.gradle           sources, Java, packaging, publication
+build-logic/fabric-target.gradle           Fabric/Loom-specific dependencies/tasks
 ```
 
-PowerShell:
+Every family now has the same multi-project shape, including legacy. There is no
+hand-maintained `build.gradle` in each target directory. Settings creates those
+directories as needed and the root applies the common logic to every target.
+
+The Python matrix resolver is authoritative for derived paths, family/platform
+ownership and property inheritance: common values, general family defaults,
+loader defaults, then explicit target overrides. Minecraft/loader identity comes
+from the target ID. `java.version` is the mod bytecode/toolchain; `build.java` is
+the Gradle JVM used by CI. Do not change the former to 21 merely because Loom
+requires a Java 21 build process for the 1.20.1 target.
+
+There is one Fabric descriptor template under `source-platforms/fabric`.
+Authors, license, name, version and contact links come from common properties;
+Minecraft, Java and loader/API constraints come from the resolved target. The
+previous 1.21.11 MIT/single-author descriptor is normalized to the common
+All Rights Reserved/two-author metadata. Explicit runtime-minimum overrides are
+kept separate from build dependencies where the supplied targets differed.
+
+IDE `.run` files and the CI matrix are generated from these same properties:
 
 ```text
-./build-all.ps1
+python scripts/source_layout.py --describe
+python scripts/source_layout.py --ci-matrix
+python scripts/sync_idea.py --check
 ```
 
-Build the legacy family:
+The IDEA generator preserves existing local Gradle JVM selections and unrelated
+run configurations. It does not force one JDK on all family builds. Generated
+sources are fingerprinted; stale, edited or extra generated files trigger a fresh
+materialization. Arbitrary nonempty directories and maintained source paths are
+rejected as output destinations.
 
-```text
-cd builds/legacy
-./gradlew buildAndCollect
-```
+## Adding a target or a loader
 
-Build both modern targets:
+For another target on an implemented loader, add its ID/dependency overrides to
+its family's `targets.properties`, create the source-layer directories (an empty
+layer can contain `.gitkeep`), add only genuine source deltas, then run the layout
+validator and IDEA generator. Build and launch it before publishing. No copied
+client shell script, descriptor or target `build.gradle` is needed.
 
-```text
-cd builds/modern
-./gradlew buildAndCollect
-```
+Forge 1.20.1 and NeoForge 1.21+ still need actual loader adapters. In particular:
 
-Build the current family:
+- Implement a real `forge-target.gradle`/`neoforge-target.gradle`, dependencies,
+  metadata, loader entrypoints and platform/family-platform sources.
+- Adapt registry timing, entity attributes, loot hooks, server lifecycle, keybinds,
+  networking and client render registration to each loader. Do not fake deferred
+  registries by copying Fabric's immediate registration order.
+- Resolve the Yarn/Mojang naming difference for earlier generations, either by a
+  deliberate mapping migration or appropriate family/loader adaptation. This is
+  not solved merely by renaming folders.
 
-```text
-cd builds/current
-./gradlew buildAndCollect
-```
+Reuse `ScytheBalance`, pure cooldown storage, ability rules and HUD contracts.
+Implement the loader boundary instead of copying balance and event registration
+back into each weapon. Shared gameplay still accesses the target's registry
+facade/entrypoint; replacing that facade is part of a real loader port.
 
-Build or run one target directly:
+## Updating an existing checkout
 
-```text
-cd builds/modern
-./gradlew :1.21.1-fabric:build
-./gradlew :1.21.11-fabric:build
-./gradlew :1.21.1-fabric:runClient
-./gradlew :1.21.11-fabric:runClient
+This refactor moves and deletes old Java/resource copies. Apply the separate
+**deletions patch** as well as the changed-files ZIP. Do not leave deleted source
+files in lower layers: they can become inherited again and are not always an
+identical duplicate that a validator can catch.
 
-cd ../current
-./gradlew :26.1.2-fabric:build
-./gradlew :26.2-fabric:build
-./gradlew :26.1.2-fabric:runClient
-./gradlew :26.2-fabric:runClient
-```
-
-Materialize targets manually:
-
-```text
-python scripts/source_layout.py 1.20.1-fabric --output build/manual/1.20.1-fabric
-python scripts/source_layout.py 1.21.1-fabric --output build/manual/1.21.1-fabric
-python scripts/source_layout.py 1.21.11-fabric --output build/manual/1.21.11-fabric
-python scripts/source_layout.py 26.1.2-fabric --output build/manual/26.1.2-fabric
-python scripts/source_layout.py 26.2-fabric --output build/manual/26.2-fabric
-```
-
-## IntelliJ IDEA integration
-
-`.idea/gradle.xml` links the independent build roots:
-
-```text
-builds/legacy
-builds/modern
-builds/current
-```
-
-Shared `.run` configurations launch:
-
-```text
-ScytheMod 1.20.1 Fabric Client  -> builds/legacy : runClient
-ScytheMod 1.21.1 Fabric Client  -> builds/modern : :1.21.1-fabric:runClient
-ScytheMod 1.21.11 Fabric Client -> builds/modern : :1.21.11-fabric:runClient
-ScytheMod 26.1.2 Fabric Client  -> builds/current : :26.1.2-fabric:runClient
-ScytheMod 26.2 Fabric Client    -> builds/current : :26.2-fabric:runClient
-```
-
-Keeping `legacy`, `modern` and `current` as independent Gradle builds lets each generation use the Gradle/Loom/toolchain stack it actually requires.
+After applying both, run the validator, then refresh Gradle in IDEA. Previously
+materialized target build directories are regenerated automatically. Do not copy
+old per-target `build.gradle` files back into the new structure. A supplied full
+project ZIP can instead be used as a clean root, without stale overlay files.

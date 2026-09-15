@@ -3,18 +3,17 @@ package com.shipovskijkorp.scythes.mod.mixin;
 import com.shipovskijkorp.scythes.mod.ScytheMod;
 import com.shipovskijkorp.scythes.mod.ability.GoldenScytheLootingContext;
 import com.shipovskijkorp.scythes.mod.item.ScytheItemUtil;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentLevelEntry;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.Registries;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.enchantment.EnchantmentLevelEntry;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.registry.Registries;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -35,7 +34,6 @@ public abstract class EnchantmentHelperMixin {
 
         cir.setReturnValue(entries);
     }
-
 
     private static void scythes$removeWrongScytheEnchantments(ItemStack stack, List<EnchantmentLevelEntry> entries) {
         if (!ScytheItemUtil.isBloodScythe(stack)) {

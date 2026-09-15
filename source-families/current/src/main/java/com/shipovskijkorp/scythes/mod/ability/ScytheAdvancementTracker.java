@@ -1,17 +1,17 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
-import net.minecraft.advancements.AdvancementHolder;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerPlayer;
-
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
+import net.minecraft.advancements.AdvancementHolder;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 
 public final class ScytheAdvancementTracker {
 
@@ -44,8 +44,6 @@ public final class ScytheAdvancementTracker {
     private static final int BLOOD_SKILL_ACTIVE = 1 << 1;
     private static final int BLOOD_SKILL_SPECIAL = 1 << 2;
     private static final int BLOOD_SKILL_ALL = BLOOD_SKILL_PASSIVE | BLOOD_SKILL_ACTIVE | BLOOD_SKILL_SPECIAL;
-    private static final int BLOOD_SKILL_EXPIRE_TICKS = 20 * 120;
-    private static final int TOXIC_POISON_REQUIRED_TICKS = 20 * 22;
 
     private static final Map<UUID, Map<UUID, BloodSkillRecord>> BLOOD_TARGET_SKILLS = new HashMap<>();
     private static final Map<ToxicPoisonKey, ToxicPoisonRecord> TOXIC_POISON = new HashMap<>();
@@ -130,7 +128,7 @@ public final class ScytheAdvancementTracker {
             record.expiresAt = Math.max(record.expiresAt, now + durationTicks);
         }
 
-        if (now - record.startTick >= TOXIC_POISON_REQUIRED_TICKS) {
+        if (now - record.startTick >= ScytheBalance.Progression.TOXIC_POISON_REQUIRED_TICKS) {
             grantCriterion(player, IMPOSSIBLE_INTOXICATION_ADVANCEMENT, "poison_22_seconds");
         }
 
@@ -140,7 +138,7 @@ public final class ScytheAdvancementTracker {
     }
 
     public static void tryGrantSuperNecromancer(ServerPlayer player, int minionCount) {
-        if (minionCount >= 10) {
+        if (minionCount >= ScytheBalance.Progression.MINION_ARMY_SIZE) {
             grantCriterion(player, SUPER_NECROMANCER_ADVANCEMENT, "summon_10_minions");
         }
     }
@@ -185,12 +183,12 @@ public final class ScytheAdvancementTracker {
         BloodSkillRecord record = byOwner.get(player.getUUID());
 
         if (record == null || now > record.expiresAt) {
-            record = new BloodSkillRecord(0, now + BLOOD_SKILL_EXPIRE_TICKS);
+            record = new BloodSkillRecord(0, now + ScytheBalance.Progression.BLOOD_SKILL_EXPIRE_TICKS);
             byOwner.put(player.getUUID(), record);
         }
 
         record.flags |= flag;
-        record.expiresAt = now + BLOOD_SKILL_EXPIRE_TICKS;
+        record.expiresAt = now + ScytheBalance.Progression.BLOOD_SKILL_EXPIRE_TICKS;
     }
 
     private static void cleanupToxicPoison(long now) {

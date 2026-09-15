@@ -1,12 +1,11 @@
 package com.shipovskijkorp.scythes.mod.compat.jei;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import java.util.List;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.potion.PotionUtil;
 import net.minecraft.potion.Potions;
-
-import java.util.List;
 
 /**
  * Client-only display model for JEI.

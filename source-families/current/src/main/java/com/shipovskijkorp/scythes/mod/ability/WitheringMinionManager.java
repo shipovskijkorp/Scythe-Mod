@@ -1,21 +1,19 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.entity.WitheringMinionEntity;
 import com.shipovskijkorp.scythes.mod.item.WitheringScytheItem;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.phys.AABB;
-
 import java.util.List;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.AABB;
 
 public final class WitheringMinionManager {
 
     private WitheringMinionManager() {
     }
-
-    private static final double SEARCH_RADIUS = 160.0D;
 
     public static int countMinions(ServerPlayer owner, ServerLevel world) {
         return findMinions(owner, world).size();
@@ -34,9 +32,9 @@ public final class WitheringMinionManager {
         minion.initializeForOwner(owner);
 
         double yaw = Math.toRadians(owner.getYRot());
-        double x = owner.getX() - Math.sin(yaw) * 1.6D;
+        double x = owner.getX() - Math.sin(yaw) * ScytheBalance.Minion.SPAWN_DISTANCE;
         double y = owner.getY();
-        double z = owner.getZ() + Math.cos(yaw) * 1.6D;
+        double z = owner.getZ() + Math.cos(yaw) * ScytheBalance.Minion.SPAWN_DISTANCE;
 
         minion.snapTo(x, y, z, owner.getYRot(), 0.0F);
         return world.addFreshEntity(minion);
@@ -70,7 +68,7 @@ public final class WitheringMinionManager {
     }
 
     public static List<WitheringMinionEntity> findMinions(ServerPlayer owner, ServerLevel world) {
-        AABB box = owner.getBoundingBox().inflate(SEARCH_RADIUS);
+        AABB box = owner.getBoundingBox().inflate(ScytheBalance.Minion.SEARCH_RADIUS);
         return world.getEntitiesOfClass(
                 WitheringMinionEntity.class,
                 box,

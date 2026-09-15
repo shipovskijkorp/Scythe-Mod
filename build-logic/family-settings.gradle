@@ -1,0 +1,51 @@
+import groovy.json.JsonSlurper
+
+// Only wrappers/Loom versions are family-local. Matrix resolution lives in Python.
+def repositoryRoot = settingsDir.toPath().resolve('../..').normalize().toFile()
+def requestedPython = System.getenv('SCYTHE_PYTHON') ?: System.getenv('PYTHON')
+def candidates = requestedPython ? [[requestedPython]] :
+        (System.getProperty('os.name').toLowerCase().contains('win') ?
+                [['py', '-3'], ['python'], ['python3']] : [['python3'], ['python']])
+def pythonCommand = candidates.find { candidate ->
+    try {
+        def process = new ProcessBuilder(candidate + ['-c', 'import sys; sys.exit(sys.version_info < (3, 10))'])
+                .redirectErrorStream(true).start()
+        process.inputStream.getText('UTF-8')
+        return process.waitFor() == 0
+    } catch (IOException ignored) {
+        return false
+    }
+}
+if (pythonCommand == null) {
+    throw new GradleException('ScytheMod needs Python 3.10+ for source materialization. Set SCYTHE_PYTHON to its executable.')
+}
+def runPython = { List<String> arguments ->
+    def process = new ProcessBuilder(pythonCommand + arguments)
+            .directory(repositoryRoot).redirectErrorStream(true).start()
+    def output = process.inputStream.getText('UTF-8')
+    if (process.waitFor() != 0) throw new GradleException("ScytheMod source tool failed:\n${output}")
+    output
+}
+def descriptor = new JsonSlurper().parseText(runPython([
+        new File(repositoryRoot, 'scripts/source_layout.py').absolutePath,
+        '--describe', '--config', new File(settingsDir, 'targets.properties').absolutePath]))
+if (descriptor.generations.size() != 1) throw new GradleException('A family build must contain exactly one generation')
+def family = descriptor.generations.keySet().first()
+rootProject.name = "ScytheMod-${family.capitalize()}"
+
+gradle.ext.scytheDescriptor = descriptor
+gradle.ext.scytheRepositoryRoot = repositoryRoot
+gradle.ext.scythePythonCommand = pythonCommand
+gradle.ext.scytheRunPython = runPython
+
+descriptor.targets.keySet().each { target ->
+    include(":${target}")
+    def directory = new File(settingsDir, "targets/${target}")
+    if (!directory.isDirectory() && !directory.mkdirs()) {
+        throw new GradleException("Cannot create target project directory: ${directory}")
+    }
+    project(":${target}").projectDir = directory
+    // No copied build.gradle per target. The root applies shared build logic.
+}
+// Generated shared Gradle run configs, never per-client shell launchers.
+runPython([new File(repositoryRoot, 'scripts/sync_idea.py').absolutePath])

@@ -1,34 +1,27 @@
 package com.shipovskijkorp.scythes.mod.item;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
-import com.shipovskijkorp.scythes.mod.ability.FrozenScytheCooldowns;
-import com.shipovskijkorp.scythes.mod.ability.FrozenStormAbility;
 import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
-import com.shipovskijkorp.scythes.mod.client.TooltipUtil;
+import com.shipovskijkorp.scythes.mod.ability.ScytheCooldowns;
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.entity.IceSpikeEntity;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.FluidState;
-import net.minecraft.item.Item.TooltipContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.SwordItem;
 import net.minecraft.item.ToolMaterials;
-import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.math.BlockPos;
@@ -36,142 +29,13 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-
-public class FrozenScytheItem extends SwordItem {
-
-    public static final int ICE_SPIKE_DURABILITY_COST = 30;
-    public static final int ICE_SPIKE_COOLDOWN_TICKS = 20 * 20;
-    public static final float ICE_SPIKE_SPEED = 3.0F;
-
-    public static final double COLD_MASTER_FREEZING_CHANCE = 0.33D;
-    public static final int COLD_MASTER_FREEZING_TICKS = 20;
-    public static final int COLD_MASTER_FROST_WALKER_LEVEL = 2;
+public class FrozenScytheItem extends ScytheSwordItem {
 
     public FrozenScytheItem(Settings settings) {
         super(
                 ToolMaterials.NETHERITE,
                 settings.attributeModifiers(SwordItem.createAttributeModifiers(ToolMaterials.NETHERITE, 4, -2.8F))
         );
-    }
-
-    @Environment(EnvType.CLIENT)
-    @Override
-    public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
-        TooltipUtil.addWrapped(tooltip, "tooltip.scythes.frozen_scythe.desc", Formatting.GRAY, Formatting.ITALIC);
-
-        if (!Screen.hasShiftDown()) {
-            TooltipUtil.addHoldShiftHint(tooltip);
-            return;
-        }
-
-        boolean alt = Screen.hasAltDown();
-        if (alt) {
-            tooltip.add(Text.empty());
-            TooltipUtil.addWrapped(tooltip, "tooltip.scythes.frozen_scythe.base_stats", Formatting.DARK_GRAY);
-        }
-
-        tooltip.add(Text.empty());
-        tooltip.add(Text.translatable("tooltip.scythes.section.passive").formatted(Formatting.GRAY));
-        tooltip.add(Text.translatable("tooltip.scythes.frozen_scythe.passive").formatted(Formatting.AQUA));
-        if (!alt) {
-            TooltipUtil.addWrapped(tooltip, "tooltip.scythes.frozen_scythe.passive.desc", Formatting.DARK_GRAY);
-        } else {
-            TooltipUtil.addWrapped(tooltip, "tooltip.scythes.stat.powder_snow_walk", Formatting.DARK_GRAY);
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable("tooltip.scythes.stat.frost_walker_level", COLD_MASTER_FROST_WALKER_LEVEL),
-                    Formatting.DARK_GRAY
-            );
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable(
-                            "tooltip.scythes.stat.freezing_chance_percent",
-                            TooltipUtil.fmtPercentValue(COLD_MASTER_FREEZING_CHANCE)
-                    ),
-                    Formatting.DARK_GRAY
-            );
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable(
-                            "tooltip.scythes.stat.freezing_sec",
-                            TooltipUtil.fmtSecondsValue(COLD_MASTER_FREEZING_TICKS)
-                    ),
-                    Formatting.DARK_GRAY
-            );
-        }
-
-        tooltip.add(Text.empty());
-        tooltip.add(Text.translatable("tooltip.scythes.section.special").formatted(Formatting.GRAY));
-        tooltip.add(Text.translatable("tooltip.scythes.ice_spike").formatted(Formatting.AQUA));
-        if (!alt) {
-            TooltipUtil.addWrapped(tooltip, "tooltip.scythes.ice_spike.desc", Formatting.GRAY);
-        } else {
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable("tooltip.scythes.stat.cooldown_sec", TooltipUtil.fmtSecondsValue(ICE_SPIKE_COOLDOWN_TICKS)),
-                    Formatting.GRAY
-            );
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable("tooltip.scythes.stat.durability_cost", String.valueOf(ICE_SPIKE_DURABILITY_COST)),
-                    Formatting.GRAY
-            );
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable("tooltip.scythes.stat.damage", TooltipUtil.fmtNumber(IceSpikeEntity.HIT_DAMAGE)),
-                    Formatting.DARK_GRAY
-            );
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable("tooltip.scythes.stat.freezing_sec", TooltipUtil.fmtSecondsValue(IceSpikeEntity.FREEZING_TICKS)),
-                    Formatting.DARK_GRAY
-            );
-        }
-
-        tooltip.add(Text.empty());
-        tooltip.add(Text.translatable("tooltip.scythes.section.active").formatted(Formatting.GRAY));
-        tooltip.add(Text.translatable(
-                "tooltip.scythes.frozen_storm",
-                TooltipUtil.getScytheAbilityKeyText(Formatting.AQUA)
-        ));
-        if (!alt) {
-            TooltipUtil.addWrapped(tooltip, "tooltip.scythes.frozen_storm.desc", Formatting.GRAY);
-            TooltipUtil.addHoldAltHint(tooltip);
-            return;
-        }
-
-        TooltipUtil.addWrapped(
-                tooltip,
-                Text.translatable("tooltip.scythes.stat.radius_blocks", TooltipUtil.fmtNumber(FrozenStormAbility.RADIUS)),
-                Formatting.GRAY
-        );
-        TooltipUtil.addWrapped(
-                tooltip,
-                Text.translatable("tooltip.scythes.stat.cooldown_sec", TooltipUtil.fmtSecondsValue(FrozenStormAbility.COOLDOWN_TICKS)),
-                Formatting.GRAY
-        );
-        TooltipUtil.addWrapped(
-                tooltip,
-                Text.translatable("tooltip.scythes.stat.durability_cost", String.valueOf(FrozenStormAbility.DURABILITY_COST)),
-                Formatting.GRAY
-        );
-        TooltipUtil.addWrapped(
-                tooltip,
-                Text.translatable("tooltip.scythes.stat.freezing_sec", TooltipUtil.fmtSecondsValue(FrozenStormAbility.FREEZING_TICKS)),
-                Formatting.DARK_GRAY
-        );
-        TooltipUtil.addWrapped(
-                tooltip,
-                Text.translatable("tooltip.scythes.stat.slowness_sec", TooltipUtil.fmtSecondsValue(FrozenStormAbility.SLOWNESS_TICKS)),
-                Formatting.DARK_GRAY
-        );
-        TooltipUtil.addWrapped(
-                tooltip,
-                Text.translatable("tooltip.scythes.stat.weakness_sec", TooltipUtil.fmtSecondsValue(FrozenStormAbility.WEAKNESS_TICKS)),
-                Formatting.DARK_GRAY
-        );
-        TooltipUtil.addWrapped(tooltip, "tooltip.scythes.stat.ignores_pets_and_teammates", Formatting.DARK_GRAY);
     }
 
     @Override
@@ -181,7 +45,7 @@ public class FrozenScytheItem extends SwordItem {
         if (!(world instanceof ServerWorld serverWorld) || !(entity instanceof PlayerEntity player)) return;
         if (!isTheOnlyHeldStackToTick(player, stack)) return;
 
-        freezeNearbyWater(player, serverWorld, COLD_MASTER_FROST_WALKER_LEVEL);
+        freezeNearbyWater(player, serverWorld, ScytheBalance.Frozen.COLD_MASTER_FROST_WALKER_LEVEL);
     }
 
     @Override
@@ -190,11 +54,11 @@ public class FrozenScytheItem extends SwordItem {
 
         if (!target.getWorld().isClient
                 && target.isAlive()
-                && attacker.getRandom().nextDouble() < COLD_MASTER_FREEZING_CHANCE) {
+                && attacker.getRandom().nextDouble() < ScytheBalance.Frozen.COLD_MASTER_FREEZING_CHANCE) {
             target.addStatusEffect(new StatusEffectInstance(
                     ScytheMod.FREEZING,
-                    COLD_MASTER_FREEZING_TICKS,
-                    0
+                    ScytheBalance.Frozen.COLD_MASTER_FREEZING_TICKS,
+                    ScytheBalance.Frozen.COLD_MASTER_FREEZING_AMPLIFIER
             ));
             if (attacker instanceof ServerPlayerEntity player) {
                 ScytheAdvancementTracker.markFrozenPassive(player);
@@ -233,7 +97,7 @@ public class FrozenScytheItem extends SwordItem {
     private static void freezeNearbyWater(PlayerEntity player, ServerWorld world, int level) {
         if (!player.isOnGround() || level <= 0) return;
 
-        int radius = Math.min(16, 2 + level);
+        int radius = Math.min(ScytheBalance.Frozen.FROST_WALKER_MAX_RADIUS, ScytheBalance.Frozen.FROST_WALKER_BASE_RADIUS + level);
         BlockPos center = player.getBlockPos();
         BlockPos.Mutable mutable = new BlockPos.Mutable();
         BlockState frostedIce = Blocks.FROSTED_ICE.getDefaultState();
@@ -257,7 +121,7 @@ public class FrozenScytheItem extends SwordItem {
                 world.scheduleBlockTick(
                         waterPos,
                         Blocks.FROSTED_ICE,
-                        MathHelper.nextInt(world.getRandom(), 60, 120)
+                        MathHelper.nextInt(world.getRandom(), ScytheBalance.Frozen.FROSTED_ICE_MIN_DELAY_TICKS, ScytheBalance.Frozen.FROSTED_ICE_MAX_DELAY_TICKS)
                 );
             }
         }
@@ -275,7 +139,7 @@ public class FrozenScytheItem extends SwordItem {
             return TypedActionResult.pass(stack);
         }
 
-        int cooldownLeft = FrozenScytheCooldowns.getIceSpikeTicksLeft(player);
+        int cooldownLeft = ScytheCooldowns.remaining(player, ScytheCooldowns.Skill.ICE_SPIKE);
         if (cooldownLeft > 0) {
             player.sendMessage(
                     Text.translatable("message.scythes.ice_spike.cooldown", Math.max(1, (cooldownLeft + 19) / 20)),
@@ -284,22 +148,22 @@ public class FrozenScytheItem extends SwordItem {
             return TypedActionResult.fail(stack);
         }
 
-        if (!hasEnoughDurability(stack, ICE_SPIKE_DURABILITY_COST)) {
+        if (!hasEnoughDurability(stack, ScytheBalance.Frozen.ICE_SPIKE_DURABILITY_COST)) {
             player.sendMessage(Text.translatable("message.scythes.scythe_ability.no_durability"), true);
             return TypedActionResult.fail(stack);
         }
 
         IceSpikeEntity spike = new IceSpikeEntity(world, player, stack);
         spike.refreshPositionAndAngles(player.getX(), player.getEyeY() - 0.1D, player.getZ(), player.getYaw(), player.getPitch());
-        spike.setVelocity(player, player.getPitch(), player.getYaw(), 0.0F, ICE_SPIKE_SPEED, 0.0F);
+        spike.setVelocity(player, player.getPitch(), player.getYaw(), 0.0F, ScytheBalance.Frozen.ICE_SPIKE_SPEED, 0.0F);
         world.spawnEntity(spike);
 
         stack.damage(
-                ICE_SPIKE_DURABILITY_COST,
+                ScytheBalance.Frozen.ICE_SPIKE_DURABILITY_COST,
                 player,
                 hand == Hand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND
         );
-        FrozenScytheCooldowns.setIceSpikeCooldown(player, ICE_SPIKE_COOLDOWN_TICKS);
+        ScytheCooldowns.start(player, ScytheCooldowns.Skill.ICE_SPIKE, ScytheBalance.Frozen.ICE_SPIKE_COOLDOWN_TICKS);
 
         world.playSound(
                 null,

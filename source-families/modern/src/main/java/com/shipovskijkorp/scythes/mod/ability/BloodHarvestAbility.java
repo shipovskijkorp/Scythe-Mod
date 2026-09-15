@@ -1,31 +1,28 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.item.BloodScytheItem;
-import com.shipovskijkorp.scythes.mod.network.BloodHarvestHudS2CPacket;
+import com.shipovskijkorp.scythes.mod.platform.HudSync;
+import com.shipovskijkorp.scythes.mod.platform.HudTransport;
+import java.util.List;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
+//? if >=1.21.11 {
+//? } else {
 import net.minecraft.item.Item;
-import net.minecraft.entity.EquipmentSlot;
+//? }
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
+//? if >=1.21.11 {
+import net.minecraft.server.world.ServerWorld;
+//? } else {
+//? }
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.Box;
 
-import java.util.List;
-
 public class BloodHarvestAbility {
-
-    public static final double RADIUS = 10.0D;
-    public static final int COOLDOWN_TICKS = 20 * 60;
-    public static final int DURABILITY_COST = 100;
-
-    public static final int SLOWNESS_TICKS = 20 * 10;
-    public static final int BLINDNESS_TICKS = 20 * 10;
-    public static final int WEAKNESS_TICKS = 20 * 10;
-    public static final int GLOWING_TICKS = 20 * 20;
-    public static final int SLOWNESS_AMPLIFIER = 1;
-    public static final int WEAKNESS_AMPLIFIER = 1;
 
     /** Активация способности */
     public static void tryActivate(ServerPlayerEntity player) {
@@ -37,24 +34,36 @@ public class BloodHarvestAbility {
         }
 
         ItemStack stack = player.getStackInHand(hand);
+//? if >=1.21.11 {
+        ServerWorld world = (ServerWorld) player.getEntityWorld();
+//? } else {
         Item item = stack.getItem();
+//? }
 
-        if (DURABILITY_COST > 0) {
+        if (ScytheBalance.BloodHarvest.DURABILITY_COST > 0) {
             int remaining = stack.getMaxDamage() - stack.getDamage();
-            if (remaining < DURABILITY_COST) {
+            if (remaining < ScytheBalance.BloodHarvest.DURABILITY_COST) {
                 player.sendMessage(Text.translatable("message.scythes.blood_harvest.no_durability"), true);
                 return;
             }
         }
 
+//? if >=1.21.11 {
+        if (player.getItemCooldownManager().isCoolingDown(stack)) {
+//? } else {
         if (player.getItemCooldownManager().isCoolingDown(item)) {
+//? }
             player.sendMessage(Text.translatable("message.scythes.blood_harvest.cooldown"), true);
             return;
         }
 
-        Box box = player.getBoundingBox().expand(RADIUS);
+        Box box = player.getBoundingBox().expand(ScytheBalance.BloodHarvest.RADIUS);
         List<ServerPlayerEntity> targets =
+//? if >=1.21.11 {
+                world.getEntitiesByClass(
+//? } else {
                 player.getWorld().getEntitiesByClass(
+//? }
                         ServerPlayerEntity.class,
                         box,
                         p -> p != player && p.isAlive() && !p.isSpectator() && !player.isTeammate(p)
@@ -66,23 +75,27 @@ public class BloodHarvestAbility {
         }
 
         // ✅ тратим прочность ТОЛЬКО на активированной косе
-        if (DURABILITY_COST > 0) {
-            stack.damage(DURABILITY_COST, player, hand == Hand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
+        if (ScytheBalance.BloodHarvest.DURABILITY_COST > 0) {
+            stack.damage(ScytheBalance.BloodHarvest.DURABILITY_COST, player, hand == Hand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
         }
 
+//? if >=1.21.11 {
+        player.getItemCooldownManager().set(stack, ScytheBalance.BloodHarvest.COOLDOWN_TICKS);
+//? } else {
         // кулдаун по Item
-        player.getItemCooldownManager().set(item, COOLDOWN_TICKS);
+        player.getItemCooldownManager().set(item, ScytheBalance.BloodHarvest.COOLDOWN_TICKS);
+//? }
 
         for (ServerPlayerEntity target : targets) {
             ScytheAdvancementTracker.markBloodActive(player, target);
-            target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, SLOWNESS_TICKS, SLOWNESS_AMPLIFIER));
-            target.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, BLINDNESS_TICKS, 0));
-            target.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, WEAKNESS_TICKS, WEAKNESS_AMPLIFIER));
-            target.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, GLOWING_TICKS, 0));
+            target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, ScytheBalance.BloodHarvest.SLOWNESS_TICKS, ScytheBalance.BloodHarvest.SLOWNESS_AMPLIFIER));
+            target.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, ScytheBalance.BloodHarvest.BLINDNESS_TICKS, ScytheBalance.BloodHarvest.BLINDNESS_AMPLIFIER));
+            target.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, ScytheBalance.BloodHarvest.WEAKNESS_TICKS, ScytheBalance.BloodHarvest.WEAKNESS_AMPLIFIER));
+            target.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, ScytheBalance.BloodHarvest.GLOWING_TICKS, ScytheBalance.BloodHarvest.GLOWING_AMPLIFIER));
         }
 
         int windowTicks = BloodHarvestTracker.start(player);
-        BloodHarvestHudS2CPacket.sendTicks(player, windowTicks);
+        HudSync.start(player, HudTransport.Timer.BLOOD_HARVEST, windowTicks);
 
         player.sendMessage(Text.translatable("message.scythes.blood_harvest.success"), true);
     }

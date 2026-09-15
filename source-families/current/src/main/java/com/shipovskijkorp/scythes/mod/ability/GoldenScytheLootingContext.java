@@ -1,5 +1,6 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.item.GoldenScytheItem;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
@@ -24,13 +25,13 @@ public final class GoldenScytheLootingContext {
 
         int bonus = 0;
         if (GoldenScytheItem.hasGoldenScythe(player)) {
-            bonus += GoldenScytheItem.PASSIVE_LOOTING_BONUS;
+            bonus += ScytheBalance.Golden.PASSIVE_LOOTING_BONUS;
             ScytheAdvancementTracker.markGoldenPassive(player);
         }
 
         LivingEntity target = CURRENT_LOOT_TARGET.get();
         if (target != null && GoldenLootMarkTracker.isMarkedBy(target, player)) {
-            bonus += GoldenLootMarkTracker.MARK_LOOTING_BONUS;
+            bonus += ScytheBalance.Golden.MARK_LOOTING_BONUS;
         }
 
         return bonus;

@@ -1,7 +1,9 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.item.FrozenScytheItem;
+import java.util.List;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -17,20 +19,8 @@ import net.minecraft.world.entity.animal.equine.AbstractHorse;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 
-import java.util.List;
-
 /** Active ability of the Frozen Scythe. */
 public final class FrozenStormAbility {
-
-    public static final double RADIUS = 20.0D;
-    public static final int COOLDOWN_TICKS = 20 * 40;
-    public static final int DURABILITY_COST = 100;
-
-    public static final int FREEZING_TICKS = 20 * 5;
-    public static final int SLOWNESS_TICKS = 20 * 10;
-    public static final int WEAKNESS_TICKS = 20 * 10;
-    public static final int SLOWNESS_AMPLIFIER = 0;
-    public static final int WEAKNESS_AMPLIFIER = 0;
 
     private FrozenStormAbility() {
     }
@@ -42,7 +32,7 @@ public final class FrozenStormAbility {
             return;
         }
 
-        int cooldownLeft = FrozenScytheCooldowns.getStormTicksLeft(player);
+        int cooldownLeft = ScytheCooldowns.remaining(player, ScytheCooldowns.Skill.STORM);
         if (cooldownLeft > 0) {
             player.sendOverlayMessage(Component.translatable(
                     "message.scythes.frozen_storm.cooldown",
@@ -52,14 +42,14 @@ public final class FrozenStormAbility {
         }
 
         ItemStack stack = player.getItemInHand(hand);
-        if (!FrozenScytheItem.hasEnoughDurability(stack, DURABILITY_COST)) {
+        if (!FrozenScytheItem.hasEnoughDurability(stack, ScytheBalance.FrozenStorm.DURABILITY_COST)) {
             player.sendOverlayMessage(Component.translatable("message.scythes.scythe_ability.no_durability"));
             return;
         }
 
         ServerLevel level = (ServerLevel) player.level();
-        double radiusSquared = RADIUS * RADIUS;
-        AABB searchBox = player.getBoundingBox().inflate(RADIUS);
+        double radiusSquared = ScytheBalance.FrozenStorm.RADIUS * ScytheBalance.FrozenStorm.RADIUS;
+        AABB searchBox = player.getBoundingBox().inflate(ScytheBalance.FrozenStorm.RADIUS);
         List<LivingEntity> targets = level.getEntitiesOfClass(
                 LivingEntity.class,
                 searchBox,
@@ -72,17 +62,17 @@ public final class FrozenStormAbility {
         }
 
         for (LivingEntity target : targets) {
-            target.addEffect(new MobEffectInstance(ScytheMod.FREEZING, FREEZING_TICKS, 0, false, true, true));
-            target.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, SLOWNESS_TICKS, SLOWNESS_AMPLIFIER, false, true, true));
-            target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, WEAKNESS_TICKS, WEAKNESS_AMPLIFIER, false, true, true));
+            target.addEffect(new MobEffectInstance(ScytheMod.FREEZING, ScytheBalance.FrozenStorm.FREEZING_TICKS, ScytheBalance.FrozenStorm.FREEZING_AMPLIFIER, false, true, true));
+            target.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, ScytheBalance.FrozenStorm.SLOWNESS_TICKS, ScytheBalance.FrozenStorm.SLOWNESS_AMPLIFIER, false, true, true));
+            target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, ScytheBalance.FrozenStorm.WEAKNESS_TICKS, ScytheBalance.FrozenStorm.WEAKNESS_AMPLIFIER, false, true, true));
         }
 
         stack.hurtAndBreak(
-                DURABILITY_COST,
+                ScytheBalance.FrozenStorm.DURABILITY_COST,
                 player,
                 hand == InteractionHand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND
         );
-        FrozenScytheCooldowns.setStormCooldown(player, COOLDOWN_TICKS);
+        ScytheCooldowns.start(player, ScytheCooldowns.Skill.STORM, ScytheBalance.FrozenStorm.COOLDOWN_TICKS);
         ScytheAdvancementTracker.markFrozenActive(player);
 
         level.playSound(

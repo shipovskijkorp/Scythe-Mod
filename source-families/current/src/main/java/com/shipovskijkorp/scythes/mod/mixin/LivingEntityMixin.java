@@ -6,14 +6,15 @@ import com.shipovskijkorp.scythes.mod.ability.GoldenLootMarkTracker;
 import com.shipovskijkorp.scythes.mod.ability.GoldenScytheLootingContext;
 import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
 import com.shipovskijkorp.scythes.mod.ability.WitheringSoulHandler;
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.item.BloodScytheItem;
 import com.shipovskijkorp.scythes.mod.util.ScytheDamageTypes;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -59,8 +60,8 @@ public abstract class LivingEntityMixin {
         ServerPlayer player = scythes$getBloodScytheAttacker(source);
         if (player == null) return;
 
-        scythes$bloodDefensePierceQueued = BloodScytheItem.DEFENSE_PIERCE_CHANCE > 0.0D
-                && player.getRandom().nextDouble() < BloodScytheItem.DEFENSE_PIERCE_CHANCE;
+        scythes$bloodDefensePierceQueued = ScytheBalance.Blood.DEFENSE_PIERCE_CHANCE > 0.0D
+                && player.getRandom().nextDouble() < ScytheBalance.Blood.DEFENSE_PIERCE_CHANCE;
     }
 
     @Inject(method = "hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z", at = @At("RETURN"))
@@ -82,7 +83,7 @@ public abstract class LivingEntityMixin {
 
         if (scythes$bloodDefensePierceQueued && self.isAlive()) {
             float mitigatedDamage = Math.max(0.0f, amount - baseActualDamage);
-            float bonusDamage = mitigatedDamage * (float) BloodScytheItem.DEFENSE_PIERCE_MITIGATION_IGNORED;
+            float bonusDamage = mitigatedDamage * (float) ScytheBalance.Blood.DEFENSE_PIERCE_MITIGATION_IGNORED;
 
             if (bonusDamage > 0.0f) {
                 float beforeBonus = self.getHealth() + self.getAbsorptionAmount();

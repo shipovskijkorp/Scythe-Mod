@@ -34,7 +34,11 @@ public class ToxicEssenceRecipeCategory implements IRecipeCategory<ToxicEssenceJ
     private final IDrawable icon;
 
     public ToxicEssenceRecipeCategory(IGuiHelper guiHelper) {
+//? if >=1.21.11 {
+        this.background = guiHelper.createDrawable(Identifier.of("minecraft", "textures/gui/container/crafting_table.png"), 29, 16, WIDTH, HEIGHT);
+//? } else {
         this.background = guiHelper.createDrawable(Identifier.of("minecraft", "textures/gui/container/crafting_table.png"), 29, 16, 116, 54);
+//? }
         this.icon = guiHelper.createDrawableItemStack(new ItemStack(ScytheMod.TOXIC_ESSENCE));
     }
 
@@ -49,6 +53,14 @@ public class ToxicEssenceRecipeCategory implements IRecipeCategory<ToxicEssenceJ
     }
 
     @Override
+//? if >=1.21.11 {
+    public IDrawable getIcon() {
+        return icon;
+    }
+
+    @Override
+//? } else {
+//? }
     public int getWidth() {
         return WIDTH;
     }
@@ -59,6 +71,10 @@ public class ToxicEssenceRecipeCategory implements IRecipeCategory<ToxicEssenceJ
     }
 
     @Override
+//? if >=1.21.11 {
+    public void draw(ToxicEssenceJeiRecipe recipe, IRecipeSlotsView recipeSlotsView, DrawContext guiGraphics, double mouseX, double mouseY) {
+        background.draw(guiGraphics);
+//? } else {
     public void draw(ToxicEssenceJeiRecipe recipe, IRecipeSlotsView recipeSlotsView, DrawContext context, double mouseX, double mouseY) {
         background.draw(context);
     }
@@ -66,6 +82,7 @@ public class ToxicEssenceRecipeCategory implements IRecipeCategory<ToxicEssenceJ
     @Override
     public IDrawable getIcon() {
         return icon;
+//? }
     }
 
     @Override

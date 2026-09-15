@@ -1,19 +1,15 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
-import net.minecraft.server.level.ServerPlayer;
-
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import net.minecraft.server.level.ServerPlayer;
 
 public final class BloodScytheVampirism {
 
     private BloodScytheVampirism() {
     }
-
-    public static final double VAMPIRISM_CHANCE = 0.25D;
-    public static final double HEAL_FRACTION = 0.50D;
-    public static final int COOLDOWN_TICKS = 20;
 
     private static final Map<UUID, Long> LAST_HEAL_TICK = new HashMap<>();
 
@@ -24,11 +20,11 @@ public final class BloodScytheVampirism {
 
         long now = player.level().getGameTime();
         long last = LAST_HEAL_TICK.getOrDefault(player.getUUID(), Long.MIN_VALUE / 2L);
-        if (COOLDOWN_TICKS > 0 && now - last < COOLDOWN_TICKS) return;
+        if (ScytheBalance.Vampirism.COOLDOWN_TICKS > 0 && now - last < ScytheBalance.Vampirism.COOLDOWN_TICKS) return;
 
-        if (VAMPIRISM_CHANCE <= 0.0D || player.getRandom().nextDouble() >= VAMPIRISM_CHANCE) return;
+        if (ScytheBalance.Vampirism.VAMPIRISM_CHANCE <= 0.0D || player.getRandom().nextDouble() >= ScytheBalance.Vampirism.VAMPIRISM_CHANCE) return;
 
-        int healAmount = (int) Math.ceil(actualDamage * HEAL_FRACTION);
+        int healAmount = (int) Math.ceil(actualDamage * ScytheBalance.Vampirism.HEAL_FRACTION);
         if (healAmount <= 0) return;
 
         player.heal(healAmount);

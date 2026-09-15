@@ -2,6 +2,7 @@ package com.shipovskijkorp.scythes.mod.recipe;
 
 import com.mojang.serialization.MapCodec;
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -42,12 +43,11 @@ public class ToxicEssenceRecipe extends CustomRecipe {
 
     @Override
     public ItemStack assemble(CraftingInput input) {
-        return new ItemStack(ScytheMod.TOXIC_ESSENCE);
+        return new ItemStack(ScytheMod.TOXIC_ESSENCE, ScytheBalance.Crafting.TOXIC_ESSENCE_OUTPUT_COUNT);
     }
 
-
     public ItemStack getResultItem() {
-        return new ItemStack(ScytheMod.TOXIC_ESSENCE);
+        return new ItemStack(ScytheMod.TOXIC_ESSENCE, ScytheBalance.Crafting.TOXIC_ESSENCE_OUTPUT_COUNT);
     }
 
     @Override

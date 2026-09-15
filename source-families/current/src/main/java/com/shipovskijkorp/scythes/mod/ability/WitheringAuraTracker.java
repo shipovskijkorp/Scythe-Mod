@@ -1,37 +1,30 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.entity.WitheringMinionEntity;
-import com.shipovskijkorp.scythes.mod.network.WitheringAuraHudS2CPacket;
+import com.shipovskijkorp.scythes.mod.platform.HudSync;
+import com.shipovskijkorp.scythes.mod.platform.HudTransport;
 import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.effect.MobEffects;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.phys.AABB;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.AABB;
 
 public final class WitheringAuraTracker {
 
     private WitheringAuraTracker() {
     }
 
-    public static final int DURATION_TICKS = 20 * 10;
-    public static final double WITHER_RADIUS = 5.0D;
-    public static final int WITHER_TICKS = 20 * 10;
-    public static final int WITHER_AMPLIFIER = 1;
-    public static final double MINION_BUFF_RADIUS = 10.0D;
-    public static final int MINION_BUFF_TICKS = 20 * 3;
-    public static final int MINION_BUFF_AMPLIFIER = 1;
-
     private static final Map<UUID, Integer> ACTIVE = new HashMap<>();
 
     public static int start(ServerPlayer player) {
-        ACTIVE.put(player.getUUID(), DURATION_TICKS);
-        return DURATION_TICKS;
+        ACTIVE.put(player.getUUID(), ScytheBalance.WitheringAura.DURATION_TICKS);
+        return ScytheBalance.WitheringAura.DURATION_TICKS;
     }
 
     public static void clear(ServerPlayer player) {
@@ -48,7 +41,7 @@ public final class WitheringAuraTracker {
 
         if (!player.isAlive() || player.isSpectator()) {
             ACTIVE.remove(player.getUUID());
-            WitheringAuraHudS2CPacket.sendStop(player);
+            HudSync.stop(player, HudTransport.Timer.WITHERING_AURA);
             return;
         }
 
@@ -57,7 +50,7 @@ public final class WitheringAuraTracker {
         ticksLeft--;
         if (ticksLeft <= 0) {
             ACTIVE.remove(player.getUUID());
-            WitheringAuraHudS2CPacket.sendStop(player);
+            HudSync.stop(player, HudTransport.Timer.WITHERING_AURA);
         } else {
             ACTIVE.put(player.getUUID(), ticksLeft);
         }
@@ -65,7 +58,7 @@ public final class WitheringAuraTracker {
 
     private static void applyAuraTick(ServerPlayer player) {
         ServerLevel world = (ServerLevel) player.level();
-        AABB witherBox = player.getBoundingBox().inflate(WITHER_RADIUS);
+        AABB witherBox = player.getBoundingBox().inflate(ScytheBalance.WitheringAura.WITHER_RADIUS);
         List<LivingEntity> targets = world.getEntitiesOfClass(
                 LivingEntity.class,
                 witherBox,
@@ -74,11 +67,11 @@ public final class WitheringAuraTracker {
         );
 
         for (LivingEntity target : targets) {
-            ScytheCombatUtil.refreshStatus(target, MobEffects.WITHER, WITHER_TICKS, WITHER_AMPLIFIER);
-            DamageAttributionTracker.recordWithering(target, player, WITHER_TICKS);
+            ScytheCombatUtil.refreshStatus(target, MobEffects.WITHER, ScytheBalance.WitheringAura.WITHER_TICKS, ScytheBalance.WitheringAura.WITHER_AMPLIFIER);
+            DamageAttributionTracker.recordWithering(target, player, ScytheBalance.WitheringAura.WITHER_TICKS);
         }
 
-        AABB buffBox = player.getBoundingBox().inflate(MINION_BUFF_RADIUS);
+        AABB buffBox = player.getBoundingBox().inflate(ScytheBalance.WitheringAura.MINION_BUFF_RADIUS);
         List<WitheringMinionEntity> minions = world.getEntitiesOfClass(
                 WitheringMinionEntity.class,
                 buffBox,
@@ -86,8 +79,8 @@ public final class WitheringAuraTracker {
         );
 
         for (WitheringMinionEntity minion : minions) {
-            ScytheCombatUtil.refreshStatus(minion, MobEffects.STRENGTH, MINION_BUFF_TICKS, MINION_BUFF_AMPLIFIER);
-            ScytheCombatUtil.refreshStatus(minion, MobEffects.SPEED, MINION_BUFF_TICKS, MINION_BUFF_AMPLIFIER);
+            ScytheCombatUtil.refreshStatus(minion, MobEffects.STRENGTH, ScytheBalance.WitheringAura.MINION_BUFF_TICKS, ScytheBalance.WitheringAura.MINION_BUFF_AMPLIFIER);
+            ScytheCombatUtil.refreshStatus(minion, MobEffects.SPEED, ScytheBalance.WitheringAura.MINION_BUFF_TICKS, ScytheBalance.WitheringAura.MINION_BUFF_AMPLIFIER);
         }
     }
 }

@@ -17,7 +17,12 @@ public abstract class EnchantmentHelperMixin {
     @Inject(
             method = "getEnchantmentLevel(Lnet/minecraft/core/Holder;Lnet/minecraft/world/entity/LivingEntity;)I",
             at = @At("RETURN"),
+//? if >=26.2 {
+            cancellable = true,
+            require = 0
+//? } else {
             cancellable = true
+//? }
     )
     private static void scythes$addGoldenScytheLooting(Holder<Enchantment> enchantment,
                                                        LivingEntity entity,

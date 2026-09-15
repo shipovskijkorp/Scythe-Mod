@@ -3,25 +3,15 @@ package com.shipovskijkorp.scythes.mod.item;
 import com.shipovskijkorp.scythes.mod.ScytheMod;
 import com.shipovskijkorp.scythes.mod.ability.DamageAttributionTracker;
 import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
-import com.shipovskijkorp.scythes.mod.ability.WitheringAuraAbility;
-import com.shipovskijkorp.scythes.mod.ability.WitheringAuraTracker;
 import com.shipovskijkorp.scythes.mod.ability.WitheringMinionManager;
-import com.shipovskijkorp.scythes.mod.client.TooltipUtil;
-import com.shipovskijkorp.scythes.mod.entity.WitheringMinionEntity;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.item.Item.TooltipContext;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.SwordItem;
-import net.minecraft.item.ToolMaterials;
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.NbtComponent;
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.RegistryWrapper;
@@ -29,124 +19,25 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.world.World;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-
-public class WitheringScytheItem extends SwordItem {
+public class WitheringScytheItem extends ScytheSwordItem {
 
     private static final String SOULS_KEY = "Souls";
 
-    public static final double WITHER_CHANCE = 0.30D;
-    public static final int WITHER_TICKS = 20 * 10;
-    public static final int WITHER_AMPLIFIER = 1;
-
-    public static final int SOULS_PER_MOB_KILL = 1;
-    public static final int SOULS_PER_PLAYER_KILL = 12;
-
-    public static final int MINION_DURABILITY_COST = 10;
-    public static final int MINION_SOUL_COST = 6;
-    public static final int MAX_MINIONS = 6;
-
     public WitheringScytheItem(Settings settings) {
-        super(ToolMaterials.NETHERITE, settings.attributeModifiers(SwordItem.createAttributeModifiers(ToolMaterials.NETHERITE, 4, -2.8F)));
-    }
-
-    @Environment(EnvType.CLIENT)
-    @Override
-    public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
-        TooltipUtil.addWrapped(tooltip, "tooltip.scythes.withering_scythe.desc", Formatting.GRAY, Formatting.ITALIC);
-
-        if (!Screen.hasShiftDown()) {
-            TooltipUtil.addHoldShiftHint(tooltip);
-            return;
-        }
-
-        boolean alt = Screen.hasAltDown();
-
-        if (alt) {
-            tooltip.add(Text.empty());
-            TooltipUtil.addWrapped(tooltip, "tooltip.scythes.withering_scythe.base_stats", Formatting.DARK_GRAY);
-        }
-
-        tooltip.add(Text.empty());
-        tooltip.add(Text.translatable("tooltip.scythes.section.passive").formatted(Formatting.GRAY));
-        tooltip.add(Text.translatable("tooltip.scythes.withering_scythe.passive", getSouls(stack)).formatted(Formatting.DARK_PURPLE));
-        if (!alt) {
-            TooltipUtil.addWrapped(tooltip, "tooltip.scythes.withering_scythe.passive.desc", Formatting.DARK_GRAY);
-        } else {
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable("tooltip.scythes.stat.souls", String.valueOf(getSouls(stack))),
-                    Formatting.DARK_PURPLE
-            );
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable("tooltip.scythes.stat.wither_chance_percent", TooltipUtil.fmtPercentValue(WITHER_CHANCE)),
-                    Formatting.DARK_PURPLE
-            );
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable("tooltip.scythes.stat.wither_sec", TooltipUtil.fmtSecondsValue(WITHER_TICKS)),
-                    Formatting.DARK_GRAY
-            );
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable("tooltip.scythes.stat.souls_per_mob", String.valueOf(SOULS_PER_MOB_KILL)),
-                    Formatting.DARK_GRAY
-            );
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable("tooltip.scythes.stat.souls_per_player", String.valueOf(SOULS_PER_PLAYER_KILL)),
-                    Formatting.DARK_GRAY
-            );
-        }
-
-        tooltip.add(Text.empty());
-        tooltip.add(Text.translatable("tooltip.scythes.section.special").formatted(Formatting.GRAY));
-        tooltip.add(Text.translatable("tooltip.scythes.withering_minion").formatted(Formatting.DARK_PURPLE));
-        if (!alt) {
-            TooltipUtil.addWrapped(tooltip, "tooltip.scythes.withering_minion.desc", Formatting.GRAY);
-        } else {
-            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.durability_cost", String.valueOf(MINION_DURABILITY_COST)), Formatting.GRAY);
-            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.soul_cost", String.valueOf(MINION_SOUL_COST)), Formatting.GRAY);
-            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.minion_cap", String.valueOf(getMaxMinions(context.getRegistryLookup(), stack))), Formatting.GRAY);
-            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.minion_health", TooltipUtil.fmtNumber(WitheringMinionEntity.MAX_HEALTH)), Formatting.DARK_GRAY);
-            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.minion_armor", TooltipUtil.fmtNumber(WitheringMinionEntity.ARMOR)), Formatting.DARK_GRAY);
-            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.minion_lifetime_sec", TooltipUtil.fmtSecondsValue(WitheringMinionEntity.LIFETIME_TICKS)), Formatting.DARK_GRAY);
-            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.minion_regen_delay_sec", TooltipUtil.fmtSecondsValue(WitheringMinionEntity.REGEN_IDLE_TICKS)), Formatting.DARK_GRAY);
-            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.minion_regen_cost", String.valueOf(WitheringMinionEntity.REGEN_DURABILITY_COST)), Formatting.DARK_GRAY);
-        }
-
-        tooltip.add(Text.empty());
-        tooltip.add(Text.translatable("tooltip.scythes.section.active").formatted(Formatting.GRAY));
-        tooltip.add(Text.translatable("tooltip.scythes.withering_aura", TooltipUtil.getScytheAbilityKeyText(Formatting.DARK_PURPLE)));
-        if (!alt) {
-            TooltipUtil.addWrapped(tooltip, "tooltip.scythes.withering_aura.desc", Formatting.GRAY);
-            TooltipUtil.addHoldAltHint(tooltip);
-            return;
-        }
-
-        TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.duration_sec", TooltipUtil.fmtSecondsValue(WitheringAuraTracker.DURATION_TICKS)), Formatting.GRAY);
-        TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.cooldown_sec", TooltipUtil.fmtSecondsValue(WitheringAuraAbility.AURA_COOLDOWN_TICKS)), Formatting.GRAY);
-        TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.durability_cost", String.valueOf(WitheringAuraAbility.AURA_DURABILITY_COST)), Formatting.GRAY);
-        TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.radius_blocks", TooltipUtil.fmtNumber(WitheringAuraTracker.WITHER_RADIUS)), Formatting.GRAY);
-        TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.wither_sec", TooltipUtil.fmtSecondsValue(WitheringAuraTracker.WITHER_TICKS)), Formatting.DARK_GRAY);
-        TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.minion_buff_radius", TooltipUtil.fmtNumber(WitheringAuraTracker.MINION_BUFF_RADIUS)), Formatting.DARK_GRAY);
-        TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.minion_buff_sec", TooltipUtil.fmtSecondsValue(WitheringAuraTracker.MINION_BUFF_TICKS)), Formatting.DARK_GRAY);
+        super(settings);
     }
 
     @Override
     public boolean postHit(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-        if (!attacker.getWorld().isClient && attacker.getRandom().nextDouble() < WITHER_CHANCE) {
+        if (!attacker.getWorld().isClient && attacker.getRandom().nextDouble() < ScytheBalance.Withering.WITHER_CHANCE) {
             target.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
                     StatusEffects.WITHER,
-                    WITHER_TICKS,
-                    WITHER_AMPLIFIER,
+                    ScytheBalance.Withering.WITHER_TICKS,
+                    ScytheBalance.Withering.WITHER_AMPLIFIER,
                     false,
                     true,
                     true
@@ -154,7 +45,7 @@ public class WitheringScytheItem extends SwordItem {
 
             if (attacker instanceof ServerPlayerEntity player) {
                 ScytheAdvancementTracker.markWitheringPassive(player);
-                DamageAttributionTracker.recordWithering(target, player, WITHER_TICKS);
+                DamageAttributionTracker.recordWithering(target, player, ScytheBalance.Withering.WITHER_TICKS);
             }
         }
 
@@ -186,12 +77,12 @@ public class WitheringScytheItem extends SwordItem {
             return TypedActionResult.fail(stack);
         }
 
-        if (getSouls(stack) < MINION_SOUL_COST) {
-            player.sendMessage(Text.translatable("message.scythes.withering_minion.no_souls", MINION_SOUL_COST), true);
+        if (getSouls(stack) < ScytheBalance.Withering.MINION_SOUL_COST) {
+            player.sendMessage(Text.translatable("message.scythes.withering_minion.no_souls", ScytheBalance.Withering.MINION_SOUL_COST), true);
             return TypedActionResult.fail(stack);
         }
 
-        if (!hasEnoughDurability(stack, MINION_DURABILITY_COST)) {
+        if (!hasEnoughDurability(stack, ScytheBalance.Withering.MINION_DURABILITY_COST)) {
             player.sendMessage(Text.translatable("message.scythes.scythe_ability.no_durability"), true);
             return TypedActionResult.fail(stack);
         }
@@ -201,8 +92,8 @@ public class WitheringScytheItem extends SwordItem {
             return TypedActionResult.fail(stack);
         }
 
-        spendSouls(stack, MINION_SOUL_COST);
-        stack.damage(MINION_DURABILITY_COST, player, hand == Hand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
+        spendSouls(stack, ScytheBalance.Withering.MINION_SOUL_COST);
+        stack.damage(ScytheBalance.Withering.MINION_DURABILITY_COST, player, hand == Hand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
         ScytheAdvancementTracker.markWitheringSpecial(player);
         ScytheAdvancementTracker.tryGrantSuperNecromancer(player, WitheringMinionManager.countMinions(player));
         world.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENTITY_WITHER_SKELETON_AMBIENT, SoundCategory.PLAYERS, 0.8F, 0.75F);
@@ -236,7 +127,6 @@ public class WitheringScytheItem extends SwordItem {
         stack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(nbt));
     }
 
-
     public static int getMaxMinions(LivingEntity holder, ItemStack stack) {
         return getMaxMinions(holder.getRegistryManager(), stack);
     }
@@ -247,14 +137,14 @@ public class WitheringScytheItem extends SwordItem {
                 .getOptional(ScytheMod.ADDITIONAL_SLOT)
                 .map(enchantment -> EnchantmentHelper.getLevel(enchantment, stack))
                 .orElse(0);
-        return MAX_MINIONS + getAdditionalMinionSlots(enchantmentLevel);
+        return ScytheBalance.Withering.MAX_MINIONS + getAdditionalMinionSlots(enchantmentLevel);
     }
 
     private static int getAdditionalMinionSlots(int level) {
         if (level <= 0) return 0;
-        if (level == 1) return 1;
-        if (level == 2) return 2;
-        return 4;
+        if (level == 1) return ScytheBalance.Withering.ADDITIONAL_SLOT_LEVEL_ONE;
+        if (level == 2) return ScytheBalance.Withering.ADDITIONAL_SLOT_LEVEL_TWO;
+        return ScytheBalance.Withering.ADDITIONAL_SLOT_LEVEL_THREE;
     }
 
     public static boolean hasEnoughDurability(ItemStack stack, int cost) {

@@ -1,12 +1,11 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.server.level.ServerPlayer;
-import org.jetbrains.annotations.Nullable;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
+import org.jetbrains.annotations.Nullable;
 
 public final class DamageAttributionTracker {
 

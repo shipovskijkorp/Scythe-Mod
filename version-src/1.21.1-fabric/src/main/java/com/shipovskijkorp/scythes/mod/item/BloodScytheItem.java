@@ -1,23 +1,16 @@
 package com.shipovskijkorp.scythes.mod.item;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
-import com.shipovskijkorp.scythes.mod.ability.BloodHarvestAbility;
-import com.shipovskijkorp.scythes.mod.ability.BloodHarvestTracker;
-import com.shipovskijkorp.scythes.mod.ability.BloodScytheCooldowns;
-import com.shipovskijkorp.scythes.mod.ability.BloodScytheVampirism;
 import com.shipovskijkorp.scythes.mod.ability.DamageAttributionTracker;
 import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
-import com.shipovskijkorp.scythes.mod.client.TooltipUtil;
-import com.shipovskijkorp.scythes.mod.effect.BleedingEffect;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.item.Item.TooltipContext;
+import com.shipovskijkorp.scythes.mod.ability.ScytheCooldowns;
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
+import java.util.List;
 import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SpawnGroup;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.mob.Angerable;
 import net.minecraft.entity.passive.AbstractHorseEntity;
@@ -25,236 +18,23 @@ import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.SwordItem;
-import net.minecraft.item.ToolMaterials;
 import net.minecraft.registry.RegistryKeys;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-
-public class BloodScytheItem extends SwordItem {
-
-    public static final double BLEEDING_CHANCE = 0.40D;
-    public static final double DEFENSE_PIERCE_CHANCE = 0.20D;
-    public static final double DEFENSE_PIERCE_MITIGATION_IGNORED = 0.50D;
-    public static final int BLEEDING_BASE_DURATION_TICKS = 20 * 2;
-    public static final int BLEEDING_EXTEND_TICKS = 20 * 2;
-
-    public static final double BLENDER_RADIUS = 3.0D;
-    public static final int BLENDER_COOLDOWN_TICKS = 20 * 30;
-    public static final int BLENDER_DURABILITY_COST = 50;
-    public static final int BLENDER_HIT_COUNT = 2;
-    public static final int BLENDER_SLOWNESS_TICKS = 20 * 4;
-    public static final int BLENDER_SLOWNESS_AMPLIFIER = 1;
-    public static final int BLENDER_BLEEDING_TICKS = 20 * 10;
-    public static final int BLENDER_BLEEDING_AMPLIFIER = 1;
-    private static final float BLENDER_SINGLE_HIT_DAMAGE = 1.0F + ToolMaterials.NETHERITE.getAttackDamage() + 4.0F;
-    private static final double BLENDER_PULL_BASE = 0.45D;
-    private static final double BLENDER_PULL_PER_BLOCK = 0.18D;
-    private static final double BLENDER_PULL_Y = 0.18D;
+public class BloodScytheItem extends ScytheSwordItem {
 
     public BloodScytheItem(Settings settings) {
-        super(ToolMaterials.NETHERITE, settings.attributeModifiers(SwordItem.createAttributeModifiers(ToolMaterials.NETHERITE, 4, -2.8F)));
-    }
-
-    @Environment(EnvType.CLIENT)
-    @Override
-    public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
-        TooltipUtil.addWrapped(tooltip, "tooltip.scythes.bloody_scythe.desc", Formatting.GRAY, Formatting.ITALIC);
-
-        if (!Screen.hasShiftDown()) {
-            TooltipUtil.addHoldShiftHint(tooltip);
-            return;
-        }
-
-        boolean alt = Screen.hasAltDown();
-
-        tooltip.add(Text.empty());
-        tooltip.add(Text.translatable("tooltip.scythes.section.passive").formatted(Formatting.GRAY));
-
-        if (!alt) {
-            TooltipUtil.addWrapped(tooltip, "tooltip.scythes.bleeding_chance", Formatting.DARK_RED);
-            TooltipUtil.addWrapped(tooltip, "tooltip.scythes.bloody_scythe.passive.desc", Formatting.DARK_GRAY);
-        } else {
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable(
-                            "tooltip.scythes.stat.bleed_chance_percent",
-                            TooltipUtil.fmtPercentValue(BLEEDING_CHANCE)
-                    ),
-                    Formatting.DARK_RED
-            );
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable(
-                            "tooltip.scythes.stat.bleed_base_sec",
-                            TooltipUtil.fmtSecondsValue(BLEEDING_BASE_DURATION_TICKS)
-                    ),
-                    Formatting.DARK_GRAY
-            );
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable(
-                            "tooltip.scythes.stat.bleed_extend_sec",
-                            TooltipUtil.fmtSecondsValue(BLEEDING_EXTEND_TICKS)
-                    ),
-                    Formatting.DARK_GRAY
-            );
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable(
-                            "tooltip.scythes.stat.bleeding_damage_per_second",
-                            TooltipUtil.fmtNumber(BleedingEffect.DAMAGE_PER_SECOND)
-                    ),
-                    Formatting.DARK_GRAY
-            );
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable(
-                            "tooltip.scythes.stat.vampirism_chance_percent",
-                            TooltipUtil.fmtPercentValue(BloodScytheVampirism.VAMPIRISM_CHANCE)
-                    ),
-                    Formatting.DARK_RED
-            );
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable(
-                            "tooltip.scythes.stat.vampirism_heal_percent",
-                            TooltipUtil.fmtPercentValue(BloodScytheVampirism.HEAL_FRACTION)
-                    ),
-                    Formatting.DARK_GRAY
-            );
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable(
-                            "tooltip.scythes.stat.vampirism_cooldown_sec",
-                            TooltipUtil.fmtSecondsValue(BloodScytheVampirism.COOLDOWN_TICKS)
-                    ),
-                    Formatting.DARK_GRAY
-            );
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable(
-                            "tooltip.scythes.stat.defense_pierce",
-                            TooltipUtil.fmtPercentValue(DEFENSE_PIERCE_CHANCE),
-                            TooltipUtil.fmtPercentValue(DEFENSE_PIERCE_MITIGATION_IGNORED)
-                    ),
-                    Formatting.DARK_RED
-            );
-        }
-
-        tooltip.add(Text.empty());
-        tooltip.add(Text.translatable("tooltip.scythes.section.special").formatted(Formatting.GRAY));
-        tooltip.add(Text.translatable("tooltip.scythes.blood_blender").formatted(Formatting.DARK_RED));
-        if (!alt) {
-            TooltipUtil.addWrapped(tooltip, "tooltip.scythes.blood_blender.desc", Formatting.GRAY);
-        } else {
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable("tooltip.scythes.stat.radius_blocks", TooltipUtil.fmtNumber(BLENDER_RADIUS)),
-                    Formatting.GRAY
-            );
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable("tooltip.scythes.stat.cooldown_sec", TooltipUtil.fmtSecondsValue(BLENDER_COOLDOWN_TICKS)),
-                    Formatting.GRAY
-            );
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable("tooltip.scythes.stat.durability_cost", String.valueOf(BLENDER_DURABILITY_COST)),
-                    Formatting.GRAY
-            );
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable("tooltip.scythes.stat.basic_hit_count", String.valueOf(BLENDER_HIT_COUNT)),
-                    Formatting.DARK_GRAY
-            );
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable("tooltip.scythes.stat.slowness_ii_sec", TooltipUtil.fmtSecondsValue(BLENDER_SLOWNESS_TICKS)),
-                    Formatting.DARK_GRAY
-            );
-            TooltipUtil.addWrapped(
-                    tooltip,
-                    Text.translatable("tooltip.scythes.stat.bleeding_ii_sec", TooltipUtil.fmtSecondsValue(BLENDER_BLEEDING_TICKS)),
-                    Formatting.DARK_GRAY
-            );
-        }
-
-        tooltip.add(Text.empty());
-        tooltip.add(Text.translatable("tooltip.scythes.section.active").formatted(Formatting.GRAY));
-        tooltip.add(Text.translatable("tooltip.scythes.blood_harvest", TooltipUtil.getScytheAbilityKeyText(Formatting.DARK_RED)));
-
-        if (!alt) {
-            TooltipUtil.addWrapped(tooltip, "tooltip.scythes.blood_harvest.desc", Formatting.GRAY);
-            TooltipUtil.addHoldAltHint(tooltip);
-            return;
-        }
-
-        TooltipUtil.addWrapped(
-                tooltip,
-                Text.translatable("tooltip.scythes.stat.radius_blocks", TooltipUtil.fmtNumber(BloodHarvestAbility.RADIUS)),
-                Formatting.GRAY
-        );
-        TooltipUtil.addWrapped(
-                tooltip,
-                Text.translatable("tooltip.scythes.stat.cooldown_sec", TooltipUtil.fmtSecondsValue(BloodHarvestAbility.COOLDOWN_TICKS)),
-                Formatting.GRAY
-        );
-        TooltipUtil.addWrapped(
-                tooltip,
-                Text.translatable("tooltip.scythes.stat.durability_cost", String.valueOf(BloodHarvestAbility.DURABILITY_COST)),
-                Formatting.GRAY
-        );
-        TooltipUtil.addWrapped(
-                tooltip,
-                Text.translatable("tooltip.scythes.stat.kill_window_sec", TooltipUtil.fmtSecondsValue(BloodHarvestTracker.KILL_WINDOW_TICKS)),
-                Formatting.GRAY
-        );
-
-        TooltipUtil.addWrapped(
-                tooltip,
-                Text.translatable("tooltip.scythes.stat.slowness_sec", TooltipUtil.fmtSecondsValue(BloodHarvestAbility.SLOWNESS_TICKS)),
-                Formatting.DARK_GRAY
-        );
-        TooltipUtil.addWrapped(
-                tooltip,
-                Text.translatable("tooltip.scythes.stat.blindness_sec", TooltipUtil.fmtSecondsValue(BloodHarvestAbility.BLINDNESS_TICKS)),
-                Formatting.DARK_GRAY
-        );
-        TooltipUtil.addWrapped(
-                tooltip,
-                Text.translatable("tooltip.scythes.stat.weakness_sec", TooltipUtil.fmtSecondsValue(BloodHarvestAbility.WEAKNESS_TICKS)),
-                Formatting.DARK_GRAY
-        );
-        TooltipUtil.addWrapped(
-                tooltip,
-                Text.translatable("tooltip.scythes.stat.glowing_sec", TooltipUtil.fmtSecondsValue(BloodHarvestAbility.GLOWING_TICKS)),
-                Formatting.DARK_GRAY
-        );
-        TooltipUtil.addWrapped(
-                tooltip,
-                Text.translatable("tooltip.scythes.stat.success_buffs_sec", TooltipUtil.fmtSecondsValue(BloodHarvestTracker.SUCCESS_BUFF_TICKS)),
-                Formatting.DARK_GRAY
-        );
-        TooltipUtil.addWrapped(
-                tooltip,
-                Text.translatable("tooltip.scythes.stat.failure_debuffs_sec", TooltipUtil.fmtSecondsValue(BloodHarvestTracker.FAILURE_DEBUFF_TICKS)),
-                Formatting.DARK_GRAY
-        );
+        super(settings);
     }
 
     @Override
@@ -275,13 +55,13 @@ public class BloodScytheItem extends SwordItem {
             return TypedActionResult.fail(stack);
         }
 
-        int cooldownLeft = BloodScytheCooldowns.getBlenderTicksLeft(player);
+        int cooldownLeft = ScytheCooldowns.remaining(player, ScytheCooldowns.Skill.BLENDER);
         if (cooldownLeft > 0) {
             player.sendMessage(Text.translatable("message.scythes.blood_blender.cooldown", Math.max(1, cooldownLeft / 20)), true);
             return TypedActionResult.fail(stack);
         }
 
-        if (!hasEnoughDurability(stack, BLENDER_DURABILITY_COST)) {
+        if (!hasEnoughDurability(stack, ScytheBalance.Blood.BLENDER_DURABILITY_COST)) {
             player.sendMessage(Text.translatable("message.scythes.scythe_ability.no_durability"), true);
             return TypedActionResult.fail(stack);
         }
@@ -293,25 +73,25 @@ public class BloodScytheItem extends SwordItem {
             target.damage(player.getDamageSources().playerAttack(player), damage);
             target.addStatusEffect(new StatusEffectInstance(
                     StatusEffects.SLOWNESS,
-                    BLENDER_SLOWNESS_TICKS,
-                    BLENDER_SLOWNESS_AMPLIFIER,
+                    ScytheBalance.Blood.BLENDER_SLOWNESS_TICKS,
+                    ScytheBalance.Blood.BLENDER_SLOWNESS_AMPLIFIER,
                     false,
                     true,
                     true
             ));
             target.addStatusEffect(new StatusEffectInstance(
                     ScytheMod.BLEEDING,
-                    BLENDER_BLEEDING_TICKS,
-                    BLENDER_BLEEDING_AMPLIFIER,
+                    ScytheBalance.Blood.BLENDER_BLEEDING_TICKS,
+                    ScytheBalance.Blood.BLENDER_BLEEDING_AMPLIFIER,
                     false,
                     true,
                     true
             ));
-            DamageAttributionTracker.recordBleeding(target, player, BLENDER_BLEEDING_TICKS);
+            DamageAttributionTracker.recordBleeding(target, player, ScytheBalance.Blood.BLENDER_BLEEDING_TICKS);
         }
 
-        stack.damage(BLENDER_DURABILITY_COST, player, hand == Hand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
-        BloodScytheCooldowns.setBlenderCooldown(player, BLENDER_COOLDOWN_TICKS);
+        stack.damage(ScytheBalance.Blood.BLENDER_DURABILITY_COST, player, hand == Hand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
+        ScytheCooldowns.start(player, ScytheCooldowns.Skill.BLENDER, ScytheBalance.Blood.BLENDER_COOLDOWN_TICKS);
         world.playSound(
                 null,
                 player.getX(),
@@ -328,8 +108,8 @@ public class BloodScytheItem extends SwordItem {
     }
 
     private static List<LivingEntity> findBlenderTargets(ServerPlayerEntity player) {
-        Box box = player.getBoundingBox().expand(BLENDER_RADIUS);
-        double maxDistanceSquared = BLENDER_RADIUS * BLENDER_RADIUS;
+        Box box = player.getBoundingBox().expand(ScytheBalance.Blood.BLENDER_RADIUS);
+        double maxDistanceSquared = ScytheBalance.Blood.BLENDER_RADIUS * ScytheBalance.Blood.BLENDER_RADIUS;
         return player.getWorld().getEntitiesByClass(
                 LivingEntity.class,
                 box,
@@ -364,15 +144,15 @@ public class BloodScytheItem extends SwordItem {
         double distance = toPlayer.length();
         if (distance < 0.001D) return;
 
-        Vec3d pull = toPlayer.normalize().multiply(BLENDER_PULL_BASE + distance * BLENDER_PULL_PER_BLOCK);
-        target.addVelocity(pull.x, Math.max(BLENDER_PULL_Y, pull.y), pull.z);
+        Vec3d pull = toPlayer.normalize().multiply(ScytheBalance.Blood.BLENDER_PULL_BASE + distance * ScytheBalance.Blood.BLENDER_PULL_PER_BLOCK);
+        target.addVelocity(pull.x, Math.max(ScytheBalance.Blood.BLENDER_PULL_Y, pull.y), pull.z);
         target.velocityModified = true;
     }
 
     private static float calculateBlenderDamage(ServerPlayerEntity player, ItemStack stack, LivingEntity target) {
-        float damage = BLENDER_SINGLE_HIT_DAMAGE;
+        float damage = ScytheBalance.Blood.BLENDER_SINGLE_HIT_DAMAGE;
         damage = EnchantmentHelper.getDamage((ServerWorld) player.getWorld(), stack, target, player.getDamageSources().playerAttack(player), damage);
-        return Math.max(0.0F, damage) * BLENDER_HIT_COUNT;
+        return Math.max(0.0F, damage) * ScytheBalance.Blood.BLENDER_HIT_COUNT;
     }
 
     public static boolean hasEnoughDurability(ItemStack stack, int cost) {
@@ -387,7 +167,7 @@ public class BloodScytheItem extends SwordItem {
             return super.postHit(stack, target, attacker);
         }
 
-        if (attacker.getRandom().nextDouble() > BLEEDING_CHANCE) {
+        if (attacker.getRandom().nextDouble() > ScytheBalance.Blood.BLEEDING_CHANCE) {
             return super.postHit(stack, target, attacker);
         }
 
@@ -396,17 +176,17 @@ public class BloodScytheItem extends SwordItem {
                 .getOptional(ScytheMod.SPIKED_BLADE)
                 .map(enchantment -> EnchantmentHelper.getLevel(enchantment, stack))
                 .orElse(0);
-        int duration = BLEEDING_BASE_DURATION_TICKS * (1 + Math.max(0, spikedLevel));
+        int duration = ScytheBalance.Blood.BLEEDING_BASE_DURATION_TICKS * (1 + Math.max(0, spikedLevel));
 
         StatusEffectInstance current = target.getStatusEffect(ScytheMod.BLEEDING);
         if (current != null) {
-            duration = Math.max(duration, current.getDuration() + BLEEDING_EXTEND_TICKS);
+            duration = Math.max(duration, current.getDuration() + ScytheBalance.Blood.BLEEDING_EXTEND_TICKS);
         }
 
         target.addStatusEffect(new StatusEffectInstance(
                 ScytheMod.BLEEDING,
                 duration,
-                0,
+                ScytheBalance.Blood.BLEEDING_AMPLIFIER,
                 false,
                 true
         ));

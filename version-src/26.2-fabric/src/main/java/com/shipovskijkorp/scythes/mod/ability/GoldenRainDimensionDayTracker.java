@@ -1,8 +1,5 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerPlayer;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -17,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 
 public final class GoldenRainDimensionDayTracker {
 

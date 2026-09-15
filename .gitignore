@@ -30,3 +30,11 @@ replay_*.log
 *.hprof
 *.jfr
 src.zip
+
+# Python tooling and materialized target project roots.
+__pycache__/
+*.py[cod]
+/.pytest_cache/
+/builds/*/targets/*/.gradle/
+/builds/*/targets/*/run/
+/builds/*/targets/*/build/

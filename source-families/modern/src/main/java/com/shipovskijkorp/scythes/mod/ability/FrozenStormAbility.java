@@ -1,7 +1,9 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.item.FrozenScytheItem;
+import java.util.List;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -10,26 +12,18 @@ import net.minecraft.entity.passive.AbstractHorseEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
+//? if >=1.21.11 {
+import net.minecraft.server.world.ServerWorld;
+//? } else {
+//? }
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.Box;
 
-import java.util.List;
-
 /** Active ability of the Frost Scythe. */
 public final class FrozenStormAbility {
-
-    public static final double RADIUS = 20.0D;
-    public static final int COOLDOWN_TICKS = 20 * 40;
-    public static final int DURABILITY_COST = 100;
-
-    public static final int FREEZING_TICKS = 20 * 5;
-    public static final int SLOWNESS_TICKS = 20 * 10;
-    public static final int WEAKNESS_TICKS = 20 * 10;
-    public static final int SLOWNESS_AMPLIFIER = 0;
-    public static final int WEAKNESS_AMPLIFIER = 0;
 
     private FrozenStormAbility() {
     }
@@ -41,7 +35,7 @@ public final class FrozenStormAbility {
             return;
         }
 
-        int cooldownLeft = FrozenScytheCooldowns.getStormTicksLeft(player);
+        int cooldownLeft = ScytheCooldowns.remaining(player, ScytheCooldowns.Skill.STORM);
         if (cooldownLeft > 0) {
             player.sendMessage(
                     Text.translatable("message.scythes.frozen_storm.cooldown", Math.max(1, (cooldownLeft + 19) / 20)),
@@ -51,14 +45,22 @@ public final class FrozenStormAbility {
         }
 
         ItemStack stack = player.getStackInHand(hand);
-        if (!FrozenScytheItem.hasEnoughDurability(stack, DURABILITY_COST)) {
+        if (!FrozenScytheItem.hasEnoughDurability(stack, ScytheBalance.FrozenStorm.DURABILITY_COST)) {
             player.sendMessage(Text.translatable("message.scythes.scythe_ability.no_durability"), true);
             return;
         }
 
-        double radiusSquared = RADIUS * RADIUS;
-        Box searchBox = player.getBoundingBox().expand(RADIUS);
+//? if >=1.21.11 {
+        ServerWorld world = player.getEntityWorld();
+//? } else {
+//? }
+        double radiusSquared = ScytheBalance.FrozenStorm.RADIUS * ScytheBalance.FrozenStorm.RADIUS;
+        Box searchBox = player.getBoundingBox().expand(ScytheBalance.FrozenStorm.RADIUS);
+//? if >=1.21.11 {
+        List<LivingEntity> targets = world.getEntitiesByClass(
+//? } else {
         List<LivingEntity> targets = player.getWorld().getEntitiesByClass(
+//? }
                 LivingEntity.class,
                 searchBox,
                 target -> isValidTarget(player, target)
@@ -73,24 +75,24 @@ public final class FrozenStormAbility {
         for (LivingEntity target : targets) {
             target.addStatusEffect(new StatusEffectInstance(
                     ScytheMod.FREEZING,
-                    FREEZING_TICKS,
-                    0,
+                    ScytheBalance.FrozenStorm.FREEZING_TICKS,
+                    ScytheBalance.FrozenStorm.FREEZING_AMPLIFIER,
                     false,
                     true,
                     true
             ));
             target.addStatusEffect(new StatusEffectInstance(
                     StatusEffects.SLOWNESS,
-                    SLOWNESS_TICKS,
-                    SLOWNESS_AMPLIFIER,
+                    ScytheBalance.FrozenStorm.SLOWNESS_TICKS,
+                    ScytheBalance.FrozenStorm.SLOWNESS_AMPLIFIER,
                     false,
                     true,
                     true
             ));
             target.addStatusEffect(new StatusEffectInstance(
                     StatusEffects.WEAKNESS,
-                    WEAKNESS_TICKS,
-                    WEAKNESS_AMPLIFIER,
+                    ScytheBalance.FrozenStorm.WEAKNESS_TICKS,
+                    ScytheBalance.FrozenStorm.WEAKNESS_AMPLIFIER,
                     false,
                     true,
                     true
@@ -98,14 +100,18 @@ public final class FrozenStormAbility {
         }
 
         stack.damage(
-                DURABILITY_COST,
+                ScytheBalance.FrozenStorm.DURABILITY_COST,
                 player,
                 hand == Hand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND
         );
-        FrozenScytheCooldowns.setStormCooldown(player, COOLDOWN_TICKS);
+        ScytheCooldowns.start(player, ScytheCooldowns.Skill.STORM, ScytheBalance.FrozenStorm.COOLDOWN_TICKS);
         ScytheAdvancementTracker.markFrozenActive(player);
 
+//? if >=1.21.11 {
+        world.playSound(
+//? } else {
         player.getWorld().playSound(
+//? }
                 null,
                 player.getX(),
                 player.getY(),

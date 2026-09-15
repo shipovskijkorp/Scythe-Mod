@@ -1,40 +1,39 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
-import com.shipovskijkorp.scythes.mod.network.ToxicAuraHudS2CPacket;
-import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.item.ToxicScytheItem;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.effect.MobEffects;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.phys.AABB;
-
+import com.shipovskijkorp.scythes.mod.platform.HudSync;
+import com.shipovskijkorp.scythes.mod.platform.HudTransport;
+import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.AABB;
 
 public final class ToxicAuraTracker {
 
     private ToxicAuraTracker() {
     }
 
-    public static final int DURATION_TICKS = 20 * 10;
-    public static final double RADIUS = 5.0D;
-    public static final int POISON_TICKS = 20 * 10;
-    public static final int POISON_AMPLIFIER = 1;
-    public static final double PURE_DAMAGE_CHANCE = 0.20D;
-    public static final float PURE_DAMAGE = 1.0F;
-    public static final int ARMOR_DAMAGE_PER_TICK = 1;
-    public static final double NAUSEA_CHANCE = 0.15D;
-    public static final int NAUSEA_TICKS = 20 * 10;
-
+//? if >=26.2 {
+    private static final Map<UUID, AuraState> ACTIVE = new HashMap<>();
+//? } else {
     private static final Map<UUID, ActiveAura> ACTIVE = new HashMap<>();
+//? }
 
     public static int start(ServerPlayer player, int acidityLevel) {
-        ACTIVE.put(player.getUUID(), new ActiveAura(DURATION_TICKS, Math.max(0, Math.min(3, acidityLevel))));
-        return DURATION_TICKS;
+//? if >=26.2 {
+        ACTIVE.put(player.getUUID(), new AuraState(ScytheBalance.ToxicAura.DURATION_TICKS, Math.max(0, acidityLevel)));
+//? } else {
+        ACTIVE.put(player.getUUID(), new ActiveAura(ScytheBalance.ToxicAura.DURATION_TICKS, Math.max(0, Math.min(3, acidityLevel))));
+//? }
+        return ScytheBalance.ToxicAura.DURATION_TICKS;
     }
 
     public static void clear(ServerPlayer player) {
@@ -46,29 +45,46 @@ public final class ToxicAuraTracker {
     }
 
     public static void tick(ServerPlayer player) {
+//? if >=26.2 {
+        AuraState state = ACTIVE.get(player.getUUID());
+        if (state == null) return;
+//? } else {
         ActiveAura aura = ACTIVE.get(player.getUUID());
         if (aura == null) return;
+//? }
 
         if (!player.isAlive() || player.isSpectator()) {
             ACTIVE.remove(player.getUUID());
-            ToxicAuraHudS2CPacket.sendStop(player);
+            HudSync.stop(player, HudTransport.Timer.TOXIC_AURA);
             return;
         }
 
+//? if >=26.2 {
+        applyAuraTick(player, state.acidityLevel());
+//? } else {
         applyAuraTick(player, aura.acidityLevel());
+//? }
 
+//? if >=26.2 {
+        int ticksLeft = state.ticksLeft() - 1;
+//? } else {
         int ticksLeft = aura.ticksLeft() - 1;
+//? }
         if (ticksLeft <= 0) {
             ACTIVE.remove(player.getUUID());
-            ToxicAuraHudS2CPacket.sendStop(player);
+            HudSync.stop(player, HudTransport.Timer.TOXIC_AURA);
         } else {
+//? if >=26.2 {
+            ACTIVE.put(player.getUUID(), new AuraState(ticksLeft, state.acidityLevel()));
+//? } else {
             ACTIVE.put(player.getUUID(), new ActiveAura(ticksLeft, aura.acidityLevel()));
+//? }
         }
     }
 
     private static void applyAuraTick(ServerPlayer player, int acidityLevel) {
         ServerLevel world = (ServerLevel) player.level();
-        AABB box = player.getBoundingBox().inflate(RADIUS);
+        AABB box = player.getBoundingBox().inflate(ScytheBalance.ToxicAura.RADIUS);
         DamageSource damageSource = player.damageSources().indirectMagic(player, player);
 
         List<LivingEntity> targets = world.getEntitiesOfClass(
@@ -78,20 +94,24 @@ public final class ToxicAuraTracker {
         );
 
         for (LivingEntity target : targets) {
-            ScytheCombatUtil.refreshStatus(target, MobEffects.POISON, POISON_TICKS, POISON_AMPLIFIER);
-            ScytheAdvancementTracker.recordToxicPoison(player, target, POISON_TICKS);
-            ScytheCombatUtil.damageArmorSet(target, ToxicScytheItem.applyAcidityBonus(player.getRandom(), ARMOR_DAMAGE_PER_TICK, acidityLevel));
+            ScytheCombatUtil.refreshStatus(target, MobEffects.POISON, ScytheBalance.ToxicAura.POISON_TICKS, ScytheBalance.ToxicAura.POISON_AMPLIFIER);
+            ScytheAdvancementTracker.recordToxicPoison(player, target, ScytheBalance.ToxicAura.POISON_TICKS);
+            ScytheCombatUtil.damageArmorSet(target, ToxicScytheItem.applyAcidityBonus(player.getRandom(), ScytheBalance.ToxicAura.ARMOR_DAMAGE_PER_TICK, acidityLevel));
 
-            if (player.getRandom().nextDouble() < PURE_DAMAGE_CHANCE) {
-                target.hurtServer(world, damageSource, PURE_DAMAGE);
+            if (player.getRandom().nextDouble() < ScytheBalance.ToxicAura.PURE_DAMAGE_CHANCE) {
+                target.hurtServer(world, damageSource, ScytheBalance.ToxicAura.PURE_DAMAGE);
             }
 
-            if (player.getRandom().nextDouble() < NAUSEA_CHANCE) {
-                ScytheCombatUtil.refreshStatus(target, MobEffects.NAUSEA, NAUSEA_TICKS, 0);
+            if (player.getRandom().nextDouble() < ScytheBalance.ToxicAura.NAUSEA_CHANCE) {
+                ScytheCombatUtil.refreshStatus(target, MobEffects.NAUSEA, ScytheBalance.ToxicAura.NAUSEA_TICKS, ScytheBalance.ToxicAura.NAUSEA_AMPLIFIER);
             }
         }
     }
 
+//? if >=26.2 {
+    private record AuraState(int ticksLeft, int acidityLevel) {
+//? } else {
     private record ActiveAura(int ticksLeft, int acidityLevel) {
+//? }
     }
 }

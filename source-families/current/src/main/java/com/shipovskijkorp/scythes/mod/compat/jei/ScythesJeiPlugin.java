@@ -1,6 +1,7 @@
 package com.shipovskijkorp.scythes.mod.compat.jei;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import java.util.List;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
@@ -9,8 +10,6 @@ import mezz.jei.api.registration.IRecipeRegistration;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-
-import java.util.List;
 
 @JeiPlugin
 public class ScythesJeiPlugin implements IModPlugin {

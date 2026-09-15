@@ -1,5 +1,6 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.item.GoldenScytheItem;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -14,10 +15,6 @@ public final class GoldenRainAbility {
     private GoldenRainAbility() {
     }
 
-    public static final double RADIUS = 20.0D;
-    public static final int COOLDOWN_TICKS = 20 * 150;
-    public static final int DURABILITY_COST = 100;
-
     public static void tryActivate(ServerPlayer player) {
         InteractionHand hand = GoldenScytheItem.getHeldGoldenScytheHand(player);
         if (hand == null) {
@@ -27,25 +24,25 @@ public final class GoldenRainAbility {
 
         ItemStack stack = player.getItemInHand(hand);
 
-        int cooldownLeft = GoldenScytheCooldowns.getRainTicksLeft(player);
+        int cooldownLeft = ScytheCooldowns.remaining(player, ScytheCooldowns.Skill.RAIN);
         if (cooldownLeft > 0) {
             player.sendOverlayMessage(Component.translatable("message.scythes.golden_rain.cooldown", Math.max(1, cooldownLeft / 20)));
             return;
         }
 
-        if (!GoldenScytheItem.hasEnoughDurability(stack, DURABILITY_COST)) {
+        if (!GoldenScytheItem.hasEnoughDurability(stack, ScytheBalance.GoldenRain.DURABILITY_COST)) {
             player.sendOverlayMessage(Component.translatable("message.scythes.scythe_ability.no_durability"));
             return;
         }
 
-        int marked = GoldenLootMarkTracker.markAround(player, RADIUS);
+        int marked = GoldenLootMarkTracker.markAround(player, ScytheBalance.GoldenRain.RADIUS);
         if (marked <= 0) {
             player.sendOverlayMessage(Component.translatable("message.scythes.golden_rain.no_targets"));
             return;
         }
 
-        stack.hurtAndBreak(DURABILITY_COST, player, hand == InteractionHand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
-        GoldenScytheCooldowns.setRainCooldown(player, COOLDOWN_TICKS);
+        stack.hurtAndBreak(ScytheBalance.GoldenRain.DURABILITY_COST, player, hand == InteractionHand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
+        ScytheCooldowns.start(player, ScytheCooldowns.Skill.RAIN, ScytheBalance.GoldenRain.COOLDOWN_TICKS);
         ScytheAdvancementTracker.markGoldenActive(player);
 
         player.level().playSound(

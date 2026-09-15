@@ -1,57 +1,114 @@
 # Scythe Mod
 
-This repository contains the multiversion Scythe Mod source layout.
+Five Fabric targets, one balance definition, independent Gradle build families.
 
-## Current supported targets in this repository
+| Family | Minecraft / loader | Mod bytecode | Gradle JVM used by CI |
+| --- | --- | --- | --- |
+| `legacy` | 1.20.1 Fabric | Java 17 | Java 21 |
+| `modern` | 1.21.1, 1.21.11 Fabric | Java 21 | Java 21 |
+| `current` | 26.1.2, 26.2 Fabric | Java 25 | Java 25 |
 
-- Minecraft **1.20.1 Fabric** — `legacy` family, target Java 17
-- Minecraft **1.21.1 Fabric** — `modern` family, target Java 21
-- Minecraft **1.21.11 Fabric** — `modern` family, target Java 21
-- Minecraft **26.1.2 Fabric** — `current` family, target Java 25
-- Minecraft **26.2 Fabric** — `current` family, target Java 25
-
-The Gradle/Loom build JVM is Java 21 for the legacy/modern generations and Java 25 for the current generation in CI. The 1.20.1 mod itself still compiles to Java 17 bytecode.
-
-Minecraft 26.1+ uses unobfuscated Mojang names instead of Yarn mappings in this project, so it is intentionally isolated from the 1.21.x source/build generation instead of forcing mapping-generation differences into the same family.
-
-The gameplay/source snapshots from the existing branches are integrated without changing their target-specific implementation. Shared files are stored once; family, Fabric and target-specific differences are layered on top.
-
-See [SOURCE_FAMILIES.md](SOURCE_FAMILIES.md) for the source layout and build commands.
+Forge and NeoForge are **not implemented yet**. The source ownership rules and
+loader boundaries are intended to make those ports possible without maintaining
+another copy of the balance or embedding loader callbacks in gameplay classes.
 
 ## IntelliJ IDEA
 
-Open the repository root in IntelliJ IDEA. The shared IDEA Gradle configuration links all independent family builds using their own Gradle wrappers:
+Open this repository root. `.idea/gradle.xml` links `builds/legacy`, `builds/modern`
+and `builds/current` as independent Gradle builds. Select the appropriate **Gradle
+JVM** from the table for each build, and synchronize Gradle. A JDK and **Python
+3.10+** are required; `SCYTHE_PYTHON` can point to the Python executable.
 
-- `builds/legacy` — Minecraft 1.20.1 Fabric
-- `builds/modern` — Minecraft 1.21.1 + 1.21.11 Fabric
-- `builds/current` — Minecraft 26.1.2 + 26.2 Fabric
+Every target, including legacy, is a Gradle subproject. Shared `.run` configurations
+appear as `ScytheMod <version> Fabric Client`. They call the corresponding
+`:<version>-fabric:runClient`, not the currently active development target.
+**JEI remains a development runtime dependency** for all five targets.
 
-After Gradle synchronization, the Run/Debug selector contains:
+Run configurations are generated from `targets.properties` during Gradle settings
+loading. They can also be refreshed without Gradle:
 
-- `ScytheMod 1.20.1 Fabric Client`
-- `ScytheMod 1.21.1 Fabric Client`
-- `ScytheMod 1.21.11 Fabric Client`
-- `ScytheMod 26.1.2 Fabric Client`
-- `ScytheMod 26.2 Fabric Client`
+```text
+python scripts/sync_idea.py
+```
 
-The modern and current targets are Gradle subprojects, so IDEA can load the targets at the same time and launch the correct Loom `runClient` task without per-version launcher scripts.
+The first IDEA Gradle sync materializes source files before IDEA indexes them.
+Subsequent syncs reuse unchanged output. Edit the maintained source layers, **not**
+`build/effective-source` files: those are generated and will be overwritten.
+There are no per-client `.bat`, `.ps1` or `.sh` launchers.
 
-## Quick build
+## Balance: edit one file
 
-Windows PowerShell:
+```text
+source-shared/src/main/java/com/shipovskijkorp/scythes/mod/balance/ScytheBalance.java
+```
+
+This is a compile-time balance table, not a runtime configuration file. Its nested
+sections contain base material/weapon parameters, active and passive ability
+values, cooldowns, costs, status effects, projectiles, minions, loot, enchantments,
+food and progression values. Rebuild the targets after changing it.
+
+For example, change `Base.DURABILITY` for durability, `Base.ATTACK_DAMAGE_BONUS`
+and `Base.ATTACK_SPEED_MODIFIER` for weapon modifiers, or the corresponding
+`Blood`, `Toxic`, `Withering`, `Golden` and `Frozen` sections for abilities.
+`Base.ATTACK_DAMAGE` is derived from the material, modifier and vanilla player
+reference value; it is not a second independent damage setting.
+
+Gameplay reads the Java fields directly. Data-driven enchantment JSON and numeric
+translation descriptions are generated from those **same fields**. This avoids
+changing the damage in Java while leaving the old cooldown or chance in a tooltip.
+Technical constants such as network IDs, flags, slot indices, rendering geometry
+and numerical tolerances are not balance entries. Delegated vanilla behavior is
+not reimplemented just to make every vanilla internal constant configurable.
+
+## Build
+
+Use the existing `build-all.ps1`, `build-all.sh` or `build-all.bat` entry point.
+They all delegate to the same matrix-driven Python script; family names are not
+copied into each shell script. The selected Gradle JVM must satisfy each wrapper
+and plugin you run; a Java 21 process is not the configured current-family JVM.
+Families can also be built separately with their respective JDKs.
 
 ```powershell
 ./build-all.ps1
+./build-all.ps1 --family modern
 ```
 
-Linux/macOS:
-
-```bash
+```sh
 ./build-all.sh
+./build-all.sh --family current
 ```
 
-Release jars are collected into `build/release/`.
+Release files go to `build/release/` and include the loader in their name, for
+example `scythe-mod-fabric-4.0+26.2.jar`. Remapped builds collect `remapJar` output;
+the named 26.x build collects `jar` output.
+
+A direct target build or launch remains available:
+
+```text
+cd builds/modern
+./gradlew :1.21.11-fabric:build
+./gradlew :1.21.11-fabric:runClient
+```
+
+Use `gradlew.bat` on Windows. Each target has its own build and runtime directories.
+
+## Checks
+
+```text
+python scripts/validate_source_layout.py --report
+python scripts/test_source_layout.py
+python scripts/verify_java.py
+```
+
+The last command requires JDK 21+ and checks Java syntax, pure-core logic and small
+adapter contracts against test stubs. It **does not compile against Minecraft**.
+CI runs these checks and then performs actual Gradle builds for each family.
+
+See [SOURCE_FAMILIES.md](SOURCE_FAMILIES.md) for ownership rules, resource templates
+and the remaining work for Forge/NeoForge. See [REFACTOR_VERIFICATION.md](REFACTOR_VERIFICATION.md)
+for the checks and limitations of this refactoring delivery.
 
 ## License
 
-All Rights Reserved.
+All Rights Reserved. Shared metadata in `build-config/common.properties` is the
+single source for the generated Fabric descriptors.

@@ -4,17 +4,17 @@
   },
   "supported_items": "#scythes:enchantable/withering_scythe",
   "primary_items": "#scythes:enchantable/withering_scythe",
-  "weight": 2,
-  "max_level": 3,
+  "weight": "${balance:Enchantments.ADDITIONAL_SLOT_WEIGHT}",
+  "max_level": "${balance:Enchantments.ADDITIONAL_SLOT_MAX_LEVEL}",
   "min_cost": {
-    "base": 12,
-    "per_level_above_first": 15
+    "base": "${balance:Enchantments.ADDITIONAL_SLOT_MIN_COST}",
+    "per_level_above_first": "${balance:Enchantments.ADDITIONAL_SLOT_COST_PER_LEVEL}"
   },
   "max_cost": {
-    "base": 47,
-    "per_level_above_first": 15
+    "base": "${balance:Enchantments.ADDITIONAL_SLOT_MAX_COST}",
+    "per_level_above_first": "${balance:Enchantments.ADDITIONAL_SLOT_COST_PER_LEVEL}"
   },
-  "anvil_cost": 4,
+  "anvil_cost": "${balance:Enchantments.ADDITIONAL_SLOT_ANVIL_COST}",
   "slots": [
     "mainhand"
   ],

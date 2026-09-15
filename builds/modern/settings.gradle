@@ -1,29 +1,11 @@
 pluginManagement {
     repositories {
-        maven {
-            name = 'Fabric'
-            url = 'https://maven.fabricmc.net/'
-        }
+        maven { name = 'Fabric'; url = 'https://maven.fabricmc.net/' }
         mavenCentral()
         gradlePluginPortal()
     }
 }
-
 plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
 }
-
-rootProject.name = "ScytheMod-Modern"
-
-def targetConfig = new Properties()
-file('targets.properties').withInputStream { targetConfig.load(it) }
-def targets = targetConfig.getProperty('targets', '')
-        .split(',').collect { it.trim() }.findAll { !it.isEmpty() }
-if (targets.isEmpty()) {
-    throw new GradleException('Modern family has no configured targets')
-}
-
-targets.each { target ->
-    include(":${target}")
-    project(":${target}").projectDir = file("targets/${target}")
-}
+apply from: file('../../build-logic/family-settings.gradle')

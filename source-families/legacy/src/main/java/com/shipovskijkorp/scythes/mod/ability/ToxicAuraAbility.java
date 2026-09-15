@@ -1,7 +1,9 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.item.ToxicScytheItem;
-import com.shipovskijkorp.scythes.mod.network.ToxicAuraHudS2CPacket;
+import com.shipovskijkorp.scythes.mod.platform.HudSync;
+import com.shipovskijkorp.scythes.mod.platform.HudTransport;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
@@ -13,9 +15,6 @@ public final class ToxicAuraAbility {
 
     private ToxicAuraAbility() {
     }
-
-    public static final int AURA_COOLDOWN_TICKS = 20 * 60;
-    public static final int AURA_DURABILITY_COST = BloodHarvestAbility.DURABILITY_COST;
 
     public static void tryActivate(ServerPlayerEntity player) {
         Hand hand = getHeldToxicScytheHand(player);
@@ -29,25 +28,25 @@ public final class ToxicAuraAbility {
             return;
         }
 
-        int cooldownLeft = ToxicScytheCooldowns.getAuraTicksLeft(player);
+        int cooldownLeft = ScytheCooldowns.remaining(player, ScytheCooldowns.Skill.TOXIC_AURA);
         if (cooldownLeft > 0) {
             player.sendMessage(Text.translatable("message.scythes.toxic_aura.cooldown", Math.max(1, cooldownLeft / 20)), true);
             return;
         }
 
         ItemStack stack = player.getStackInHand(hand);
-        if (!ToxicScytheItem.hasEnoughDurability(stack, AURA_DURABILITY_COST)) {
+        if (!ToxicScytheItem.hasEnoughDurability(stack, ScytheBalance.ToxicAura.AURA_DURABILITY_COST)) {
             player.sendMessage(Text.translatable("message.scythes.scythe_ability.no_durability"), true);
             return;
         }
 
-        if (AURA_DURABILITY_COST > 0) {
-            stack.damage(AURA_DURABILITY_COST, player, p -> p.sendToolBreakStatus(hand));
+        if (ScytheBalance.ToxicAura.AURA_DURABILITY_COST > 0) {
+            stack.damage(ScytheBalance.ToxicAura.AURA_DURABILITY_COST, player, p -> p.sendToolBreakStatus(hand));
         }
 
         int auraTicks = ToxicAuraTracker.start(player, stack);
-        ToxicAuraHudS2CPacket.sendTicks(player, auraTicks);
-        ToxicScytheCooldowns.setAuraCooldown(player, AURA_COOLDOWN_TICKS);
+        HudSync.start(player, HudTransport.Timer.TOXIC_AURA, auraTicks);
+        ScytheCooldowns.start(player, ScytheCooldowns.Skill.TOXIC_AURA, ScytheBalance.ToxicAura.AURA_COOLDOWN_TICKS);
         ScytheAdvancementTracker.markToxicActive(player);
 
         player.getWorld().playSound(

@@ -4,17 +4,17 @@
   },
   "supported_items": "#scythes:enchantable/withering_scythe",
   "primary_items": "#scythes:enchantable/withering_scythe",
-  "weight": 2,
-  "max_level": 1,
+  "weight": "${balance:Enchantments.SOUL_SIPHON_WEIGHT}",
+  "max_level": "${balance:Enchantments.SOUL_SIPHON_MAX_LEVEL}",
   "min_cost": {
-    "base": 20,
-    "per_level_above_first": 0
+    "base": "${balance:Enchantments.SOUL_SIPHON_MIN_COST}",
+    "per_level_above_first": "${balance:Enchantments.SOUL_SIPHON_COST_PER_LEVEL}"
   },
   "max_cost": {
-    "base": 60,
-    "per_level_above_first": 0
+    "base": "${balance:Enchantments.SOUL_SIPHON_MAX_COST}",
+    "per_level_above_first": "${balance:Enchantments.SOUL_SIPHON_COST_PER_LEVEL}"
   },
-  "anvil_cost": 4,
+  "anvil_cost": "${balance:Enchantments.SOUL_SIPHON_ANVIL_COST}",
   "slots": [
     "mainhand"
   ],

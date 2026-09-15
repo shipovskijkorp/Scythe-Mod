@@ -3,12 +3,12 @@ package com.shipovskijkorp.scythes.mod.util;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.passive.AbstractHorseEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.entry.RegistryEntry;
 
 public final class ScytheCombatUtil {
 

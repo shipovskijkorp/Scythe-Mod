@@ -1,14 +1,13 @@
 package com.shipovskijkorp.scythes.mod.compat.jei;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import java.util.List;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.PotionContentsComponent;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.potion.Potions;
-
-import java.util.List;
 
 public final class ToxicEssenceJeiRecipe {
 

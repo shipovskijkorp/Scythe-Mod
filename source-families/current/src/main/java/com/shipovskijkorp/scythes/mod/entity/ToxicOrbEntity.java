@@ -2,16 +2,18 @@ package com.shipovskijkorp.scythes.mod.entity;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
 import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
-import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.item.ToxicScytheItem;
+import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
+import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.ItemSupplier;
 import net.minecraft.world.entity.projectile.ThrowableProjectile;
@@ -21,15 +23,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 
-import java.util.List;
-
 public class ToxicOrbEntity extends ThrowableProjectile implements ItemSupplier {
-
-    public static final double DAMAGE_RADIUS = 2.0D;
-    public static final float PURE_DAMAGE = 2.0F;
-    public static final int POISON_TICKS = 20 * 10;
-    public static final int POISON_AMPLIFIER = 1;
-    public static final int ARMOR_DAMAGE = 30;
 
     private int acidityLevel = 0;
 
@@ -39,7 +33,7 @@ public class ToxicOrbEntity extends ThrowableProjectile implements ItemSupplier 
     }
 
     public ToxicOrbEntity(Level world, LivingEntity owner) {
-        super(ScytheMod.TOXIC_ORB, owner.getX(), owner.getEyeY() - 0.15D, owner.getZ(), world);
+        super(ScytheMod.TOXIC_ORB, owner.getX(), owner.getEyeY() - ScytheBalance.ToxicOrb.SPAWN_EYE_OFFSET, owner.getZ(), world);
         setOwner(owner);
         setNoGravity(true);
     }
@@ -50,7 +44,7 @@ public class ToxicOrbEntity extends ThrowableProjectile implements ItemSupplier 
     }
 
     public void setAcidityLevel(int acidityLevel) {
-        this.acidityLevel = Math.max(0, Math.min(3, acidityLevel));
+        this.acidityLevel = Math.max(0, Math.min(ScytheBalance.Enchantments.ACIDITY_MAX_LEVEL, acidityLevel));
     }
 
     @Override
@@ -87,7 +81,7 @@ public class ToxicOrbEntity extends ThrowableProjectile implements ItemSupplier 
             return;
         }
 
-        if (tickCount > 20 * 8) {
+        if (tickCount > ScytheBalance.ToxicOrb.MAX_LIFETIME_TICKS) {
             applyToxicBurst();
             discard();
         }
@@ -105,7 +99,7 @@ public class ToxicOrbEntity extends ThrowableProjectile implements ItemSupplier 
                 ? damageSources().indirectMagic(this, ownerEntity)
                 : damageSources().magic();
 
-        AABB box = getBoundingBox().inflate(DAMAGE_RADIUS);
+        AABB box = getBoundingBox().inflate(ScytheBalance.ToxicOrb.DAMAGE_RADIUS);
         List<LivingEntity> targets = serverWorld.getEntitiesOfClass(
                 LivingEntity.class,
                 box,
@@ -113,12 +107,12 @@ public class ToxicOrbEntity extends ThrowableProjectile implements ItemSupplier 
         );
 
         for (LivingEntity target : targets) {
-            target.hurtServer(serverWorld, damageSource, PURE_DAMAGE);
-            ScytheCombatUtil.refreshStatus(target, MobEffects.POISON, POISON_TICKS, POISON_AMPLIFIER);
+            target.hurtServer(serverWorld, damageSource, ScytheBalance.ToxicOrb.PURE_DAMAGE);
+            ScytheCombatUtil.refreshStatus(target, MobEffects.POISON, ScytheBalance.ToxicOrb.POISON_TICKS, ScytheBalance.ToxicOrb.POISON_AMPLIFIER);
             if (playerOwner != null) {
-                ScytheAdvancementTracker.recordToxicPoison(playerOwner, target, POISON_TICKS);
+                ScytheAdvancementTracker.recordToxicPoison(playerOwner, target, ScytheBalance.ToxicOrb.POISON_TICKS);
             }
-            ScytheCombatUtil.damageArmorSet(target, ToxicScytheItem.applyAcidityBonus(this.random, ARMOR_DAMAGE, acidityLevel));
+            ScytheCombatUtil.damageArmorSet(target, ToxicScytheItem.applyAcidityBonus(this.random, ScytheBalance.ToxicOrb.ARMOR_DAMAGE, acidityLevel));
         }
     }
 }
