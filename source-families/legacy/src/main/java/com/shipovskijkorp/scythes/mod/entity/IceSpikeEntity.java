@@ -1,6 +1,7 @@
 package com.shipovskijkorp.scythes.mod.entity;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.ability.DamageAttributionTracker;
 import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
 import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
@@ -18,7 +19,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.world.World;
 
-/** Arrow-like projectile fired by the Frost Scythe. */
+/** Arrow-like projectile fired by the Frozen Scythe. */
 public final class IceSpikeEntity extends PersistentProjectileEntity {
 
     public IceSpikeEntity(EntityType<? extends IceSpikeEntity> entityType, World world) {
@@ -64,6 +65,7 @@ public final class IceSpikeEntity extends PersistentProjectileEntity {
                     true
             ));
             if (owner instanceof ServerPlayerEntity playerOwner) {
+                DamageAttributionTracker.recordFreezing(target, playerOwner, ScytheBalance.IceSpike.FREEZING_TICKS);
                 ScytheAdvancementTracker.markFrozenSpecial(playerOwner);
             }
         }

@@ -1,0 +1,32 @@
+{
+  "parent": "scythes:root",
+  "display": {
+    "icon": {
+      "item": "scythes:farmer_essence"
+    },
+    "title": {
+      "translate": "advancement.scythes.final_boss_of_the_garden.title"
+    },
+    "description": {
+      "translate": "advancement.scythes.final_boss_of_the_garden.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "get_farmer_essence": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "scythes:farmer_essence"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

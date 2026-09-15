@@ -1,5 +1,6 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
+import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
 import com.shipovskijkorp.scythes.mod.ScytheMod;
 import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.item.FrozenScytheItem;
@@ -63,6 +64,7 @@ public final class FrozenStormAbility {
 
         for (LivingEntity target : targets) {
             target.addEffect(new MobEffectInstance(ScytheMod.FREEZING, ScytheBalance.FrozenStorm.FREEZING_TICKS, ScytheBalance.FrozenStorm.FREEZING_AMPLIFIER, false, true, true));
+            DamageAttributionTracker.recordFreezing(target, player, ScytheBalance.FrozenStorm.FREEZING_TICKS);
             target.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, ScytheBalance.FrozenStorm.SLOWNESS_TICKS, ScytheBalance.FrozenStorm.SLOWNESS_AMPLIFIER, false, true, true));
             target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, ScytheBalance.FrozenStorm.WEAKNESS_TICKS, ScytheBalance.FrozenStorm.WEAKNESS_AMPLIFIER, false, true, true));
         }
@@ -89,6 +91,7 @@ public final class FrozenStormAbility {
     }
 
     private static boolean isValidTarget(ServerPlayer player, LivingEntity target) {
+        if (ScytheCombatUtil.isProtectedWitheringMinion(player, target)) return false;
         if (target == player) return false;
         if (!target.isAlive()) return false;
         if (target.isSpectator()) return false;

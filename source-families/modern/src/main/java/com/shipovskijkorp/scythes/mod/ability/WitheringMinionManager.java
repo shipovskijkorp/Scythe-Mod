@@ -27,16 +27,49 @@ public final class WitheringMinionManager {
     }
 
 //? if >=1.21.11 {
-    public static int dismissMinions(ServerPlayerEntity owner, ServerWorld world) {
+    public static int dismissMinions(ServerPlayerEntity owner, ServerWorld world, ItemStack refundScythe) {
         List<WitheringMinionEntity> minions = findMinions(owner, world);
 //? } else {
-    public static int dismissMinions(ServerPlayerEntity owner) {
+    public static int dismissMinions(ServerPlayerEntity owner, ItemStack refundScythe) {
         List<WitheringMinionEntity> minions = findMinions(owner);
 //? }
         for (WitheringMinionEntity minion : minions) {
+            WitheringScytheItem.addSouls(refundScythe, calculateSoulRefund(minion));
             minion.discard();
         }
         return minions.size();
+    }
+
+    public static int refundExpiredMinion(ServerPlayerEntity owner, WitheringMinionEntity minion) {
+        ItemStack scythe = findSoulStorageScythe(owner);
+        if (scythe.isEmpty()) return 0;
+
+        int refund = calculateSoulRefund(minion);
+        WitheringScytheItem.addSouls(scythe, refund);
+        return refund;
+    }
+
+    public static int calculateSoulRefund(WitheringMinionEntity minion) {
+        float maxHealth = minion.getMaxHealth();
+        if (maxHealth <= 0.0F) return 0;
+
+        double healthFraction = Math.max(0.0D, Math.min(1.0D, minion.getHealth() / maxHealth));
+        return (int) Math.floor(ScytheBalance.Withering.MINION_SOUL_COST * healthFraction);
+    }
+
+    public static ItemStack findSoulStorageScythe(ServerPlayerEntity owner) {
+        ItemStack mainHand = owner.getMainHandStack();
+        if (mainHand.getItem() instanceof WitheringScytheItem) return mainHand;
+
+        ItemStack offHand = owner.getOffHandStack();
+        if (offHand.getItem() instanceof WitheringScytheItem) return offHand;
+
+        for (int slot = 0; slot < owner.getInventory().size(); slot++) {
+            ItemStack stack = owner.getInventory().getStack(slot);
+            if (stack.getItem() instanceof WitheringScytheItem) return stack;
+        }
+
+        return ItemStack.EMPTY;
     }
 
 //? if >=1.21.11 {

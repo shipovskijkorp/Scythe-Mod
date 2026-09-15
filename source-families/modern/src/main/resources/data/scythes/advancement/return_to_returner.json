@@ -1,0 +1,23 @@
+{
+  "parent": "scythes:hot_stuff_2",
+  "display": {
+    "icon": {
+      "id": "minecraft:fire_charge"
+    },
+    "title": {
+      "translate": "advancement.scythes.return_to_returner.title"
+    },
+    "description": {
+      "translate": "advancement.scythes.return_to_returner.desc"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "kill_ghast_with_fire_scythe_special": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

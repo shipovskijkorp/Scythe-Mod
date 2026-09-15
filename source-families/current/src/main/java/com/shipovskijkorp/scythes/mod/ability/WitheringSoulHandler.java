@@ -17,6 +17,16 @@ public final class WitheringSoulHandler {
 
     /** Called once by the loader after a credited kill, on the server thread. */
     public static void onKill(ServerLevel world, Entity entity, LivingEntity killedEntity) {
+        if (entity instanceof WitheringMinionEntity minion) {
+            ServerPlayer owner = minion.getOwnerPlayer();
+            if (owner == null) return;
+
+            ItemStack scythe = WitheringMinionManager.findSoulStorageScythe(owner);
+            if (scythe.isEmpty()) return;
+            awardSouls(owner, killedEntity, scythe);
+            return;
+        }
+
         ServerPlayer owner = findSoulOwner(entity);
         if (owner == null) return;
         awardSouls(owner, killedEntity);
@@ -48,10 +58,13 @@ public final class WitheringSoulHandler {
     }
 
     private static void awardSouls(ServerPlayer owner, LivingEntity killedEntity) {
-        if (killedEntity instanceof ServerPlayer playerVictim && owner.isAlliedTo(playerVictim)) return;
-
         ItemStack scythe = findWitheringScythe(owner);
         if (scythe.isEmpty()) return;
+        awardSouls(owner, killedEntity, scythe);
+    }
+
+    private static void awardSouls(ServerPlayer owner, LivingEntity killedEntity, ItemStack scythe) {
+        if (killedEntity instanceof ServerPlayer playerVictim && owner.isAlliedTo(playerVictim)) return;
 
         int amount = killedEntity instanceof ServerPlayer
                 ? ScytheBalance.Withering.SOULS_PER_PLAYER_KILL

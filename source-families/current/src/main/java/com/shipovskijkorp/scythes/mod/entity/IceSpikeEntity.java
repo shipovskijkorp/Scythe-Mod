@@ -1,6 +1,7 @@
 package com.shipovskijkorp.scythes.mod.entity;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.ability.DamageAttributionTracker;
 import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
 import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
@@ -73,6 +74,7 @@ public final class IceSpikeEntity extends AbstractArrow {
                     true
             ));
             if (ownerEntity instanceof ServerPlayer playerOwner) {
+                DamageAttributionTracker.recordFreezing(target, playerOwner, ScytheBalance.IceSpike.FREEZING_TICKS);
                 ScytheAdvancementTracker.markFrozenSpecial(playerOwner);
             }
         }

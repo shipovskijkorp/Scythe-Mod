@@ -33,6 +33,7 @@ public final class FarmerHarvestAbility {
 
         stack.damage(ScytheBalance.Farmer.MASS_HARVEST_DURABILITY_COST, player, p -> p.sendToolBreakStatus(hand));
         ScytheCooldowns.start(player, ScytheCooldowns.Skill.FARMER_HARVEST, ScytheBalance.Farmer.MASS_HARVEST_COOLDOWN_TICKS);
+        ScytheAdvancementTracker.markFarmerSpecial(player);
         player.sendMessage(Text.translatable("message.scythes.farmer_harvest.success", harvested), true);
         return true;
     }

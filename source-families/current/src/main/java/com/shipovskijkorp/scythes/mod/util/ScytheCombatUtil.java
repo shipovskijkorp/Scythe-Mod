@@ -1,5 +1,7 @@
 package com.shipovskijkorp.scythes.mod.util;
 
+import net.minecraft.server.level.ServerPlayer;
+import com.shipovskijkorp.scythes.mod.entity.WitheringMinionEntity;
 import net.minecraft.core.Holder;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -29,7 +31,15 @@ public final class ScytheCombatUtil {
             EquipmentSlot.FEET
     };
 
+    public static boolean isProtectedWitheringMinion(LivingEntity source, LivingEntity target) {
+        if (!(target instanceof WitheringMinionEntity minion) || source == null) return false;
+        if (source instanceof ServerPlayer player && minion.isOwner(player)) return true;
+        ServerPlayer minionOwner = minion.getOwnerPlayer();
+        return minionOwner != null && source.isAlliedTo(minionOwner);
+    }
+
     public static boolean isInvalidHostileTarget(LivingEntity owner, LivingEntity target) {
+        if (isProtectedWitheringMinion(owner, target)) return true;
         if (target == owner) return true;
         if (!target.isAlive()) return true;
         if (target.isSpectator()) return true;

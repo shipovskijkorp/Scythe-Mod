@@ -60,7 +60,7 @@ public final class WitheringAuraTracker {
         List<LivingEntity> targets = player.getWorld().getEntitiesByClass(
                 LivingEntity.class,
                 witherBox,
-                target -> !(target instanceof WitheringMinionEntity minion && minion.isOwner(player))
+                target -> !ScytheCombatUtil.isProtectedWitheringMinion(player, target)
                         && !ScytheCombatUtil.isInvalidHostileTarget(player, target)
         );
 

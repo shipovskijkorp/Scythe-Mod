@@ -30,6 +30,7 @@ public class ToxicScytheItem extends ScytheSwordItem {
     @Override
     public void hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         super.hurtEnemy(stack, target, attacker);
+        if (ScytheCombatUtil.isProtectedWitheringMinion(attacker, target)) return;
 
         boolean passiveTriggered = false;
         int acidityLevel = getAcidityLevel(attacker, stack);

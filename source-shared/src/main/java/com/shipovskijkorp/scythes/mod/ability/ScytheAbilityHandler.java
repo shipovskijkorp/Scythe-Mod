@@ -40,6 +40,10 @@ public final class ScytheAbilityHandler {
             FarmerGrowthAbility.tryActivate(player);
             return true;
         }
+        if (stack.getItem() instanceof FireScytheItem) {
+            FireBurstAbility.tryActivate(player);
+            return true;
+        }
         return false;
     }
 }

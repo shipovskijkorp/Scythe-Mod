@@ -48,6 +48,7 @@ public class ScytheModClient implements ClientModInitializer {
         FarmerScytheItem.installTooltipAppender(ScytheTooltips::append);
 
         EntityRendererRegistry.register(ScytheMod.TOXIC_ORB, FlyingItemEntityRenderer::new);
+        EntityRendererRegistry.register(ScytheMod.FIREBALL, FlyingItemEntityRenderer::new);
         EntityRendererRegistry.register(ScytheMod.ICE_SPIKE, IceSpikeEntityRenderer::new);
         EntityRendererRegistry.register(ScytheMod.WITHERING_MINION, WitherSkeletonEntityRenderer::new);
 
@@ -119,6 +120,7 @@ public class ScytheModClient implements ClientModInitializer {
             BloodHarvestHudState.tick();
             ToxicAuraHudState.tick();
             WitheringAuraHudState.tick();
+            FireScytheLockHighlighter.tick(client);
 
             while (scytheAbilityKey.wasPressed()) {
                 if (client.getNetworkHandler() != null && ClientPlayNetworking.canSend(ModPackets.ScytheAbilityPayload.ID)) {

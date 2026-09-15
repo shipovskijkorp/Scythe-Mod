@@ -37,6 +37,7 @@ public class ScytheModClient implements ClientModInitializer {
 
         EntityRendererRegistry.register(ScytheMod.ICE_SPIKE, IceSpikeEntityRenderer::new);
         EntityRendererRegistry.register(ScytheMod.TOXIC_ORB, FlyingItemEntityRenderer::new);
+        EntityRendererRegistry.register(ScytheMod.FIREBALL, FlyingItemEntityRenderer::new);
         EntityRendererRegistry.register(ScytheMod.WITHERING_MINION, WitherSkeletonEntityRenderer::new);
 
         // HUD
@@ -100,6 +101,7 @@ public class ScytheModClient implements ClientModInitializer {
             BloodHarvestHudState.tick();
             ToxicAuraHudState.tick();
             WitheringAuraHudState.tick();
+            FireScytheLockHighlighter.tick(client);
 
             while (scytheAbilityKey.wasPressed()) {
                 if (client.getNetworkHandler() != null && ClientPlayNetworking.canSend(ModPackets.SCYTHE_ABILITY_C2S)) {

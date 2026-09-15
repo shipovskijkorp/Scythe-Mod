@@ -3,13 +3,16 @@ package com.shipovskijkorp.scythes.mod;
 import com.shipovskijkorp.scythes.mod.ability.*;
 import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.effect.BleedingEffect;
+import com.shipovskijkorp.scythes.mod.effect.BurnsEffect;
 import com.shipovskijkorp.scythes.mod.effect.FreezingEffect;
 import com.shipovskijkorp.scythes.mod.effect.NoJumpEffect;
+import com.shipovskijkorp.scythes.mod.entity.FireballEntity;
 import com.shipovskijkorp.scythes.mod.entity.IceSpikeEntity;
 import com.shipovskijkorp.scythes.mod.entity.ToxicOrbEntity;
 import com.shipovskijkorp.scythes.mod.entity.WitheringMinionEntity;
 import com.shipovskijkorp.scythes.mod.item.BloodScytheItem;
 import com.shipovskijkorp.scythes.mod.item.FarmerScytheItem;
+import com.shipovskijkorp.scythes.mod.item.FireScytheItem;
 import com.shipovskijkorp.scythes.mod.item.FrozenHeartItem;
 import com.shipovskijkorp.scythes.mod.item.FrozenScytheItem;
 import com.shipovskijkorp.scythes.mod.item.GoldenScytheItem;
@@ -63,10 +66,11 @@ public class ScytheMod implements ModInitializer {
     public static final Item FROZEN_SCYTHE = registerItem("frozen_scythe", FrozenScytheItem::new, scytheSettings("frozen_scythe"));
     public static final Item FARMER_SCYTHE = registerItem("farmer_scythe", FarmerScytheItem::new,
             ScytheMaterial.configureBase(itemSettings("farmer_scythe")));
-    public static final Item FIRE_SCYTHE = registerItem("fire_scythe", ScytheSwordItem::new, scytheSettings("fire_scythe"));
+    public static final Item FIRE_SCYTHE = registerItem("fire_scythe", FireScytheItem::new, scytheSettings("fire_scythe"));
     public static final Item GUIDE_BOOK = registerItem("guide_book", GuideBookItem::new, itemSettings("guide_book").maxCount(1));
 
     private static final RegistryKey<EntityType<?>> TOXIC_ORB_KEY = RegistryKey.of(RegistryKeys.ENTITY_TYPE, id("toxic_orb"));
+    private static final RegistryKey<EntityType<?>> FIREBALL_KEY = RegistryKey.of(RegistryKeys.ENTITY_TYPE, id("fireball"));
     private static final RegistryKey<EntityType<?>> ICE_SPIKE_KEY = RegistryKey.of(RegistryKeys.ENTITY_TYPE, id("ice_spike"));
     private static final RegistryKey<EntityType<?>> WITHERING_MINION_KEY = RegistryKey.of(RegistryKeys.ENTITY_TYPE, id("withering_minion"));
 
@@ -76,6 +80,13 @@ public class ScytheMod implements ModInitializer {
             .trackRangeBlocks(ScytheBalance.ToxicOrb.TRACKING_RANGE)
             .trackedUpdateRate(ScytheBalance.ToxicOrb.UPDATE_INTERVAL)
             .build(TOXIC_ORB_KEY);
+
+    public static final EntityType<FireballEntity> FIREBALL = FabricEntityTypeBuilder
+            .<FireballEntity>create(SpawnGroup.MISC, FireballEntity::new)
+            .dimensions(EntityDimensions.fixed(ScytheBalance.Fire.FIREBALL_WIDTH, ScytheBalance.Fire.FIREBALL_HEIGHT))
+            .trackRangeBlocks(ScytheBalance.Fire.FIREBALL_TRACKING_RANGE)
+            .trackedUpdateRate(ScytheBalance.Fire.FIREBALL_UPDATE_INTERVAL)
+            .build(FIREBALL_KEY);
 
     public static final EntityType<IceSpikeEntity> ICE_SPIKE = FabricEntityTypeBuilder
             .<IceSpikeEntity>create(SpawnGroup.MISC, IceSpikeEntity::new)
@@ -87,6 +98,7 @@ public class ScytheMod implements ModInitializer {
     public static final EntityType<WitheringMinionEntity> WITHERING_MINION = FabricEntityTypeBuilder
             .<WitheringMinionEntity>create(SpawnGroup.MONSTER, WitheringMinionEntity::new)
             .dimensions(EntityDimensions.fixed(ScytheBalance.Minion.WIDTH, ScytheBalance.Minion.HEIGHT))
+            .fireImmune()
             .trackRangeBlocks(ScytheBalance.Minion.TRACKING_RANGE)
             .trackedUpdateRate(ScytheBalance.Minion.UPDATE_INTERVAL)
             .build(WITHERING_MINION_KEY);
@@ -128,6 +140,8 @@ public class ScytheMod implements ModInitializer {
             Registry.registerReference(Registries.STATUS_EFFECT, id("no_jump"), new NoJumpEffect());
     public static final RegistryEntry<StatusEffect> FREEZING =
             Registry.registerReference(Registries.STATUS_EFFECT, id("freezing"), new FreezingEffect());
+    public static final RegistryEntry<StatusEffect> BURNS =
+            Registry.registerReference(Registries.STATUS_EFFECT, id("burns"), new BurnsEffect());
 
     public static final RegistryKey<Enchantment> SPIKED_BLADE = RegistryKey.of(RegistryKeys.ENCHANTMENT, id("spiked_blade"));
     public static final RegistryKey<Enchantment> ADDITIONAL_SLOT = RegistryKey.of(RegistryKeys.ENCHANTMENT, id("additional_slot"));
@@ -137,6 +151,7 @@ public class ScytheMod implements ModInitializer {
     @Override
     public void onInitialize() {
         Registry.register(Registries.ENTITY_TYPE, TOXIC_ORB_KEY, TOXIC_ORB);
+        Registry.register(Registries.ENTITY_TYPE, FIREBALL_KEY, FIREBALL);
         Registry.register(Registries.ENTITY_TYPE, ICE_SPIKE_KEY, ICE_SPIKE);
         Registry.register(Registries.ENTITY_TYPE, WITHERING_MINION_KEY, WITHERING_MINION);
         FabricDefaultAttributeRegistry.register(WITHERING_MINION, WitheringMinionEntity.createAttributes());

@@ -23,6 +23,7 @@ public final class ScytheTooltips {
         if (stack.getItem() instanceof GoldenScytheItem) golden(stack, context, tooltip, type);
         if (stack.getItem() instanceof FrozenScytheItem) frozen(stack, context, tooltip, type);
         if (stack.getItem() instanceof FarmerScytheItem) farmer(stack, context, tooltip, type);
+        if (stack.getItem() instanceof FireScytheItem) fire(stack, context, tooltip, type);
     }
 
     private static void blood(ItemStack stack, Item.TooltipContext context, List<Text> tooltip, TooltipType type) {
@@ -619,6 +620,48 @@ public final class ScytheTooltips {
                 Text.translatable("tooltip.scythes.stat.weakness_sec", TooltipUtil.fmtSecondsValue(ScytheBalance.FrozenStorm.WEAKNESS_TICKS)),
                 Formatting.DARK_GRAY
         );
+        TooltipUtil.addWrapped(tooltip, "tooltip.scythes.stat.ignores_pets_and_teammates", Formatting.DARK_GRAY);
+    }
+
+    private static void fire(ItemStack stack, Item.TooltipContext context, List<Text> tooltip, TooltipType type) {
+        TooltipUtil.addWrapped(tooltip, "tooltip.scythes.fire_scythe.desc", Formatting.GRAY, Formatting.ITALIC);
+        if (!Screen.hasShiftDown()) { TooltipUtil.addHoldShiftHint(tooltip); return; }
+        boolean alt = Screen.hasAltDown();
+        if (alt) { tooltip.add(Text.empty()); TooltipUtil.addWrapped(tooltip, "tooltip.scythes.fire_scythe.base_stats", Formatting.DARK_GRAY); }
+
+        tooltip.add(Text.empty());
+        tooltip.add(Text.translatable("tooltip.scythes.section.passive").formatted(Formatting.GRAY));
+        tooltip.add(Text.translatable("tooltip.scythes.fire_scythe.passive").formatted(Formatting.GOLD));
+        if (!alt) TooltipUtil.addWrapped(tooltip, "tooltip.scythes.fire_scythe.passive.desc", Formatting.DARK_GRAY);
+        else {
+            TooltipUtil.addWrapped(tooltip, "tooltip.scythes.stat.lava_walk", Formatting.DARK_GRAY);
+            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.burns_chance_percent", TooltipUtil.fmtPercentValue(ScytheBalance.Fire.PASSIVE_BURNS_CHANCE)), Formatting.GOLD);
+            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.burns_sec", TooltipUtil.fmtSecondsValue(ScytheBalance.Fire.PASSIVE_BURNS_TICKS)), Formatting.DARK_GRAY);
+            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.burns_immunity", TooltipUtil.fmtSecondsValue(ScytheBalance.Burns.MAX_CONTINUOUS_TICKS), TooltipUtil.fmtSecondsValue(ScytheBalance.Burns.IMMUNITY_TICKS)), Formatting.DARK_GRAY);
+        }
+
+        tooltip.add(Text.empty());
+        tooltip.add(Text.translatable("tooltip.scythes.section.special").formatted(Formatting.GRAY));
+        tooltip.add(Text.translatable("tooltip.scythes.fireball").formatted(Formatting.GOLD));
+        if (!alt) TooltipUtil.addWrapped(tooltip, "tooltip.scythes.fireball.desc", Formatting.GRAY);
+        else {
+            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.cooldown_sec", TooltipUtil.fmtSecondsValue(ScytheBalance.Fire.FIREBALL_COOLDOWN_TICKS)), Formatting.GRAY);
+            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.durability_cost", String.valueOf(ScytheBalance.Fire.FIREBALL_DURABILITY_COST)), Formatting.GRAY);
+            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.max_explosion_damage", TooltipUtil.fmtNumber(ScytheBalance.Fire.FIREBALL_MAX_DAMAGE)), Formatting.DARK_GRAY);
+            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.fireball_lifetime_sec", TooltipUtil.fmtSecondsValue(ScytheBalance.Fire.FIREBALL_MAX_LIFETIME_TICKS)), Formatting.DARK_GRAY);
+            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.burns_sec", TooltipUtil.fmtSecondsValue(ScytheBalance.Fire.FIREBALL_BURNS_TICKS)), Formatting.DARK_GRAY);
+            TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.stun_sec", TooltipUtil.fmtSecondsValue(ScytheBalance.Fire.FIREBALL_STUN_TICKS)), Formatting.DARK_GRAY);
+        }
+
+        tooltip.add(Text.empty());
+        tooltip.add(Text.translatable("tooltip.scythes.section.active").formatted(Formatting.GRAY));
+        tooltip.add(Text.translatable("tooltip.scythes.fire_burst", TooltipUtil.getScytheAbilityKeyText(Formatting.GOLD)));
+        if (!alt) { TooltipUtil.addWrapped(tooltip, "tooltip.scythes.fire_burst.desc", Formatting.GRAY); TooltipUtil.addHoldAltHint(tooltip); return; }
+        TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.radius_blocks", TooltipUtil.fmtNumber(ScytheBalance.FireBurst.RADIUS)), Formatting.GRAY);
+        TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.cooldown_sec", TooltipUtil.fmtSecondsValue(ScytheBalance.FireBurst.COOLDOWN_TICKS)), Formatting.GRAY);
+        TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.durability_cost", String.valueOf(ScytheBalance.FireBurst.DURABILITY_COST)), Formatting.GRAY);
+        TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.burns_sec", TooltipUtil.fmtSecondsValue(ScytheBalance.FireBurst.BURNS_TICKS)), Formatting.DARK_GRAY);
+        TooltipUtil.addWrapped(tooltip, Text.translatable("tooltip.scythes.stat.armor_damage", String.valueOf(ScytheBalance.FireBurst.ARMOR_DAMAGE)), Formatting.DARK_GRAY);
         TooltipUtil.addWrapped(tooltip, "tooltip.scythes.stat.ignores_pets_and_teammates", Formatting.DARK_GRAY);
     }
 

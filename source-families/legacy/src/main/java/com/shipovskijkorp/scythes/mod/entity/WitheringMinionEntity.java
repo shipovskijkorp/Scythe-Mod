@@ -7,17 +7,20 @@ import java.util.UUID;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.control.AquaticMoveControl;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.ai.goal.LookAroundGoal;
 import net.minecraft.entity.ai.goal.LookAtEntityGoal;
 import net.minecraft.entity.ai.goal.MeleeAttackGoal;
-import net.minecraft.entity.ai.goal.SwimGoal;
 import net.minecraft.entity.ai.goal.WanderAroundFarGoal;
+import net.minecraft.entity.ai.pathing.AmphibiousSwimNavigation;
+import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.HostileEntity;
+import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.WitherSkeletonEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -40,11 +43,31 @@ public class WitheringMinionEntity extends WitherSkeletonEntity {
     private UUID ownerUuid;
     private int lifeTicks;
     private long lastDamageWorldTick;
+    @Nullable
+    private LivingEntity ownerDefenseTarget;
+    private boolean targetStateInitialized;
+    private int observedOwnerHurtTimestamp;
+    @Nullable
+    private UUID observedOwnerAttackerUuid;
+    private int observedSelfHurtTimestamp;
+    @Nullable
+    private UUID observedSelfAttackerUuid;
+    private int observedOwnerAttackTimestamp;
+    @Nullable
+    private UUID observedOwnerAttackTargetUuid;
 
     public WitheringMinionEntity(EntityType<? extends WitheringMinionEntity> entityType, World world) {
         super(entityType, world);
         this.experiencePoints = 0;
         this.setCanPickUpLoot(false);
+        this.moveControl = new AquaticMoveControl(
+                this,
+                ScytheBalance.Minion.SWIM_PITCH_CHANGE,
+                ScytheBalance.Minion.SWIM_YAW_CHANGE,
+                ScytheBalance.Minion.SWIM_WATER_SPEED_MULTIPLIER,
+                ScytheBalance.Minion.SWIM_LAND_SPEED_MULTIPLIER,
+                true
+        );
     }
 
     public static DefaultAttributeContainer.Builder createAttributes() {
@@ -57,8 +80,24 @@ public class WitheringMinionEntity extends WitherSkeletonEntity {
     }
 
     @Override
+    protected EntityNavigation createNavigation(World world) {
+        AmphibiousSwimNavigation navigation = new AmphibiousSwimNavigation(this, world);
+        navigation.setCanSwim(true);
+        return navigation;
+    }
+
+    @Override
+    public boolean isPushedByFluids() {
+        return false;
+    }
+
+    @Override
+    public boolean canBreatheInWater() {
+        return true;
+    }
+
+    @Override
     protected void initGoals() {
-        this.goalSelector.add(1, new SwimGoal(this));
         this.goalSelector.add(2, new MeleeAttackGoal(this, ScytheBalance.Minion.MELEE_SPEED, true));
         this.goalSelector.add(3, new FollowOwnerLikeWolfGoal(this, ScytheBalance.Minion.FOLLOW_SPEED, ScytheBalance.Minion.FOLLOW_START_DISTANCE, ScytheBalance.Minion.FOLLOW_STOP_DISTANCE));
         this.goalSelector.add(7, new WanderAroundFarGoal(this, ScytheBalance.Minion.WANDER_SPEED));
@@ -69,6 +108,7 @@ public class WitheringMinionEntity extends WitherSkeletonEntity {
     public void initializeForOwner(ServerPlayerEntity owner) {
         this.ownerUuid = owner.getUuid();
         this.lifeTicks = 0;
+        primeTargetState(owner);
         this.lastDamageWorldTick = getWorld().getTime();
         this.setCustomNameVisible(false);
         this.setPersistent();
@@ -96,13 +136,29 @@ public class WitheringMinionEntity extends WitherSkeletonEntity {
         }
 
         lifeTicks++;
-        if (lifeTicks >= ScytheBalance.Minion.LIFETIME_TICKS || getOwnerPlayer() == null) {
+        ServerPlayerEntity owner = getOwnerPlayer();
+        if (lifeTicks >= ScytheBalance.Minion.LIFETIME_TICKS) {
+            if (owner != null) {
+                WitheringMinionManager.refundExpiredMinion(owner, this);
+            }
+            discard();
+            return;
+        }
+        if (owner == null) {
             discard();
             return;
         }
 
-        if (age % ScytheBalance.Minion.AI_UPDATE_INTERVAL_TICKS == 0) {
-            updateDogLikeTarget();
+        if (!targetStateInitialized) {
+            primeTargetState(owner);
+        }
+        updateDogLikeTarget(owner);
+
+        // Do this outside the follow goal as well. Combat owns the MOVE control at a
+        // higher priority, so relying on the follow goal alone can leave a minion
+        // chasing a stale target forever while its owner disappears into the distance.
+        if (shouldTeleportToOwner(owner)) {
+            tryTeleportNearOwner(owner);
         }
 
         tryPassiveRegeneration();
@@ -132,34 +188,121 @@ public class WitheringMinionEntity extends WitherSkeletonEntity {
         }
     }
 
-    private void updateDogLikeTarget() {
-        ServerPlayerEntity owner = getOwnerPlayer();
-        if (owner == null) return;
+    private void primeTargetState(ServerPlayerEntity owner) {
+        targetStateInitialized = true;
+        observedOwnerHurtTimestamp = owner.getLastAttackedTime();
+        LivingEntity ownerAttacker = owner.getAttacker();
+        observedOwnerAttackerUuid = ownerAttacker == null ? null : ownerAttacker.getUuid();
+        observedSelfHurtTimestamp = getLastAttackedTime();
+        LivingEntity selfAttacker = getAttacker();
+        observedSelfAttackerUuid = selfAttacker == null ? null : selfAttacker.getUuid();
+        observedOwnerAttackTimestamp = owner.getLastAttackTime();
+        LivingEntity ownerTarget = owner.getAttacking();
+        observedOwnerAttackTargetUuid = ownerTarget == null ? null : ownerTarget.getUuid();
+        ownerDefenseTarget = null;
+    }
 
+    private void updateDogLikeTarget(ServerPlayerEntity owner) {
+        int ownerHurtTimestamp = owner.getLastAttackedTime();
+        LivingEntity ownerAttacker = owner.getAttacker();
+        UUID ownerAttackerUuid = ownerAttacker == null ? null : ownerAttacker.getUuid();
+        boolean newOwnerHit = ownerHurtTimestamp != observedOwnerHurtTimestamp
+                || ownerAttackerUuid != null && !ownerAttackerUuid.equals(observedOwnerAttackerUuid);
+        if (newOwnerHit) {
+            observedOwnerHurtTimestamp = ownerHurtTimestamp;
+            if (ownerAttackerUuid != null) {
+                observedOwnerAttackerUuid = ownerAttackerUuid;
+            }
+            if (isAllowedTarget(owner, ownerAttacker)) {
+                ownerDefenseTarget = ownerAttacker;
+                setTarget(ownerDefenseTarget);
+                return;
+            }
+            ownerDefenseTarget = null;
+        }
+
+        // The newest entity that actually hurt the owner remains the top-priority
+        // threat until it dies/becomes invalid or the minion has to regroup.
+        if (isAllowedTarget(owner, ownerDefenseTarget)) {
+            if (getTarget() != ownerDefenseTarget) {
+                setTarget(ownerDefenseTarget);
+            }
+            return;
+        }
+        ownerDefenseTarget = null;
+
+        // Do not rescan and switch between several angry mobs every tick. If the
+        // current target is actively targeting this minion, keep it; otherwise pick
+        // the nearest mob that has already decided to attack us, before it lands a hit.
         LivingEntity current = getTarget();
+        if (isAllowedTarget(owner, current) && current instanceof MobEntity mob && mob.getTarget() == this) {
+            return;
+        }
+        LivingEntity incomingAggressor = findMobTargetingMe(owner);
+        if (incomingAggressor != null) {
+            setTarget(incomingAggressor);
+            return;
+        }
+
+        int selfHurtTimestamp = getLastAttackedTime();
+        LivingEntity selfAttacker = getAttacker();
+        UUID selfAttackerUuid = selfAttacker == null ? null : selfAttacker.getUuid();
+        boolean newSelfHit = selfHurtTimestamp != observedSelfHurtTimestamp
+                || selfAttackerUuid != null && !selfAttackerUuid.equals(observedSelfAttackerUuid);
+        if (newSelfHit) {
+            observedSelfHurtTimestamp = selfHurtTimestamp;
+            if (selfAttackerUuid != null) {
+                observedSelfAttackerUuid = selfAttackerUuid;
+            }
+            if (isAllowedTarget(owner, selfAttacker)) {
+                setTarget(selfAttacker);
+                return;
+            }
+        }
+
+        current = getTarget();
         if (isAllowedTarget(owner, current)) {
             return;
         }
 
-        LivingEntity selfAttacker = getAttacker();
-        if (isAllowedTarget(owner, selfAttacker)) {
-            setTarget(selfAttacker);
-            return;
-        }
-
-        LivingEntity ownerAttacker = owner.getAttacker();
-        if (isAllowedTarget(owner, ownerAttacker)) {
-            setTarget(ownerAttacker);
-            return;
-        }
-
+        int ownerAttackTimestamp = owner.getLastAttackTime();
         LivingEntity ownerTarget = owner.getAttacking();
-        if (isAllowedTarget(owner, ownerTarget)) {
-            setTarget(ownerTarget);
-            return;
+        UUID ownerTargetUuid = ownerTarget == null ? null : ownerTarget.getUuid();
+        boolean newOwnerAttack = ownerAttackTimestamp != observedOwnerAttackTimestamp
+                || ownerTargetUuid != null && !ownerTargetUuid.equals(observedOwnerAttackTargetUuid);
+        if (newOwnerAttack) {
+            observedOwnerAttackTimestamp = ownerAttackTimestamp;
+            if (ownerTargetUuid != null) {
+                observedOwnerAttackTargetUuid = ownerTargetUuid;
+            }
+            if (isAllowedTarget(owner, ownerTarget)) {
+                setTarget(ownerTarget);
+                return;
+            }
         }
 
         setTarget(null);
+    }
+
+    @Nullable
+    private LivingEntity findMobTargetingMe(ServerPlayerEntity owner) {
+        Box searchBox = getBoundingBox().expand(ScytheBalance.Minion.FOLLOW_RANGE);
+        LivingEntity nearest = null;
+        double nearestDistance = Double.MAX_VALUE;
+
+        for (MobEntity mob : getWorld().getEntitiesByClass(
+                MobEntity.class,
+                searchBox,
+                mob -> mob != this && mob.getTarget() == this && isAllowedTarget(owner, mob)
+        )) {
+            double distance = squaredDistanceTo(mob);
+            if (distance < nearestDistance) {
+                nearestDistance = distance;
+                nearest = mob;
+            }
+        }
+
+        return nearest;
     }
 
     private boolean isAllowedTarget(ServerPlayerEntity owner, @Nullable LivingEntity target) {
@@ -235,6 +378,8 @@ public class WitheringMinionEntity extends WitherSkeletonEntity {
 
         this.refreshPositionAndAngles(targetX, targetY, targetZ, getYaw(), getPitch());
         this.getNavigation().stop();
+        this.ownerDefenseTarget = null;
+        this.setTarget(null);
         return true;
     }
 

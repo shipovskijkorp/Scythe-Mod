@@ -1,9 +1,13 @@
 package com.shipovskijkorp.scythes.mod.effect;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.ability.DamageAttributionTracker;
+import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
 import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.util.ScytheDamageTypes;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.passive.SnowGolemEntity;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectCategory;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -35,7 +39,13 @@ public final class FreezingEffect extends StatusEffect {
         if (instance != null
                 && instance.getDuration() % ScytheBalance.Freezing.DAMAGE_INTERVAL_TICKS == 0
                 && entity.getRandom().nextFloat() < ScytheBalance.Freezing.DAMAGE_CHANCE) {
+            ServerPlayerEntity freezingOwner = entity instanceof SnowGolemEntity
+                    ? DamageAttributionTracker.getFreezingOwner(entity)
+                    : null;
             entity.damage(ScytheDamageTypes.freezing(entity.getWorld()), ScytheBalance.Freezing.DAMAGE_PER_PROC);
+            if (!entity.isAlive() && freezingOwner != null) {
+                ScytheAdvancementTracker.tryGrantSupercooledSnow(freezingOwner);
+            }
         }
 
         return true;

@@ -110,6 +110,44 @@
     },
     "frozen_special": {
       "trigger": "minecraft:impossible"
+    },
+    "has_fire_scythe": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "scythes:fire_scythe"
+          }
+        ]
+      }
+    },
+    "fire_passive": {
+      "trigger": "minecraft:impossible"
+    },
+    "fire_active": {
+      "trigger": "minecraft:impossible"
+    },
+    "fire_special": {
+      "trigger": "minecraft:impossible"
+    },
+    "has_farmer_scythe": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "scythes:farmer_scythe"
+          }
+        ]
+      }
+    },
+    "farmer_passive": {
+      "trigger": "minecraft:impossible"
+    },
+    "farmer_active": {
+      "trigger": "minecraft:impossible"
+    },
+    "farmer_special": {
+      "trigger": "minecraft:impossible"
     }
   },
   "requirements": [
@@ -172,6 +210,30 @@
     ],
     [
       "frozen_special"
+    ],
+    [
+      "has_fire_scythe"
+    ],
+    [
+      "fire_passive"
+    ],
+    [
+      "fire_active"
+    ],
+    [
+      "fire_special"
+    ],
+    [
+      "has_farmer_scythe"
+    ],
+    [
+      "farmer_passive"
+    ],
+    [
+      "farmer_active"
+    ],
+    [
+      "farmer_special"
     ]
   ]
 }

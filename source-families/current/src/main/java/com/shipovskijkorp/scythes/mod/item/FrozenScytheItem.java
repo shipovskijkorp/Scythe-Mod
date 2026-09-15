@@ -1,6 +1,8 @@
 package com.shipovskijkorp.scythes.mod.item;
 
+import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.ability.DamageAttributionTracker;
 import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
 import com.shipovskijkorp.scythes.mod.ability.ScytheCooldowns;
 import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
@@ -45,10 +47,12 @@ public final class FrozenScytheItem extends ScytheSwordItem {
     @Override
     public void hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         super.hurtEnemy(stack, target, attacker);
+        if (ScytheCombatUtil.isProtectedWitheringMinion(attacker, target)) return;
         if (attacker.level().isClientSide()) return;
         if (target.isAlive() && attacker.getRandom().nextDouble() < ScytheBalance.Frozen.COLD_MASTER_FREEZING_CHANCE) {
             target.addEffect(new MobEffectInstance(ScytheMod.FREEZING, ScytheBalance.Frozen.COLD_MASTER_FREEZING_TICKS, ScytheBalance.Frozen.COLD_MASTER_FREEZING_AMPLIFIER));
             if (attacker instanceof ServerPlayer player) {
+                DamageAttributionTracker.recordFreezing(target, player, ScytheBalance.Frozen.COLD_MASTER_FREEZING_TICKS);
                 ScytheAdvancementTracker.markFrozenPassive(player);
             }
         }

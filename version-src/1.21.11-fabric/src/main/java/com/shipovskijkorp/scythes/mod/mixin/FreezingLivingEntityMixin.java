@@ -1,10 +1,14 @@
 package com.shipovskijkorp.scythes.mod.mixin;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.ability.DamageAttributionTracker;
+import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
 import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.util.FreezingRenderState;
 import com.shipovskijkorp.scythes.mod.util.ScytheDamageTypes;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.passive.SnowGolemEntity;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
@@ -57,7 +61,13 @@ public abstract class FreezingLivingEntityMixin implements FreezingRenderState {
 
         scythes$freezingDamageTicks = 0;
         if (self.getRandom().nextFloat() < ScytheBalance.Freezing.DAMAGE_CHANCE) {
+            ServerPlayerEntity freezingOwner = self instanceof SnowGolemEntity
+                    ? DamageAttributionTracker.getFreezingOwner(self)
+                    : null;
             self.damage(world, ScytheDamageTypes.freezing(world), ScytheBalance.Freezing.DAMAGE_PER_PROC);
+            if (!self.isAlive() && freezingOwner != null) {
+                ScytheAdvancementTracker.tryGrantSupercooledSnow(freezingOwner);
+            }
         }
     }
 

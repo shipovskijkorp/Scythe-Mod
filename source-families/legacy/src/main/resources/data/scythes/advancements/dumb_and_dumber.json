@@ -1,0 +1,23 @@
+{
+  "parent": "scythes:carrot",
+  "display": {
+    "icon": {
+      "item": "scythes:farmer_scythe"
+    },
+    "title": {
+      "translate": "advancement.scythes.dumb_and_dumber.title"
+    },
+    "description": {
+      "translate": "advancement.scythes.dumb_and_dumber.desc"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "kill_ender_dragon_with_farmer_scythe": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

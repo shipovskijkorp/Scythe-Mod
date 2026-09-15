@@ -38,6 +38,7 @@ public final class FarmerHarvestAbility {
                 hand == Hand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND
         );
         ScytheCooldowns.start(player, ScytheCooldowns.Skill.FARMER_HARVEST, ScytheBalance.Farmer.MASS_HARVEST_COOLDOWN_TICKS);
+        ScytheAdvancementTracker.markFarmerSpecial(player);
         player.sendMessage(Text.translatable("message.scythes.farmer_harvest.success", harvested), true);
         return true;
     }

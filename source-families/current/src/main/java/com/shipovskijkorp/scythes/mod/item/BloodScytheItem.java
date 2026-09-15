@@ -1,5 +1,6 @@
 package com.shipovskijkorp.scythes.mod.item;
 
+import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
 import com.shipovskijkorp.scythes.mod.ScytheMod;
 import com.shipovskijkorp.scythes.mod.ability.DamageAttributionTracker;
 import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
@@ -102,6 +103,7 @@ public class BloodScytheItem extends ScytheSwordItem {
     }
 
     private static boolean isInvalidBlenderTarget(ServerPlayer player, LivingEntity target) {
+        if (ScytheCombatUtil.isProtectedWitheringMinion(player, target)) return true;
         if (target == player) return true;
         if (!target.isAlive()) return true;
         if (target.isSpectator()) return true;
@@ -143,6 +145,7 @@ public class BloodScytheItem extends ScytheSwordItem {
     @Override
     public void hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         super.hurtEnemy(stack, target, attacker);
+        if (ScytheCombatUtil.isProtectedWitheringMinion(attacker, target)) return;
 
         if (attacker.level().isClientSide()) {
             return;

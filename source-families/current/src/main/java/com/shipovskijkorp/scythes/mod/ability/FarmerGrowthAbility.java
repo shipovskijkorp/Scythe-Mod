@@ -48,6 +48,7 @@ public final class FarmerGrowthAbility {
                 hand == InteractionHand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND
         );
         ScytheCooldowns.start(player, ScytheCooldowns.Skill.FARMER_GROWTH, ScytheBalance.Farmer.GROWTH_COOLDOWN_TICKS);
+        ScytheAdvancementTracker.markFarmerActive(player);
         player.sendOverlayMessage(Component.translatable("message.scythes.farmer_growth.success", affected));
     }
 }

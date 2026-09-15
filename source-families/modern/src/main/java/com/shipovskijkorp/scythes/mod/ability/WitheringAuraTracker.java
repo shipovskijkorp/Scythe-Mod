@@ -72,7 +72,7 @@ public final class WitheringAuraTracker {
 //? }
                 LivingEntity.class,
                 witherBox,
-                target -> !(target instanceof WitheringMinionEntity minion && minion.isOwner(player))
+                target -> !ScytheCombatUtil.isProtectedWitheringMinion(player, target)
                         && !ScytheCombatUtil.isInvalidHostileTarget(player, target)
         );
 

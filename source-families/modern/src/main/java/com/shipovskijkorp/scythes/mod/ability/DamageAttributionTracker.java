@@ -18,6 +18,7 @@ public final class DamageAttributionTracker {
 
     private static final Map<UUID, TrackedSource> BLEEDING = new HashMap<>();
     private static final Map<UUID, TrackedSource> WITHERING = new HashMap<>();
+    private static final Map<UUID, TrackedSource> FREEZING = new HashMap<>();
 
     public static void recordBleeding(LivingEntity target, ServerPlayerEntity owner, int ticks) {
         record(BLEEDING, target, owner, ticks);
@@ -25,6 +26,10 @@ public final class DamageAttributionTracker {
 
     public static void recordWithering(LivingEntity target, ServerPlayerEntity owner, int ticks) {
         record(WITHERING, target, owner, ticks);
+    }
+
+    public static void recordFreezing(LivingEntity target, ServerPlayerEntity owner, int ticks) {
+        record(FREEZING, target, owner, ticks);
     }
 
     @Nullable
@@ -37,9 +42,15 @@ public final class DamageAttributionTracker {
         return getOwner(WITHERING, target);
     }
 
+    @Nullable
+    public static ServerPlayerEntity getFreezingOwner(LivingEntity target) {
+        return getOwner(FREEZING, target);
+    }
+
     public static void clear(LivingEntity target) {
         BLEEDING.remove(target.getUuid());
         WITHERING.remove(target.getUuid());
+        FREEZING.remove(target.getUuid());
     }
 
     private static void record(Map<UUID, TrackedSource> map,

@@ -217,7 +217,7 @@ public final class GuideScreen extends Screen {
         int y = Math.min(mouseY + 10, height - boxHeight - 4);
         graphics.fill(x, y, x + boxWidth, y + boxHeight, 0xF0100010);
         graphics.fill(x, y, x + boxWidth, y + 1, 0xFF503A70);
-        graphics.text(font, hoveredRecipeName, x + 4, y + 3, 0xFFFFFF, false);
+        graphics.text(font, hoveredRecipeName, x + 4, y + 3, GuideUi.opaque(0xFFFFFF), false);
     }
     private int renderScytheIndex(GuiGraphicsExtractor graphics, int x, int y, int mouseX, int mouseY, int bottom) {
         List<GuideResources.Entry> entries = view.resources().entries();

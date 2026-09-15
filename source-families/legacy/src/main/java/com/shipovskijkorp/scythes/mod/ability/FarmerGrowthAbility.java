@@ -43,6 +43,7 @@ public final class FarmerGrowthAbility {
         FarmerHarvestHandler.consumeBoneMeal(player, ScytheBalance.Farmer.GROWTH_BONE_MEAL_COST);
         stack.damage(ScytheBalance.Farmer.GROWTH_DURABILITY_COST, player, p -> p.sendToolBreakStatus(hand));
         ScytheCooldowns.start(player, ScytheCooldowns.Skill.FARMER_GROWTH, ScytheBalance.Farmer.GROWTH_COOLDOWN_TICKS);
+        ScytheAdvancementTracker.markFarmerActive(player);
         player.sendMessage(Text.translatable("message.scythes.farmer_growth.success", affected), true);
     }
 }

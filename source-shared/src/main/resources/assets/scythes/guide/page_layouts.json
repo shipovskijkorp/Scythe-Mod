@@ -3,8 +3,8 @@
   "placeholder": "{{sc_text:<index>}}",
   "templates": {
     "welcome": {
-      "slots": 6,
-      "template": "# {{sc_text:0}}\n{{sc_text:1}}\n\n## {{sc_text:2}}\n{{sc_text:3}}\n<new_page/>\n## {{sc_text:4}}\n<scythe_index/>\n\n{{sc_text:5}}"
+      "slots": 4,
+      "template": "# {{sc_text:0}}\n{{sc_text:1}}\n<new_page/>\n## {{sc_text:2}}\n<scythe_index/>\n\n{{sc_text:3}}"
     },
     "element": {
       "slots": 19,

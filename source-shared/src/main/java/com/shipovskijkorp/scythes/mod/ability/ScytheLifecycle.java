@@ -14,6 +14,7 @@ public final class ScytheLifecycle {
             WitheringAuraTracker.tick(player);
             PlagueScytheMigrationHandler.migratePlayer(player);
         }
+        FireLaunchTracker.tick();
         GoldenLootMarkTracker.tick(server);
     }
 

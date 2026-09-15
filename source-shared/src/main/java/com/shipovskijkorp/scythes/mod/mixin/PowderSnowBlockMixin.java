@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class PowderSnowBlockMixin {
 
     @Inject(method = "canWalkOnPowderSnow", at = @At("HEAD"), cancellable = true)
-    private static void scythes$allowFrostScytheCarrierToWalk(
+    private static void scythes$allowFrozenScytheCarrierToWalk(
             Entity entity,
             CallbackInfoReturnable<Boolean> cir
     ) {

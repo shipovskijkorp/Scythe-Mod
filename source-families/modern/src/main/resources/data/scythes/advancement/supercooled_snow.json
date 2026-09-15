@@ -1,0 +1,23 @@
+{
+  "parent": "scythes:king_of_the_north",
+  "display": {
+    "icon": {
+      "id": "minecraft:carved_pumpkin"
+    },
+    "title": {
+      "translate": "advancement.scythes.supercooled_snow.title"
+    },
+    "description": {
+      "translate": "advancement.scythes.supercooled_snow.desc"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "freeze_snow_golem_to_death": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

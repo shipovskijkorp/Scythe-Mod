@@ -6,6 +6,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.FarmlandBlock;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemUsageContext;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -28,6 +29,7 @@ public final class FarmerTillingHandler {
 
         PlayerEntity player = origin.getPlayer();
         if (player == null || origin.getStack().isEmpty()) return;
+        if (player instanceof ServerPlayerEntity serverPlayer) ScytheAdvancementTracker.markFarmerPassive(serverPlayer);
 
         int radius = ScytheBalance.Farmer.TILLING_RADIUS;
         outer:

@@ -2,6 +2,7 @@ package com.shipovskijkorp.scythes.mod.platform.fabric;
 
 import com.shipovskijkorp.scythes.mod.ability.*;
 import com.shipovskijkorp.scythes.mod.platform.HudSync;
+import com.shipovskijkorp.scythes.mod.util.BurnsUtil;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityCombatEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -16,7 +17,11 @@ public final class FabricServerHooks {
 
     public static void register() {
         HudSync.install(new FabricHudTransport());
-        ServerLifecycleEvents.SERVER_STOPPED.register(server -> ScytheCooldowns.clearAll());
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            ScytheCooldowns.clearAll();
+            BurnsUtil.clearAll();
+            FireLaunchTracker.clearAll();
+        });
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             server.execute(() -> PlagueScytheMigrationHandler.migratePlayer(handler.player));
             server.execute(() -> WelcomeAdvancementHandler.grantRoot(handler.player));

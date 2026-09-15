@@ -4,7 +4,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 
 /** Small MC adapter: UUID and clock are the only version-dependent operations. */
 public final class ScytheCooldowns {
-    public enum Skill { BLENDER, TOXIC_ORB, TOXIC_AURA, WITHERING_AURA, MIDAS, RAIN, ICE_SPIKE, STORM, FARMER_HARVEST, FARMER_GROWTH }
+    public enum Skill { BLENDER, TOXIC_ORB, TOXIC_AURA, WITHERING_AURA, MIDAS, RAIN, ICE_SPIKE, STORM, FARMER_HARVEST, FARMER_GROWTH, FIREBALL, FIRE_BURST }
     private static final CooldownStore<Skill> STORE = new CooldownStore<>();
     private ScytheCooldowns() {}
 

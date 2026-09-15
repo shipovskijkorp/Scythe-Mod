@@ -1,5 +1,6 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
+import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
 import com.shipovskijkorp.scythes.mod.ScytheMod;
 import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.item.FrozenScytheItem;
@@ -17,7 +18,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.Box;
 
-/** Active ability of the Frost Scythe. */
+/** Active ability of the Frozen Scythe. */
 public final class FrozenStormAbility {
 
     private FrozenStormAbility() {
@@ -68,6 +69,7 @@ public final class FrozenStormAbility {
                     true,
                     true
             ));
+            DamageAttributionTracker.recordFreezing(target, player, ScytheBalance.FrozenStorm.FREEZING_TICKS);
             target.addStatusEffect(new StatusEffectInstance(
                     StatusEffects.SLOWNESS,
                     ScytheBalance.FrozenStorm.SLOWNESS_TICKS,
@@ -104,6 +106,7 @@ public final class FrozenStormAbility {
     }
 
     private static boolean isValidTarget(ServerPlayerEntity player, LivingEntity target) {
+        if (ScytheCombatUtil.isProtectedWitheringMinion(player, target)) return false;
         if (target == player) return false;
         if (!target.isAlive()) return false;
         if (target.isSpectator()) return false;

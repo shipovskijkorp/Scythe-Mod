@@ -3,6 +3,7 @@ package com.shipovskijkorp.scythes.mod.ability;
 import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.block.Block;
@@ -28,6 +29,7 @@ public final class FarmerTillingHandler {
 
         Player player = origin.getPlayer();
         if (player == null || origin.getItemInHand().isEmpty()) return;
+        if (player instanceof ServerPlayer serverPlayer) ScytheAdvancementTracker.markFarmerPassive(serverPlayer);
 
         int radius = ScytheBalance.Farmer.TILLING_RADIUS;
         outer:

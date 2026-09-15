@@ -1,5 +1,6 @@
 package com.shipovskijkorp.scythes.mod.item;
 
+import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
 import com.shipovskijkorp.scythes.mod.ScytheMod;
 import com.shipovskijkorp.scythes.mod.ability.DamageAttributionTracker;
 import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
@@ -35,6 +36,7 @@ public class WitheringScytheItem extends ScytheSwordItem {
     @Override
     public void hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         super.hurtEnemy(stack, target, attacker);
+        if (ScytheCombatUtil.isProtectedWitheringMinion(attacker, target)) return;
 
         if (attacker.level().isClientSide()) {
             return;
@@ -70,8 +72,10 @@ public class WitheringScytheItem extends ScytheSwordItem {
         }
 
         if (player.isShiftKeyDown()) {
-            int dismissed = WitheringMinionManager.dismissMinions(player, (ServerLevel) player.level());
-            player.sendOverlayMessage(Component.translatable("message.scythes.withering_minion.dismissed", dismissed));
+            int soulsBefore = getSouls(stack);
+            int dismissed = WitheringMinionManager.dismissMinions(player, (ServerLevel) player.level(), stack);
+            int soulsReturned = getSouls(stack) - soulsBefore;
+            player.sendOverlayMessage(Component.translatable("message.scythes.withering_minion.dismissed", dismissed, soulsReturned));
             return InteractionResult.SUCCESS;
         }
 

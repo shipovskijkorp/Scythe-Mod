@@ -1,0 +1,27 @@
+{
+  "parent": "scythes:final_boss_of_the_garden",
+  "display": {
+    "icon": {
+      "id": "scythes:farmer_scythe",
+      "count": 1
+    },
+    "title": {
+      "translate": "advancement.scythes.carrot.title"
+    },
+    "description": {
+      "translate": "advancement.scythes.carrot.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "craft_farmer_scythe": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "scythes:craft_farmer_scythe"
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "parent": "scythes:hell_bomb",
+  "display": {
+    "icon": {
+      "id": "scythes:fire_scythe",
+      "count": 1
+    },
+    "title": {
+      "translate": "advancement.scythes.hot_stuff_2.title"
+    },
+    "description": {
+      "translate": "advancement.scythes.hot_stuff_2.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "craft_fire_scythe": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "scythes:craft_fire_scythe"
+      }
+    }
+  }
+}

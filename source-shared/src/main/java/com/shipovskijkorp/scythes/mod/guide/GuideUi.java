@@ -13,8 +13,8 @@ public final class GuideUi {
     public static final int RIGHT_TEXT_OFFSET = PAGE_TEXTURE_WIDTH + 4;
 
     /** Exact BCCE chapter-tab silhouette, packed as a pre-tinted atlas to avoid loader-specific shader code. */
-    public static final int TAB_TEXTURE_WIDTH = 104;
-    public static final int TAB_NORMAL_WIDTH = 99;
+    public static final int TAB_TEXTURE_WIDTH = 74;
+    public static final int TAB_NORMAL_WIDTH = 69;
     public static final int TAB_HEIGHT = 16;
     public static final int TAB_STEP = 17;
     public static final int TAB_TOP = 18;

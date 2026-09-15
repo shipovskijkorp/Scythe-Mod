@@ -210,6 +210,10 @@ public final class ScytheBalance {
         public static final double WANDER_SPEED = 0.8D;
         public static final float LOOK_DISTANCE = 8.0F;
         public static final int AI_UPDATE_INTERVAL_TICKS = 10;
+        public static final int SWIM_PITCH_CHANGE = 85;
+        public static final int SWIM_YAW_CHANGE = 10;
+        public static final float SWIM_WATER_SPEED_MULTIPLIER = 0.8F;
+        public static final float SWIM_LAND_SPEED_MULTIPLIER = 1.0F;
         // Classic random-position search is retained for 1.20/1.21 targets.
         public static final int CLASSIC_TELEPORT_ATTEMPTS = 10;
         public static final int CLASSIC_TELEPORT_RADIUS = 3;
@@ -259,7 +263,7 @@ public final class ScytheBalance {
         public static final int ICE_SPIKE_DURABILITY_COST = 30;
         public static final int ICE_SPIKE_COOLDOWN_TICKS = TICKS_PER_SECOND * 20;
         public static final float ICE_SPIKE_SPEED = 3.0F;
-        public static final double COLD_MASTER_FREEZING_CHANCE = 0.33D;
+        public static final double COLD_MASTER_FREEZING_CHANCE = 0.20D;
         public static final int COLD_MASTER_FREEZING_TICKS = 20;
         public static final int COLD_MASTER_FROST_WALKER_LEVEL = 2;
         public static final int FROST_WALKER_MAX_RADIUS = 16;
@@ -273,7 +277,7 @@ public final class ScytheBalance {
     public static final class FrozenStorm {
         private FrozenStorm() {}
 
-        public static final double RADIUS = 20.0D;
+        public static final double RADIUS = 15.0D;
         public static final int COOLDOWN_TICKS = TICKS_PER_SECOND * 40;
         public static final int DURABILITY_COST = Base.ACTIVE_DURABILITY_COST;
         public static final int FREEZING_TICKS = TICKS_PER_SECOND * 5;
@@ -317,6 +321,58 @@ public final class ScytheBalance {
         public static final int FREEZING_AMPLIFIER = 0;
     }
 
+
+    /** Fire Scythe passive, lock-on projectile and lava mobility tuning. */
+    public static final class Fire {
+        private Fire() {}
+
+        public static final double PASSIVE_BURNS_CHANCE = 0.20D;
+        public static final int PASSIVE_BURNS_TICKS = TICKS_PER_SECOND * 3;
+        public static final int PASSIVE_REFRESH_THRESHOLD_TICKS = TICKS_PER_SECOND;
+        public static final int PASSIVE_FIRE_SECONDS = 4;
+
+        public static final int FIREBALL_CHARGE_TICKS = TICKS_PER_SECOND;
+        public static final int FIREBALL_COOLDOWN_TICKS = TICKS_PER_SECOND * 25;
+        public static final int FIREBALL_DURABILITY_COST = 50;
+        public static final double FIREBALL_LOCK_RANGE = 128.0D;
+        public static final double FIREBALL_LOCK_MIN_DOT = 0.965D;
+        public static final float FIREBALL_SPEED = 1.45F;
+        public static final double FIREBALL_HOMING_STRENGTH = 0.18D;
+        public static final int FIREBALL_MAX_LIFETIME_TICKS = TICKS_PER_SECOND * 15;
+        public static final double FIREBALL_EXPLOSION_RADIUS = 4.0D;
+        public static final float FIREBALL_MAX_DAMAGE = 10.0F;
+        public static final int FIREBALL_FIRE_SECONDS = 5;
+        public static final int FIREBALL_BURNS_TICKS = TICKS_PER_SECOND * 3;
+        public static final int FIREBALL_STUN_TICKS = 10;
+        public static final float FIREBALL_WIDTH = 0.35F;
+        public static final float FIREBALL_HEIGHT = 0.35F;
+        public static final int FIREBALL_TRACKING_RANGE = 16;
+        public static final int FIREBALL_UPDATE_INTERVAL = 2;
+        public static final double FIREBALL_SPAWN_EYE_OFFSET = 0.15D;
+    }
+
+    /** Fire Scythe area ability. */
+    public static final class FireBurst {
+        private FireBurst() {}
+
+        public static final double RADIUS = 10.0D;
+        public static final int COOLDOWN_TICKS = TICKS_PER_SECOND * 45;
+        public static final int DURABILITY_COST = Base.ACTIVE_DURABILITY_COST;
+        public static final int ARMOR_DAMAGE = 30;
+        public static final int FIRE_SECONDS = 6;
+        public static final int BURNS_TICKS = TICKS_PER_SECOND * 5;
+        public static final int LAUNCH_DELAY_TICKS = TICKS_PER_SECOND;
+        public static final double LAUNCH_VELOCITY_Y = 0.90D;
+    }
+
+    /** Burns anti-heal and hidden immunity rules. */
+    public static final class Burns {
+        private Burns() {}
+
+        public static final int MAX_CONTINUOUS_TICKS = TICKS_PER_SECOND * 6;
+        public static final int IMMUNITY_TICKS = TICKS_PER_SECOND * 5;
+        public static final int AMPLIFIER = 0;
+    }
 
     /** Farmer Scythe tuning. Base tool stats follow the other scythes; combat damage follows a Netherite Hoe. */
     public static final class Farmer {

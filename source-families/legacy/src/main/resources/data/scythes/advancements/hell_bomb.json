@@ -1,0 +1,32 @@
+{
+  "parent": "scythes:root",
+  "display": {
+    "icon": {
+      "item": "scythes:fire_essence"
+    },
+    "title": {
+      "translate": "advancement.scythes.hell_bomb.title"
+    },
+    "description": {
+      "translate": "advancement.scythes.hell_bomb.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "get_fire_essence": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "scythes:fire_essence"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

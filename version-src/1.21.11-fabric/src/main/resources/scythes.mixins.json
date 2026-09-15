@@ -12,8 +12,10 @@
   ],
   "client": [
     "ItemGroupMixin",
+    "FireScytheGlowMixin",
     "FreezingLivingEntityRendererMixin",
-    "FreezingLivingEntityRenderStateMixin"
+    "FreezingLivingEntityRenderStateMixin",
+    "AdvancementWidgetMixin"
   ],
   "injectors": {
     "defaultRequire": 1

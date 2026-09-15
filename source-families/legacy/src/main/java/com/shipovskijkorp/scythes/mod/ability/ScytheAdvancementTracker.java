@@ -2,6 +2,7 @@ package com.shipovskijkorp.scythes.mod.ability;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
 import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
+import com.shipovskijkorp.scythes.mod.item.FarmerScytheItem;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -9,7 +10,9 @@ import java.util.UUID;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.boss.dragon.EnderDragonEntity;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
@@ -24,6 +27,9 @@ public final class ScytheAdvancementTracker {
     private static final String MERCILESS_ADVANCEMENT = "merciless";
     private static final String IMPOSSIBLE_INTOXICATION_ADVANCEMENT = "impossible_intoxication";
     private static final String THREE_DAYS_RAIN_ADVANCEMENT = "three_days_rain";
+    private static final String FARMER_DRAGON_ADVANCEMENT = "dumb_and_dumber";
+    private static final String FIREBALL_GHAST_ADVANCEMENT = "return_to_returner";
+    private static final String SUPERCOOLED_SNOW_ADVANCEMENT = "supercooled_snow";
 
     private static final String CRITERION_BLOOD_PASSIVE = "blood_passive";
     private static final String CRITERION_BLOOD_ACTIVE = "blood_active";
@@ -40,6 +46,12 @@ public final class ScytheAdvancementTracker {
     private static final String CRITERION_FROZEN_PASSIVE = "frozen_passive";
     private static final String CRITERION_FROZEN_ACTIVE = "frozen_active";
     private static final String CRITERION_FROZEN_SPECIAL = "frozen_special";
+    private static final String CRITERION_FIRE_PASSIVE = "fire_passive";
+    private static final String CRITERION_FIRE_ACTIVE = "fire_active";
+    private static final String CRITERION_FIRE_SPECIAL = "fire_special";
+    private static final String CRITERION_FARMER_PASSIVE = "farmer_passive";
+    private static final String CRITERION_FARMER_ACTIVE = "farmer_active";
+    private static final String CRITERION_FARMER_SPECIAL = "farmer_special";
 
     private static final int BLOOD_SKILL_PASSIVE = 1;
     private static final int BLOOD_SKILL_ACTIVE = 1 << 1;
@@ -115,6 +127,38 @@ public final class ScytheAdvancementTracker {
         grantMasteryCriterion(player, CRITERION_FROZEN_SPECIAL);
     }
 
+    public static void markFirePassive(ServerPlayerEntity player) {
+        grantMasteryCriterion(player, CRITERION_FIRE_PASSIVE);
+    }
+
+    public static void markFireActive(ServerPlayerEntity player) {
+        grantMasteryCriterion(player, CRITERION_FIRE_ACTIVE);
+    }
+
+    public static void markFireSpecial(ServerPlayerEntity player) {
+        grantMasteryCriterion(player, CRITERION_FIRE_SPECIAL);
+    }
+
+    public static void markFarmerPassive(ServerPlayerEntity player) {
+        grantMasteryCriterion(player, CRITERION_FARMER_PASSIVE);
+    }
+
+    public static void markFarmerActive(ServerPlayerEntity player) {
+        grantMasteryCriterion(player, CRITERION_FARMER_ACTIVE);
+    }
+
+    public static void markFarmerSpecial(ServerPlayerEntity player) {
+        grantMasteryCriterion(player, CRITERION_FARMER_SPECIAL);
+    }
+
+    public static void tryGrantFireballGhastKill(ServerPlayerEntity player) {
+        grantCriterion(player, FIREBALL_GHAST_ADVANCEMENT, "kill_ghast_with_fire_scythe_special");
+    }
+
+    public static void tryGrantSupercooledSnow(ServerPlayerEntity player) {
+        grantCriterion(player, SUPERCOOLED_SNOW_ADVANCEMENT, "freeze_snow_golem_to_death");
+    }
+
     public static void recordToxicPoison(ServerPlayerEntity player, LivingEntity target, int durationTicks) {
         if (durationTicks <= 0 || target.getUuid().equals(player.getUuid())) return;
 
@@ -159,6 +203,18 @@ public final class ScytheAdvancementTracker {
         if (record != null && now <= record.expiresAt && (record.flags & BLOOD_SKILL_ALL) == BLOOD_SKILL_ALL) {
             grantCriterion(killer, MERCILESS_ADVANCEMENT, "kill_after_all_blood_skills");
         }
+    }
+
+
+    public static void tryGrantFarmerDragonKill(LivingEntity target, DamageSource source) {
+        if (!(target instanceof EnderDragonEntity)) return;
+        if (!source.isOf(DamageTypes.PLAYER_ATTACK)) return;
+
+        Entity attacker = source.getAttacker();
+        if (!(attacker instanceof ServerPlayerEntity player)) return;
+        if (!(player.getMainHandStack().getItem() instanceof FarmerScytheItem)) return;
+
+        grantCriterion(player, FARMER_DRAGON_ADVANCEMENT, "kill_ender_dragon_with_farmer_scythe");
     }
 
     public static void clear(ServerPlayerEntity player) {

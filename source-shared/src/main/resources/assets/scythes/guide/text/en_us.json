@@ -45,9 +45,7 @@
   "pages": {
     "welcome": [
       "Welcome",
-      "Seven essences answer the scythemaker: blood, venom, wither, gold, frost, harvest and flame. Each path begins long before the blade is forged; the substance must first be found, bound and taught what kind of power it is meant to carry.",
-      "Reading the Codex",
-      "The bookmarks at the left mark the seven elements. Choose one to enter its path. Once inside an element, the arrows beneath the pages move only through that element's own leaves; choosing another bookmark begins that path from its first page.",
+      "Every essence is an extension of its master's will. But a reaper's path begins long before the blade is forged — power must first be found and brought under control. Only then will it take a form that can serve in battle and in labor. Only in the hands of a reaper devoted to the craft will that power reveal its true potential.",
       "Elements",
       "Every element is gathered here. The image beside each name leads to the same path as its bookmark."
     ],
@@ -108,9 +106,9 @@
       "Passive — Soul Reaping",
       "Hits have a ${balance:Withering.WITHER_CHANCE|percent}% chance to inflict Wither II. A slain mob yields ${balance:Withering.SOULS_PER_MOB_KILL} soul, while a slain player yields ${balance:Withering.SOULS_PER_PLAYER_KILL}. Souls remain stored for summoning rather than vanishing with the corpse.",
       "Special — Summon Minion",
-      "Right click to spend ${balance:Withering.MINION_SOUL_COST} souls and ${balance:Withering.MINION_DURABILITY_COST} durability, calling a Withering minion to your side. Without further enchantment the bond can sustain up to ${balance:Withering.MAX_MINIONS} servants at once.",
+      "Right click to spend ${balance:Withering.MINION_SOUL_COST} souls and ${balance:Withering.MINION_DURABILITY_COST} durability, calling a fire-immune Withering minion to your side. Its kills feed souls back into your Withering Scythe. Dismissing it, or letting its lifetime expire, refunds up to ${balance:Withering.MINION_SOUL_COST} souls in proportion to its remaining health, rounded down. Without further enchantment the bond can sustain up to ${balance:Withering.MAX_MINIONS} servants at once.",
       "Active — Withering Aura",
-      "The ability key opens the seal for ${balance:WitheringAura.DURATION_TICKS|seconds} seconds. Enemies within ${balance:WitheringAura.WITHER_RADIUS|number} blocks suffer Wither II, while allied minions within ${balance:WitheringAura.MINION_BUFF_RADIUS|number} blocks are strengthened. Cost: ${balance:WitheringAura.AURA_DURABILITY_COST} durability. Cooldown: ${balance:WitheringAura.AURA_COOLDOWN_TICKS|seconds} seconds.",
+      "The ability key opens the seal for ${balance:WitheringAura.DURATION_TICKS|seconds} seconds. Enemies within ${balance:WitheringAura.WITHER_RADIUS|number} blocks suffer Wither II. Allied minions within ${balance:WitheringAura.MINION_BUFF_RADIUS|number} blocks continuously receive a ${balance:WitheringAura.MINION_BUFF_TICKS|seconds}-second Strength and Speed buff, refreshed while they remain inside the aura. Cost: ${balance:WitheringAura.AURA_DURABILITY_COST} durability. Cooldown: ${balance:WitheringAura.AURA_COOLDOWN_TICKS|seconds} seconds.",
       "Wielding Withering",
       "This path is strongest when prepared before danger arrives. Bank souls, enter battle with room for minions, then release the aura only when both enemies and servants can be caught in it. The element rewards command more than haste."
     ],
@@ -187,16 +185,18 @@
       "Blaze Powder and Fire Charge crown the pattern, lava flanks the TNT core, and the three empty rockets close the lower edge. The lava is consumed, but the iron buckets remain behind like the pans of a completed rite.",
       "fire_essence",
       "Forging the Blade",
-      "Set Fire Essence into the common Netherite scythe frame. Unlike Farmer, Fire follows the sword-born scythe lineage and carries the same martial base as the other combat elements.",
+      "Set Fire Essence into the common Netherite scythe frame. Fire follows the sword-born combat lineage and carries the same martial base as the other combat elements.",
       "fire_scythe",
-      "Passive — Sleeping Ember",
-      "The ember has not yet revealed a passive rite. The forged blade is complete, but the fire within it remains sealed rather than pretending to a power it has not learned.",
-      "Special — Unbroken Seal",
-      "No special rite has answered the wielder yet. The essence holds enough violence to promise one, but until that seal is broken the right hand commands only the weapon itself.",
-      "Active — Unnamed Flame",
-      "The deepest flame is still silent. There is no active rite to invoke; only the finished scythe and the knowledge that its element has not reached its final form.",
+      "Passive — Living Flame",
+      "Every strike ignites its victim. Each hit also has a ${balance:Fire.PASSIVE_BURNS_CHANCE|percent}% chance to apply Burns for ${balance:Fire.PASSIVE_BURNS_TICKS|seconds} seconds; the passive only refreshes when at most one second remains. While held in either hand, the scythe lets its wielder walk on lava and ignore magma-block damage.",
+      "Special — Hunting Fireball",
+      "Hold RMB for ${balance:Fire.FIREBALL_CHARGE_TICKS|seconds} second to lock a highlighted enemy, then release. The fireball homes on that target for up to ${balance:Fire.FIREBALL_MAX_LIFETIME_TICKS|seconds} seconds before exploding. Its blast reaches about ${balance:Fire.FIREBALL_EXPLOSION_RADIUS|number} blocks, deals up to ${balance:Fire.FIREBALL_MAX_DAMAGE|number} explosion damage with distance falloff and never breaks blocks. The locked target is ignited, receives Burns for ${balance:Fire.FIREBALL_BURNS_TICKS|seconds} seconds and is stunned for ${balance:Fire.FIREBALL_STUN_TICKS|seconds} seconds. Cost: ${balance:Fire.FIREBALL_DURABILITY_COST} durability. Cooldown: ${balance:Fire.FIREBALL_COOLDOWN_TICKS|seconds} seconds.",
+      "Active — Inferno",
+      "The ability key ignites every valid enemy within ${balance:FireBurst.RADIUS|number} blocks, applies Burns for ${balance:FireBurst.BURNS_TICKS|seconds} seconds and damages each non-Netherite armor piece by ${balance:FireBurst.ARMOR_DAMAGE} durability. After ${balance:FireBurst.LAUNCH_DELAY_TICKS|seconds} second the marked targets erupt upward through a cloud of flame. Cost: ${balance:FireBurst.DURABILITY_COST} durability. Cooldown: ${balance:FireBurst.COOLDOWN_TICKS|seconds} seconds. Pets and teammates are ignored.",
+      "Burns",
+      "Burns blocks healing completely while active. A target can suffer it continuously for at most ${balance:Burns.MAX_CONTINUOUS_TICKS|seconds} seconds; when Burns ends, or reaches that cap, the target gains a hidden ${balance:Burns.IMMUNITY_TICKS|seconds}-second immunity to new Burns applications.",
       "Wielding Fire",
-      "For now, wield Fire as a forged scythe whose element is waiting to awaken. Its path already has a complete essence ritual and blade, but its combat rites should be learned only when the flame has a true identity of its own."
+      "Fire wins by denying recovery and forcing movement. Inferno breaks grouped enemies apart, while Hunting Fireball keeps pressure on a chosen target that tries to disengage."
     ]
   }
 }

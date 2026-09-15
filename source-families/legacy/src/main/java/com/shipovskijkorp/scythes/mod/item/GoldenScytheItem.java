@@ -1,5 +1,6 @@
 package com.shipovskijkorp.scythes.mod.item;
 
+import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
 import com.shipovskijkorp.scythes.mod.ability.GoldenLootMarkTracker;
 import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
 import com.shipovskijkorp.scythes.mod.ability.ScytheCooldowns;
@@ -115,6 +116,7 @@ public class GoldenScytheItem extends ScytheSwordItem {
     }
 
     public static boolean isValidGoldenTarget(ServerPlayerEntity player, LivingEntity target) {
+        if (ScytheCombatUtil.isProtectedWitheringMinion(player, target)) return false;
         if (target == player) return false;
         if (!target.isAlive()) return false;
         if (target.isSpectator()) return false;

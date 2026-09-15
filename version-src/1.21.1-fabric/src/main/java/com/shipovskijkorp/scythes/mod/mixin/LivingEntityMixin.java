@@ -1,5 +1,6 @@
 package com.shipovskijkorp.scythes.mod.mixin;
 
+import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
 import com.shipovskijkorp.scythes.mod.ScytheMod;
 import com.shipovskijkorp.scythes.mod.ability.BloodScytheVampirism;
 import com.shipovskijkorp.scythes.mod.ability.GoldenLootMarkTracker;
@@ -8,11 +9,15 @@ import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
 import com.shipovskijkorp.scythes.mod.ability.WitheringSoulHandler;
 import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.item.BloodScytheItem;
+import com.shipovskijkorp.scythes.mod.item.FireScytheItem;
 import com.shipovskijkorp.scythes.mod.util.ScytheDamageTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageTypes;
+import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -44,6 +49,28 @@ public abstract class LivingEntityMixin {
         }
     }
 
+    @Inject(method = "heal", at = @At("HEAD"), cancellable = true)
+    private void scythes$blockHealingWhileBurned(float amount, CallbackInfo ci) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (self.hasStatusEffect(ScytheMod.BURNS)) ci.cancel();
+    }
+
+    @Inject(method = "canWalkOnFluid", at = @At("HEAD"), cancellable = true)
+    private void scythes$walkOnLavaWithFireScythe(FluidState fluidState, CallbackInfoReturnable<Boolean> cir) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (self instanceof PlayerEntity player && FireScytheItem.isHeld(player) && fluidState.isIn(FluidTags.LAVA)) {
+            cir.setReturnValue(true);
+        }
+    }
+
+    @Inject(method = "damage", at = @At("HEAD"), cancellable = true)
+    private void scythes$ignoreHotFloorWithFireScythe(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (self instanceof PlayerEntity player && FireScytheItem.isHeld(player) && source.isOf(DamageTypes.HOT_FLOOR)) {
+            cir.setReturnValue(false);
+        }
+    }
+
     @Inject(method = "damage", at = @At("HEAD"))
     private void scythes$captureDamageBefore(DamageSource source,
                                              float amount,
@@ -59,6 +86,7 @@ public abstract class LivingEntityMixin {
 
         ServerPlayerEntity player = scythes$getBloodScytheAttacker(source);
         if (player == null) return;
+        if (ScytheCombatUtil.isProtectedWitheringMinion(player, self)) return;
 
         scythes$bloodDefensePierceQueued = ScytheBalance.Blood.DEFENSE_PIERCE_CHANCE > 0.0D
                 && player.getRandom().nextDouble() < ScytheBalance.Blood.DEFENSE_PIERCE_CHANCE;
@@ -76,6 +104,7 @@ public abstract class LivingEntityMixin {
 
         ServerPlayerEntity player = scythes$getBloodScytheAttacker(source);
         if (player == null) return;
+        if (ScytheCombatUtil.isProtectedWitheringMinion(player, self)) return;
 
         float before = scythes$healthBeforeDamage + scythes$absorptionBeforeDamage;
         float afterBaseHit = self.getHealth() + self.getAbsorptionAmount();
@@ -120,6 +149,7 @@ public abstract class LivingEntityMixin {
         if (self.getWorld().isClient) return;
         WitheringSoulHandler.tryAwardTrackedWitheringDeath(self, source);
         ScytheAdvancementTracker.tryGrantMercilessOnDeath(self, source);
+        ScytheAdvancementTracker.tryGrantFarmerDragonKill(self, source);
     }
 
     @Inject(method = "dropLoot", at = @At("HEAD"))

@@ -29,6 +29,7 @@ public class ToxicScytheItem extends ScytheSwordItem {
 
     @Override
     public boolean postHit(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+        if (ScytheCombatUtil.isProtectedWitheringMinion(attacker, target)) return super.postHit(stack, target, attacker);
         if (!attacker.getWorld().isClient) {
             ServerPlayerEntity player = attacker instanceof ServerPlayerEntity serverPlayer ? serverPlayer : null;
             boolean passiveTriggered = false;

@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "group": "scythes:guide",
+  "ingredients": [
+    "minecraft:book",
+    "minecraft:black_dye"
+  ],
+  "result": {
+    "id": "scythes:guide_book"
+  }
+}
