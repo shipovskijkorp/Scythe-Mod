@@ -19,7 +19,9 @@ dependencies {
     add(remapped ? 'modImplementation' : 'implementation', "net.fabricmc.fabric-api:fabric-api:${cfg['deps.fabric_api']}")
     def jeiCoordinate = remapped ? "${cfg['deps.jei']}-fabric,${cfg['deps.minecraft']}" : cfg['deps.jei']
     add(remapped ? 'modCompileOnly' : 'compileOnly', "maven.modrinth:jei:${jeiCoordinate}")
-    add(remapped ? 'modRuntimeOnly' : 'runtimeOnly', "maven.modrinth:jei:${jeiCoordinate}")
+    if (!cfg.containsKey('runtime.jei') || cfg['runtime.jei'].toBoolean()) {
+        add(remapped ? 'modRuntimeOnly' : 'runtimeOnly', "maven.modrinth:jei:${jeiCoordinate}")
+    }
 }
 fabricApi { configureDataGeneration { client = true } }
 loom {

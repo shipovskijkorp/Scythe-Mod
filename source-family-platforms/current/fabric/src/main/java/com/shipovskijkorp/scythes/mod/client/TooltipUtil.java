@@ -10,7 +10,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
 
 @Environment(EnvType.CLIENT)
 public final class TooltipUtil {
@@ -26,17 +25,13 @@ public final class TooltipUtil {
     }
 
     public static boolean hasShiftDown() {
-        return isKeyDown(GLFW.GLFW_KEY_LEFT_SHIFT) || isKeyDown(GLFW.GLFW_KEY_RIGHT_SHIFT);
+        Minecraft client = Minecraft.getInstance();
+        return client != null && client.hasShiftDown();
     }
 
     public static boolean hasAltDown() {
-        return isKeyDown(GLFW.GLFW_KEY_LEFT_ALT) || isKeyDown(GLFW.GLFW_KEY_RIGHT_ALT);
-    }
-
-    private static boolean isKeyDown(int keyCode) {
         Minecraft client = Minecraft.getInstance();
-        if (client == null || client.getWindow() == null) return false;
-        return GLFW.glfwGetKey(client.getWindow().handle(), keyCode) == GLFW.GLFW_PRESS;
+        return client != null && client.hasAltDown();
     }
 
     public static Component getScytheAbilityKeyText(ChatFormatting formatting) {

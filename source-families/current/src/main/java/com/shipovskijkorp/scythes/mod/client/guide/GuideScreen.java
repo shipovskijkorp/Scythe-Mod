@@ -150,7 +150,6 @@ public final class GuideScreen extends Screen {
         return y + 4;
     }
 
-
     private int renderRecipe(GuiGraphicsExtractor graphics, String recipeId, int x, int y, int mouseX, int mouseY, int bottom) {
         GuideResources.GuideRecipe recipe = view.resources().recipe(recipeId);
         if (recipe == null || y + CRAFTING_GRID_HEIGHT > bottom) return y;
@@ -219,6 +218,7 @@ public final class GuideScreen extends Screen {
         graphics.fill(x, y, x + boxWidth, y + 1, 0xFF503A70);
         graphics.text(font, hoveredRecipeName, x + 4, y + 3, GuideUi.opaque(0xFFFFFF), false);
     }
+
     private int renderScytheIndex(GuiGraphicsExtractor graphics, int x, int y, int mouseX, int mouseY, int bottom) {
         List<GuideResources.Entry> entries = view.resources().entries();
         for (int i = 0; i < entries.size(); i++) {
@@ -274,7 +274,11 @@ public final class GuideScreen extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+//? if >=26.3 {
+        if (event.button() == 1) {
+//? } else {
         if (event.button() == 0) {
+//? }
             for (ClickRegion region : clickRegions) {
                 if (region.contains(event.x(), event.y())) {
                     region.action.run();

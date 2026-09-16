@@ -6,7 +6,7 @@ Five Fabric targets, one balance definition, independent Gradle build families.
 | --- | --- | --- | --- |
 | `legacy` | 1.20.1 Fabric | Java 17 | Java 21 |
 | `modern` | 1.21.1, 1.21.11 Fabric | Java 21 | Java 21 |
-| `current` | 26.1.2, 26.2 Fabric | Java 25 | Java 25 |
+| `current` | 26.1.2, 26.2, 26.3 Fabric | Java 25 | Java 25 |
 
 Forge and NeoForge are **not implemented yet**. The source ownership rules and
 loader boundaries are intended to make those ports possible without maintaining
@@ -79,7 +79,7 @@ Families can also be built separately with their respective JDKs.
 ```
 
 Release files go to `build/release/` and include the loader in their name, for
-example `scythe-mod-fabric-4.0+26.2.jar`. Remapped builds collect `remapJar` output;
+example `scythe-mod-fabric-5.0+26.3.jar`. Remapped builds collect `remapJar` output;
 the named 26.x build collects `jar` output.
 
 A direct target build or launch remains available:

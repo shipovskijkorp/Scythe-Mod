@@ -179,10 +179,12 @@ public class ScytheMod implements ModInitializer {
         ScytheAbilityC2SPacket.register();
         FabricServerHooks.register();
 
-//? if >=26.2 {
-        LOGGER.info("ScytheMod 4.0 initialized successfully for Minecraft 26.2");
+//? if >=26.3 {
+        LOGGER.info("ScytheMod 5.0 initialized successfully for Minecraft 26.3");
+//? } else if >=26.2 {
+        LOGGER.info("ScytheMod 5.0 initialized successfully for Minecraft 26.2");
 //? } else {
-        LOGGER.info("ScytheMod 4.0 initialized successfully for Minecraft 26.1.2");
+        LOGGER.info("ScytheMod 5.0 initialized successfully for Minecraft 26.1.2");
 //? }
     }
 

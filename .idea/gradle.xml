@@ -12,6 +12,7 @@
             <option value="$PROJECT_DIR$/builds/current" />
             <option value="$PROJECT_DIR$/builds/current/targets/26.1.2-fabric" />
             <option value="$PROJECT_DIR$/builds/current/targets/26.2-fabric" />
+            <option value="$PROJECT_DIR$/builds/current/targets/26.3-fabric" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="true" />

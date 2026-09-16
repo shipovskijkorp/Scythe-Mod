@@ -17,7 +17,9 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.client.renderer.entity.WitherSkeletonRenderer;
 import net.minecraft.network.chat.Component;
+//? if <26.3 {
 import org.lwjgl.glfw.GLFW;
+//? }
 
 public class ScytheModClient implements ClientModInitializer {
 
@@ -75,8 +77,13 @@ public class ScytheModClient implements ClientModInitializer {
         scytheAbilityKey = KeyMappingHelper.registerKeyMapping(
                 new KeyMapping(
                         "key.scythes.scythe_ability",
+//? if >=26.3 {
+                        InputConstants.Type.KEYBOARD,
+                        InputConstants.KEY_R,
+//? } else {
                         InputConstants.Type.KEYSYM,
                         GLFW.GLFW_KEY_R,
+//? }
                         SCYTHES_CATEGORY
                 )
         );
