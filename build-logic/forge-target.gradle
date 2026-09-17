@@ -1,0 +1,32 @@
+// Only this adapter knows Forge/Architectury Loom dependency configurations.
+apply plugin: 'dev.architectury.loom'
+apply plugin: 'maven-publish'
+
+def cfg = ext.scytheTarget
+ext.scytheReleaseTask = 'remapJar'
+
+repositories {
+    maven { name = 'Forge'; url = 'https://maven.minecraftforge.net/' }
+    maven { name = 'Fabric'; url = 'https://maven.fabricmc.net/' }
+    maven { name = 'JEI'; url = 'https://maven.blamejared.com/' }
+}
+
+dependencies {
+    add('minecraft', "com.mojang:minecraft:${cfg['deps.minecraft']}")
+    add('mappings', "net.fabricmc:yarn:${cfg['deps.yarn']}:v2")
+    add('forge', "net.minecraftforge:forge:${cfg['deps.minecraft']}-${cfg['deps.forge']}")
+
+    add('modCompileOnly', "mezz.jei:jei-${cfg['deps.minecraft']}-forge-api:${cfg['deps.jei']}")
+    if (!cfg.containsKey('runtime.jei') || cfg['runtime.jei'].toBoolean()) {
+        add('modRuntimeOnly', "mezz.jei:jei-${cfg['deps.minecraft']}-forge:${cfg['deps.jei']}")
+    }
+}
+
+loom {
+    forge {
+        mixinConfig 'scythes.mixins.json'
+    }
+    runs {
+        configureEach { ideConfigGenerated = false }
+    }
+}

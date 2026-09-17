@@ -33,7 +33,7 @@ def validate() -> list[str]:
     for root in [shared, *families]:
         for source in root.rglob('*.java'):
             text = source.read_text(encoding='utf-8')
-            if LOADER_IMPORT.search(text) or '.platform.fabric.' in text:
+            if LOADER_IMPORT.search(text) or re.search(r'\.platform\.(?:fabric|forge|neoforge)\.', text):
                 problems.append(f'Loader API escaped into common code: {source.relative_to(ROOT)}')
             if any(part in source.parts for part in ('ability', 'effect', 'entity', 'item')):
                 if re.search(r'import .*\.network\.(?:ModPackets|.*Packet);', text):
@@ -79,6 +79,7 @@ def validate() -> list[str]:
     validate_all_directives(props)
     with tempfile.TemporaryDirectory(prefix='scythe-layout-check-') as temporary:
         for target in targets:
+            layout = layouts[target]
             output = materialize_target(target, Path(temporary) / target, props)
             java = list(output.rglob('*.java'))
             own_classes = {re.search(r'package ([^;]+);', p.read_text(encoding="utf-8")).group(1) + '.' + p.stem for p in java}
@@ -95,13 +96,28 @@ def validate() -> list[str]:
                 data = json.loads(source.read_text(encoding="utf-8"))
                 if '${balance:' in source.read_text(encoding="utf-8"):
                     problems.append(f'{target}: unresolved resource balance placeholder in {source.name}')
-            metadata = json.loads((output / 'src/main/resources/fabric.mod.json').read_text(encoding="utf-8"))
-            if metadata['version'] != props[f'target.{target}.artifact.version']:
-                problems.append(f'{target}: generated metadata version mismatch')
-            for names in metadata['entrypoints'].values():
-                for name in names:
-                    if name not in own_classes:
-                        problems.append(f'{target}: missing entrypoint class {name}')
+            if layout.platform == 'fabric':
+                metadata = json.loads((output / 'src/main/resources/fabric.mod.json').read_text(encoding="utf-8"))
+                if metadata['version'] != props[f'target.{target}.artifact.version']:
+                    problems.append(f'{target}: generated metadata version mismatch')
+                for names in metadata['entrypoints'].values():
+                    for name in names:
+                        if name not in own_classes:
+                            problems.append(f'{target}: missing entrypoint class {name}')
+            elif layout.platform == 'forge':
+                metadata_path = output / 'src/main/resources/META-INF/mods.toml'
+                if not metadata_path.is_file():
+                    problems.append(f'{target}: missing META-INF/mods.toml')
+                else:
+                    metadata = metadata_path.read_text(encoding="utf-8")
+                    expected_version = props[f'target.{target}.artifact.version']
+                    if f'version="{expected_version}"' not in metadata:
+                        problems.append(f'{target}: generated metadata version mismatch')
+                    if 'modId="scythes"' not in metadata:
+                        problems.append(f'{target}: Forge metadata has the wrong modId')
+                entrypoint = output / 'src/main/java/com/shipovskijkorp/scythes/mod/ScytheMod.java'
+                if not entrypoint.is_file() or '@Mod(ScytheMod.MOD_ID)' not in entrypoint.read_text(encoding="utf-8"):
+                    problems.append(f'{target}: missing Forge @Mod entrypoint')
     problems.extend(sync(check=True))
     return problems
 

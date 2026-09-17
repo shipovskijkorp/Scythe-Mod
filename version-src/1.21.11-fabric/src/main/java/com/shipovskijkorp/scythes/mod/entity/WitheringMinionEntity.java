@@ -7,14 +7,11 @@ import java.util.UUID;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.control.AquaticMoveControl;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.ai.goal.LookAroundGoal;
 import net.minecraft.entity.ai.goal.LookAtEntityGoal;
 import net.minecraft.entity.ai.goal.MeleeAttackGoal;
-import net.minecraft.entity.ai.goal.WanderAroundFarGoal;
-import net.minecraft.entity.ai.pathing.AmphibiousSwimNavigation;
-import net.minecraft.entity.ai.pathing.EntityNavigation;
+import net.minecraft.entity.ai.goal.SwimGoal;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
@@ -63,14 +60,6 @@ public class WitheringMinionEntity extends WitherSkeletonEntity {
         super(entityType, world);
         this.experiencePoints = 0;
         this.setCanPickUpLoot(false);
-        this.moveControl = new AquaticMoveControl(
-                this,
-                ScytheBalance.Minion.SWIM_PITCH_CHANGE,
-                ScytheBalance.Minion.SWIM_YAW_CHANGE,
-                ScytheBalance.Minion.SWIM_WATER_SPEED_MULTIPLIER,
-                ScytheBalance.Minion.SWIM_LAND_SPEED_MULTIPLIER,
-                true
-        );
     }
 
     public static DefaultAttributeContainer.Builder createAttributes() {
@@ -83,22 +72,19 @@ public class WitheringMinionEntity extends WitherSkeletonEntity {
     }
 
     @Override
-    protected EntityNavigation createNavigation(World world) {
-        AmphibiousSwimNavigation navigation = new AmphibiousSwimNavigation(this, world);
-        navigation.setCanSwim(true);
-        return navigation;
-    }
-
-    @Override
     public boolean isPushedByFluids() {
         return false;
     }
 
     @Override
     protected void initGoals() {
+        // Summoned wither skeletons are land mobs. The amphibious navigation/move
+        // controller used before this prevented normal one-block ground traversal
+        // and caused repeated yaw corrections on land. Keep vanilla ground movement
+        // and only add the ordinary swimming escape goal.
+        this.goalSelector.add(0, new SwimGoal(this));
         this.goalSelector.add(2, new MeleeAttackGoal(this, ScytheBalance.Minion.MELEE_SPEED, true));
         this.goalSelector.add(3, new FollowOwnerLikeWolfGoal(this, ScytheBalance.Minion.FOLLOW_SPEED, ScytheBalance.Minion.FOLLOW_START_DISTANCE, ScytheBalance.Minion.FOLLOW_STOP_DISTANCE));
-        this.goalSelector.add(7, new WanderAroundFarGoal(this, ScytheBalance.Minion.WANDER_SPEED));
         this.goalSelector.add(8, new LookAtEntityGoal(this, PlayerEntity.class, ScytheBalance.Minion.LOOK_DISTANCE));
         this.goalSelector.add(8, new LookAroundGoal(this));
     }
@@ -426,7 +412,7 @@ public class WitheringMinionEntity extends WitherSkeletonEntity {
             this.speed = speed;
             this.startDistance = startDistance;
             this.stopDistance = stopDistance;
-            this.setControls(EnumSet.of(Control.MOVE, Control.LOOK));
+            this.setControls(EnumSet.of(Control.MOVE));
         }
 
         @Override
@@ -460,14 +446,12 @@ public class WitheringMinionEntity extends WitherSkeletonEntity {
         @Override
         public void tick() {
             if (owner == null) return;
-            minion.getLookControl().lookAt(owner, 10.0F, 10.0F);
-
             if (minion.shouldTeleportToOwner(owner) && minion.tryTeleportNearOwner(owner)) {
                 updateCountdownTicks = ScytheBalance.Minion.AI_UPDATE_INTERVAL_TICKS;
                 return;
             }
 
-            if (--updateCountdownTicks <= 0) {
+            if (minion.getNavigation().isIdle() || --updateCountdownTicks <= 0) {
                 updateCountdownTicks = ScytheBalance.Minion.AI_UPDATE_INTERVAL_TICKS;
                 minion.getNavigation().startMovingTo(owner, speed);
             }

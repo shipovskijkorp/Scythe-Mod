@@ -380,7 +380,7 @@ def preprocess_text(text: str, *, minecraft: str, family: str, platform: str, so
 
 
 
-_TEXT_SUFFIXES = {".java", ".json", ".mcmeta", ".properties", ".txt", ".xml"}
+_TEXT_SUFFIXES = {".java", ".json", ".mcmeta", ".toml", ".properties", ".txt", ".xml"}
 
 
 def is_lang_path(relative: str) -> bool:
@@ -462,6 +462,8 @@ def materialize_target(target: str, destination: Path | None = None,
             text = processed_source(source, layout, props)
             if source.suffix in (".json", ".mcmeta") and ("${balance:" in text or "@mod." in text or "@meta." in text):
                 text = json.dumps(expand_json(json.loads(text), balance, meta), ensure_ascii=False, indent=2) + "\n"
+            elif source.suffix == ".toml" and ("${balance:" in text or "@mod." in text or "@meta." in text):
+                text = expand_json(text, balance, meta)
             output.write_text(text, encoding="utf-8", newline="")
         else:
             shutil.copy2(source, output)

@@ -3,7 +3,7 @@ apply plugin: rootProject.ext.scytheLoomPlugin
 apply plugin: 'maven-publish'
 
 def cfg = ext.scytheTarget
-def remapped = rootProject.ext.scytheLoomPlugin == 'fabric-loom'
+def remapped = rootProject.ext.scytheLoomPlugin in ['fabric-loom', 'dev.architectury.loom']
 ext.scytheReleaseTask = remapped ? 'remapJar' : 'jar'
 
 repositories {

@@ -99,8 +99,9 @@ def metadata_values(target: str, properties: dict[str, str]) -> dict:
     result = {k: v for k, v in values.items() if k.startswith("mod.")}
     result["mod.authors"] = [v.strip() for v in values["mod.authors"].split(",") if v.strip()]
     result["mod.version"] = values["artifact.version"]
-    for key in ("minecraft", "loader_min", "fabric_api_min"):
-        result["meta." + key] = values["metadata." + key]
+    for key, value in values.items():
+        if key.startswith("metadata."):
+            result["meta." + key[len("metadata."):]] = value
     result["meta.java_min"] = ">=" + values["java.version"]
     return result
 

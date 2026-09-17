@@ -19,7 +19,7 @@ its entries merge by key, from the broadest to the most specific layer.
 | Shared | Cross-generation code/resources; pure balance, cooldown store and transport contract |
 | Family | Minecraft-version/API adaptation with no direct loader imports |
 | Platform | Loader-specific files usable across all participating generations |
-| Family-platform | Loader hooks whose Minecraft/Fabric API signature is generation-specific |
+| Family-platform | Loader hooks whose Minecraft/loader API signature is generation-specific |
 | Target | Only irreducible differences for one target |
 
 Use the narrowest layer that explains a difference. A Fabric event handler for
@@ -119,10 +119,10 @@ Mixin targets have not been converted into a speculative generic resource DSL.
 
 ## Server and client boundaries
 
-`FabricServerHooks` owns Fabric event subscriptions. It calls plain gameplay
-handlers for kills, loot, death, join, disconnect and server ticks. `ScytheLifecycle`
-contains the tick and disconnect logic. Do not subscribe to Fabric events from
-an ability, item, entity or effect implementation.
+`FabricServerHooks` and `ForgeServerHooks` own loader event subscriptions. They call
+plain gameplay handlers for kills, loot, death, join, disconnect and server ticks.
+`ScytheLifecycle` contains the tick and disconnect logic. Do not subscribe to loader
+events from an ability, item, entity or effect implementation.
 
 Ability key packets call `ScytheAbilityHandler.activate(player)`. The server
 selects the held item and executes the matching skill; the client does not supply
@@ -130,10 +130,10 @@ an arbitrary damage amount, target list or cooldown. The main hand retains
 priority, with an offhand fallback only when the main hand is not a scythe.
 
 HUD trackers use `HudSync`, whose implementation is installed by the loader
-bootstrap. `HudTransport<P>` is a tiny loader-independent contract; the Fabric
-implementation owns S2C calls and preserves the existing packet IDs, payloads
-and availability checks. A second installation or use before installation fails
-explicitly. This is an intentional bootstrap error, not a silently dropped HUD.
+bootstrap. `HudTransport<P>` is a tiny loader-independent contract; Fabric and Forge
+implementations own their S2C calls while preserving the same timer semantics. A
+second installation or use before installation fails explicitly. This is an
+intentional bootstrap error, not a silently dropped HUD.
 
 `CooldownStore<K>` is pure Java, shared by all scythes and all versions. The small
 `ScytheCooldowns` adapter supplies player UUID and game time. Entries are separated
@@ -144,8 +144,9 @@ internal timer remain separate where their semantics differ.
 `ScytheTooltips` owns client presentation formerly copied into five item classes.
 The common sword base invokes a delegate installed by the client entrypoint.
 A dedicated server does not install or reference the actual tooltip renderer.
-Client networking registration, keybindings and rendering still belong to the
-loader layer; this refactor does not pretend those are portable without work.
+Client networking registration, keybindings and rendering belong to the loader
+layer. The 1.20.1 Forge adapter implements those hooks separately instead of leaking
+Forge APIs into shared gameplay classes.
 
 ## Build and metadata ownership
 
@@ -159,9 +160,11 @@ build-logic/family-settings.gradle         resolve matrix, include target projec
 build-logic/family-root.gradle             apply loader adapters and aggregate tasks
 build-logic/common-target.gradle           sources, Java, packaging, publication
 build-logic/fabric-target.gradle           Fabric/Loom-specific dependencies/tasks
+build-logic/forge-target.gradle            Forge/Architectury-Loom dependencies/tasks
 ```
 
-Every family now has the same multi-project shape, including legacy. There is no
+Every build generation has the same multi-project shape. `legacy` remains Fabric-only, while
+`legacy-forge` is a separate Gradle build that points back to the same `legacy` source family. There is no
 hand-maintained `build.gradle` in each target directory. Settings creates those
 directories as needed and the root applies the common logic to every target.
 
@@ -172,9 +175,10 @@ from the target ID. `java.version` is the mod bytecode/toolchain; `build.java` i
 the Gradle JVM used by CI. Do not change the former to 21 merely because Loom
 requires a Java 21 build process for the 1.20.1 target.
 
-There is one Fabric descriptor template under `source-platforms/fabric`.
-Authors, license, name, version and contact links come from common properties;
-Minecraft, Java and loader/API constraints come from the resolved target. The
+There is one descriptor template per implemented loader under `source-platforms`:
+`fabric/fabric.mod.json` and `forge/META-INF/mods.toml`. Authors, license, name,
+version and contact links come from common properties; Minecraft, Java and
+loader/API constraints come from the resolved target. The
 previous 1.21.11 MIT/single-author descriptor is normalized to the common
 All Rights Reserved/two-author metadata. Explicit runtime-minimum overrides are
 kept separate from build dependencies where the supplied targets differed.
@@ -201,16 +205,17 @@ layer can contain `.gitkeep`), add only genuine source deltas, then run the layo
 validator and IDEA generator. Build and launch it before publishing. No copied
 client shell script, descriptor or target `build.gradle` is needed.
 
-Forge 1.20.1 and NeoForge 1.21+ still need actual loader adapters. In particular:
+Forge 1.20.1 is implemented in the isolated `builds/legacy-forge` generation. It uses
+Architectury Loom 1.7.x with Yarn mappings, while `builds/legacy` keeps its original Fabric Loom.
+Both targets resolve the same `legacy` gameplay/family sources, while Forge-specific
+registration, entity attributes, loot/lifecycle hooks, networking, keybinds, HUD
+and render registration live under the Forge platform layers.
 
-- Implement a real `forge-target.gradle`/`neoforge-target.gradle`, dependencies,
-  metadata, loader entrypoints and platform/family-platform sources.
-- Adapt registry timing, entity attributes, loot hooks, server lifecycle, keybinds,
-  networking and client render registration to each loader. Do not fake deferred
-  registries by copying Fabric's immediate registration order.
-- Resolve the Yarn/Mojang naming difference for earlier generations, either by a
-  deliberate mapping migration or appropriate family/loader adaptation. This is
-  not solved merely by renaming folders.
+NeoForge 1.21+ still needs its own loader adapter. Add real build logic, metadata,
+entrypoints and platform/family-platform sources, and adapt registry timing, events,
+networking and client registration rather than copying another loader's bootstrap.
+If a future loader/build changes mappings, treat that as a deliberate mapping
+migration or family/loader adaptation rather than a folder rename.
 
 Reuse `ScytheBalance`, pure cooldown storage, ability rules and HUD contracts.
 Implement the loader boundary instead of copying balance and event registration

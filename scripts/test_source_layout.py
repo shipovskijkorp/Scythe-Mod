@@ -191,7 +191,13 @@ class MaterializationTests(unittest.TestCase):
                         json.loads(path.read_text(encoding="utf-8"))
                         self.assertNotIn('${balance:', path.read_text(encoding="utf-8"))
                     self.assertFalse(list(out.rglob('*HudS2CPacket.java')))
-                    self.assertTrue(list(out.rglob('FabricHudTransport.java')))
+                    platform = sl.target_layout(target, self.props).platform
+                    expected_transport = {
+                        'fabric': 'FabricHudTransport.java',
+                        'forge': 'ForgeHudTransport.java',
+                    }.get(platform)
+                    if expected_transport is not None:
+                        self.assertTrue(list(out.rglob(expected_transport)))
 
     def test_cached_staging_unchanged_and_corruption_repaired(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -222,6 +228,102 @@ class MaterializationTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 sl.materialize_target(sl.target_ids()[0], Path(tmp))
             self.assertEqual('keep me', (Path(tmp) / 'user-file.txt').read_text(encoding="utf-8"))
+
+
+class ForgeRuntimeSafetyTests(unittest.TestCase):
+    def test_forge_registrables_are_created_during_register_event(self):
+        path = sl.ROOT / 'source-family-platforms/legacy/forge/src/main/java/com/shipovskijkorp/scythes/mod/ScytheMod.java'
+        text = path.read_text(encoding='utf-8')
+        self.assertNotIn('public static final Item BLOODY_SCYTHE =', text)
+        self.assertNotIn('public static final EntityType<IceSpikeEntity> ICE_SPIKE =', text)
+        self.assertNotIn('public static final StatusEffect BLEEDING =', text)
+        self.assertNotIn('public static final Enchantment SPIKED_BLADE =', text)
+        self.assertIn('event.register(RegistryKeys.ITEM, id("bloody_scythe"),', text)
+        self.assertIn('event.register(RegistryKeys.ENTITY_TYPE, id("ice_spike"),', text)
+        self.assertIn('event.register(RegistryKeys.STATUS_EFFECT, id("bleeding"),', text)
+        self.assertIn('event.register(RegistryKeys.ENCHANTMENT, id("spiked_blade"),', text)
+
+    def test_forge_yarn_dev_runtime_does_not_auto_load_jei(self):
+        props = sl.load_properties()
+        self.assertEqual('false', props['target.1.20.1-forge.runtime.jei'])
+
+    def test_forge_1201_resource_pack_metadata_and_models_are_materialized(self):
+        props = sl.load_properties()
+        with tempfile.TemporaryDirectory() as tmp:
+            out = sl.materialize_target('1.20.1-forge', Path(tmp) / 'forge', props)
+            metadata = json.loads((out / 'src/main/resources/pack.mcmeta').read_text(encoding='utf-8'))
+            self.assertEqual(15, metadata['pack']['pack_format'])
+            self.assertTrue((out / 'src/main/resources/assets/scythes/models/item/bloody_scythe.json').is_file())
+            self.assertTrue((out / 'src/main/resources/assets/scythes/textures/item/bloody_scythe.png').is_file())
+
+    def test_legacy_guide_icons_use_item_models(self):
+        path = sl.ROOT / 'source-families/legacy/src/main/java/com/shipovskijkorp/scythes/mod/client/guide/GuideScreen.java'
+        text = path.read_text(encoding='utf-8')
+        self.assertIn('ItemStack icon = recipeStack(entry.item());', text)
+        self.assertIn('context.drawItem(icon, x + 2, y + 2);', text)
+        self.assertNotIn('textures/item/" + parts[1] + ".png', text)
+
+    def test_legacy_minion_uses_land_movement_without_idle_wandering(self):
+        path = sl.ROOT / 'source-families/legacy/src/main/java/com/shipovskijkorp/scythes/mod/entity/WitheringMinionEntity.java'
+        text = path.read_text(encoding='utf-8')
+        self.assertNotIn('import net.minecraft.entity.ai.control.AquaticMoveControl;', text)
+        self.assertNotIn('import net.minecraft.entity.ai.pathing.AmphibiousSwimNavigation;', text)
+        self.assertNotIn('new WanderAroundFarGoal(', text)
+        self.assertIn('new SwimGoal(this)', text)
+        self.assertIn('EnumSet.of(Control.MOVE)', text)
+        self.assertIn('getNavigation().isIdle()', text)
+
+
+    def test_all_guides_render_real_strong_poison_potion_stack(self):
+        props = sl.load_properties()
+        expected_api = {
+            '1.20.1-fabric': 'PotionUtil.setPotion',
+            '1.20.1-forge': 'PotionUtil.setPotion',
+            '1.21.1-fabric': 'PotionContentsComponent.createStack',
+            '1.21.11-fabric': 'DataComponentTypes.POTION_CONTENTS',
+            '26.1.2-fabric': 'DataComponents.POTION_CONTENTS',
+            '26.2-fabric': 'DataComponents.POTION_CONTENTS',
+            '26.3-fabric': 'DataComponents.POTION_CONTENTS',
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            for target in sl.target_ids(props):
+                with self.subTest(target=target):
+                    out = sl.materialize_target(target, Path(tmp) / target, props)
+                    path = out / 'src/main/java/com/shipovskijkorp/scythes/mod/client/guide/GuideScreen.java'
+                    text = path.read_text(encoding='utf-8')
+                    self.assertIn('ItemStack stack = recipeStack(slot);', text)
+                    self.assertIn('"strong_poison".equals(slot.nameKey())', text)
+                    self.assertIn(expected_api[target], text)
+
+
+
+    def test_guide_recipe_slots_preserve_machine_name_key_separately_from_localized_tooltip(self):
+        path = sl.ROOT / 'source-shared/src/main/java/com/shipovskijkorp/scythes/mod/guide/GuideResources.java'
+        text = path.read_text(encoding='utf-8')
+        self.assertIn('String nameKey = getString(object, "name", item);', text)
+        self.assertIn('String name = names.getOrDefault(nameKey, nameKey);', text)
+        self.assertIn('return new RecipeSlot(item, nameKey, name);', text)
+        self.assertIn('record RecipeSlot(String item, String nameKey, String name)', text)
+
+    def test_all_minions_use_ground_navigation_for_one_block_traversal(self):
+        props = sl.load_properties()
+        forbidden = (
+            'AquaticMoveControl',
+            'SmoothSwimmingMoveControl',
+            'AmphibiousSwimNavigation',
+            'AmphibiousPathNavigation',
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            for target in sl.target_ids(props):
+                with self.subTest(target=target):
+                    out = sl.materialize_target(target, Path(tmp) / target, props)
+                    path = out / 'src/main/java/com/shipovskijkorp/scythes/mod/entity/WitheringMinionEntity.java'
+                    text = path.read_text(encoding='utf-8')
+                    code = '\n'.join(line for line in text.splitlines() if not line.lstrip().startswith('//'))
+                    self.assertFalse(any(token in code for token in forbidden), code)
+                    self.assertNotIn('Control.MOVE, Control.LOOK', text)
+                    self.assertNotIn('Flag.MOVE, Flag.LOOK', text)
+
 
 
 class IdeaTests(unittest.TestCase):

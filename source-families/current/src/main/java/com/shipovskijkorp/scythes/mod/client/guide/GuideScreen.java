@@ -12,11 +12,15 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.alchemy.PotionContents;
+import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.util.FormattedCharSequence;
 
 /** Compact BCCE-style Guide Book screen for Minecraft 26.x. */
@@ -165,9 +169,19 @@ public final class GuideScreen extends Screen {
 
     private void renderRecipeSlot(GuiGraphicsExtractor graphics, GuideResources.RecipeSlot slot, int x, int y, int mouseX, int mouseY) {
         if (slot == null || slot.empty()) return;
-        ItemStack stack = recipeStack(slot.item());
+        ItemStack stack = recipeStack(slot);
         if (!stack.isEmpty()) graphics.item(stack, x, y);
         if (inside(mouseX, mouseY, x, y, 16, 16)) hoveredRecipeName = slot.name();
+    }
+
+    private static ItemStack recipeStack(GuideResources.RecipeSlot slot) {
+        if (slot == null || slot.empty()) return ItemStack.EMPTY;
+        if ("strong_poison".equals(slot.nameKey()) && "minecraft:potion".equals(slot.item())) {
+            ItemStack stack = new ItemStack(Items.POTION);
+            stack.set(DataComponents.POTION_CONTENTS, new PotionContents(Potions.STRONG_POISON));
+            return stack;
+        }
+        return recipeStack(slot.item());
     }
 
     private static ItemStack recipeStack(String itemId) {

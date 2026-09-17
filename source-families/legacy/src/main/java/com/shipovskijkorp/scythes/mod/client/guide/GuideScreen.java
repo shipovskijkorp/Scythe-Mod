@@ -12,6 +12,9 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.potion.PotionUtil;
+import net.minecraft.potion.Potions;
 import net.minecraft.registry.Registries;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
@@ -162,9 +165,17 @@ public final class GuideScreen extends Screen {
 
     private void renderRecipeSlot(DrawContext context, GuideResources.RecipeSlot slot, int x, int y, int mouseX, int mouseY) {
         if (slot == null || slot.empty()) return;
-        ItemStack stack = recipeStack(slot.item());
+        ItemStack stack = recipeStack(slot);
         if (!stack.isEmpty()) context.drawItem(stack, x, y);
         if (inside(mouseX, mouseY, x, y, 16, 16)) hoveredRecipeName = slot.name();
+    }
+
+    private static ItemStack recipeStack(GuideResources.RecipeSlot slot) {
+        if (slot == null || slot.empty()) return ItemStack.EMPTY;
+        if ("strong_poison".equals(slot.nameKey()) && "minecraft:potion".equals(slot.item())) {
+            return PotionUtil.setPotion(new ItemStack(Items.POTION), Potions.STRONG_POISON);
+        }
+        return recipeStack(slot.item());
     }
 
     private static ItemStack recipeStack(String itemId) {
@@ -223,10 +234,9 @@ public final class GuideScreen extends Screen {
             boolean hovered = inside(mouseX, mouseY, x, y, GuideUi.PAGE_TEXT_WIDTH, INDEX_ROW_HEIGHT);
             if (hovered) context.fill(x, y, x + GuideUi.PAGE_TEXT_WIDTH, y + INDEX_ROW_HEIGHT, GuideUi.HOVER);
 
-            Identifier texture = itemTexture(entry.item());
-            if (texture != null) {
-                drawTexture(context, texture, x + 2, y + 2, 0, 0, INDEX_ICON_SIZE, INDEX_ICON_SIZE,
-                    INDEX_ICON_SIZE, INDEX_ICON_SIZE);
+            ItemStack icon = recipeStack(entry.item());
+            if (!icon.isEmpty()) {
+                context.drawItem(icon, x + 2, y + 2);
             }
 
             String label = view.resources().document(entry.page()).title();
@@ -249,13 +259,6 @@ public final class GuideScreen extends Screen {
             textX + Math.min(textRenderer.getWidth(title), GuideUi.PAGE_TEXT_WIDTH - 34), y + 10,
             0xFF000000 | GuideUi.TEXT);
         return y + 17;
-    }
-
-    private static Identifier itemTexture(String itemId) {
-        if (itemId == null || itemId.isBlank()) return null;
-        String[] parts = itemId.split(":", 2);
-        if (parts.length != 2 || parts[0].isBlank() || parts[1].isBlank()) return null;
-        return new Identifier(parts[0], "textures/item/" + parts[1] + ".png");
     }
 
     private static void drawTexture(DrawContext context, Identifier texture, int x, int y, float u, float v,

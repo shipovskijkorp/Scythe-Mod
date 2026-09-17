@@ -19,14 +19,11 @@ import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.control.SmoothSwimmingMoveControl;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
-import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
-import net.minecraft.world.entity.ai.navigation.AmphibiousPathNavigation;
-import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.monster.skeleton.WitherSkeleton;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -63,14 +60,6 @@ public class WitheringMinionEntity extends WitherSkeleton {
     public WitheringMinionEntity(EntityType<? extends WitheringMinionEntity> entityType, Level world) {
         super(entityType, world);
         this.xpReward = 0;
-        this.moveControl = new SmoothSwimmingMoveControl(
-                this,
-                ScytheBalance.Minion.SWIM_PITCH_CHANGE,
-                ScytheBalance.Minion.SWIM_YAW_CHANGE,
-                ScytheBalance.Minion.SWIM_WATER_SPEED_MULTIPLIER,
-                ScytheBalance.Minion.SWIM_LAND_SPEED_MULTIPLIER,
-                true
-        );
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -83,20 +72,18 @@ public class WitheringMinionEntity extends WitherSkeleton {
     }
 
     @Override
-    protected PathNavigation createNavigation(Level level) {
-        return new AmphibiousPathNavigation(this, level);
-    }
-
-    @Override
     public boolean isPushedByFluid() {
         return false;
     }
 
     @Override
     protected void registerGoals() {
+        // Keep the summoned wither skeleton on vanilla ground navigation so normal
+        // one-block path nodes use JumpControl instead of swimming movement logic.
+        // FloatGoal is enough to keep it from simply sinking when it enters water.
+        this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(2, new MeleeAttackGoal(this, ScytheBalance.Minion.MELEE_SPEED, true));
         this.goalSelector.addGoal(3, new FollowOwnerLikeWolfGoal(this, ScytheBalance.Minion.FOLLOW_SPEED, ScytheBalance.Minion.FOLLOW_START_DISTANCE, ScytheBalance.Minion.FOLLOW_STOP_DISTANCE));
-        this.goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, ScytheBalance.Minion.WANDER_SPEED));
         this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, ScytheBalance.Minion.LOOK_DISTANCE));
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
     }
@@ -432,7 +419,7 @@ public class WitheringMinionEntity extends WitherSkeleton {
             this.speed = speed;
             this.startDistance = startDistance;
             this.stopDistance = stopDistance;
-            this.setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
+            this.setFlags(EnumSet.of(Flag.MOVE));
         }
 
         @Override
@@ -466,14 +453,12 @@ public class WitheringMinionEntity extends WitherSkeleton {
         @Override
         public void tick() {
             if (owner == null) return;
-            minion.getLookControl().setLookAt(owner, 10.0F, 10.0F);
-
             if (minion.shouldTeleportToOwner(owner) && minion.tryTeleportNearOwner(owner)) {
                 updateCountdownTicks = ScytheBalance.Minion.AI_UPDATE_INTERVAL_TICKS;
                 return;
             }
 
-            if (--updateCountdownTicks <= 0) {
+            if (minion.getNavigation().isDone() || --updateCountdownTicks <= 0) {
                 updateCountdownTicks = ScytheBalance.Minion.AI_UPDATE_INTERVAL_TICKS;
                 minion.getNavigation().moveTo(owner, speed);
             }

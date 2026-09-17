@@ -10,12 +10,18 @@ import java.util.List;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 //? if >=1.21.11 {
+import net.minecraft.component.DataComponentTypes;
+//? }
+import net.minecraft.component.type.PotionContentsComponent;
+//? if >=1.21.11 {
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gl.RenderPipelines;
 //? }
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.potion.Potions;
 import net.minecraft.registry.Registries;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
@@ -165,9 +171,27 @@ public final class GuideScreen extends Screen {
 
     private void renderRecipeSlot(DrawContext context, GuideResources.RecipeSlot slot, int x, int y, int mouseX, int mouseY) {
         if (slot == null || slot.empty()) return;
-        ItemStack stack = recipeStack(slot.item());
+        ItemStack stack = recipeStack(slot);
         if (!stack.isEmpty()) context.drawItem(stack, x, y);
         if (inside(mouseX, mouseY, x, y, 16, 16)) hoveredRecipeName = slot.name();
+    }
+
+    private static ItemStack recipeStack(GuideResources.RecipeSlot slot) {
+        if (slot == null || slot.empty()) return ItemStack.EMPTY;
+        if ("strong_poison".equals(slot.nameKey()) && "minecraft:potion".equals(slot.item())) {
+            return strongPoisonPotion();
+        }
+        return recipeStack(slot.item());
+    }
+
+    private static ItemStack strongPoisonPotion() {
+//? if >=1.21.11 {
+        ItemStack stack = new ItemStack(Items.POTION);
+        stack.set(DataComponentTypes.POTION_CONTENTS, new PotionContentsComponent(Potions.STRONG_POISON));
+        return stack;
+//? } else {
+        return PotionContentsComponent.createStack(Items.POTION, Potions.STRONG_POISON);
+//? }
     }
 
     private static ItemStack recipeStack(String itemId) {

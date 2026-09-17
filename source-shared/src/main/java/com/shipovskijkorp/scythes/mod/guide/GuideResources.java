@@ -344,14 +344,14 @@ public final class GuideResources {
     }
 
     private static RecipeSlot readRecipeSlot(JsonObject object, Map<String, String> names) {
-        if (object == null) return new RecipeSlot("", "");
+        if (object == null) return new RecipeSlot("", "", "");
         String item = getString(object, "item", "");
         String nameKey = getString(object, "name", item);
         String name = names.getOrDefault(nameKey, nameKey);
-        return new RecipeSlot(item, name);
+        return new RecipeSlot(item, nameKey, name);
     }
     public record Entry(String id, String page, String item, int colour) {}
-    public record RecipeSlot(String item, String name) { public boolean empty() { return item == null || item.isBlank(); } }
+    public record RecipeSlot(String item, String nameKey, String name) { public boolean empty() { return item == null || item.isBlank(); } }
     public record GuideRecipe(List<RecipeSlot> ingredients, RecipeSlot output) {
         public GuideRecipe { ingredients = Collections.unmodifiableList(new ArrayList<>(ingredients)); }
     }
