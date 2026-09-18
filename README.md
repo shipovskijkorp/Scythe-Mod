@@ -1,6 +1,6 @@
 # Scythe Mod
 
-Ten targets, one balance definition, six independent Gradle build families.
+Eleven targets, one balance definition, six independent Gradle build families.
 
 | Family | Minecraft / loader | Mod bytecode | Gradle JVM used by CI |
 | --- | --- | --- | --- |
@@ -9,9 +9,9 @@ Ten targets, one balance definition, six independent Gradle build families.
 | `modern` | 1.21.1, 1.21.11 Fabric | Java 21 | Java 21 |
 | `modern-neoforge` | 1.21.1, 1.21.11 NeoForge | Java 21 | Java 21 |
 | `current` | 26.1.2, 26.2, 26.3 Fabric | Java 25 | Java 25 |
-| `current-neoforge` | 26.1.2 NeoForge | Java 25 | Java 25 |
+| `current-neoforge` | 26.1.2, 26.2 NeoForge | Java 25 | Java 25 |
 
-Forge 1.20.1 remains an isolated Gradle build because it must coexist with the legacy Fabric toolchain. Both modern NeoForge targets live together in `builds/modern-neoforge`, use Architectury Loom 1.13, and reuse the same `modern` gameplay sources as their Fabric siblings. NeoForge 26.1.2 lives in `builds/current-neoforge`, uses ModDevGradle with the official named 26.1.2 API, and reuses the same `current` gameplay sources as Fabric 26.1.2.
+Forge 1.20.1 remains an isolated Gradle build because it must coexist with the legacy Fabric toolchain. Both modern NeoForge targets live together in `builds/modern-neoforge`, use Architectury Loom 1.13, and reuse the same `modern` gameplay sources as their Fabric siblings. NeoForge 26.1.2 and 26.2 live together in `builds/current-neoforge`, use ModDevGradle with the official named APIs, and reuse the same `current` gameplay sources as their Fabric siblings.
 
 ## IntelliJ IDEA
 
@@ -97,6 +97,8 @@ cd ../modern-neoforge
 cd ../current-neoforge
 ./gradlew :26.1.2-neoforge:build
 ./gradlew :26.1.2-neoforge:runClient
+./gradlew :26.2-neoforge:build
+./gradlew :26.2-neoforge:runClient
 ```
 
 Use `gradlew.bat` on Windows. Each target has its own build and runtime directories.
@@ -113,7 +115,8 @@ The last command requires JDK 21+ and checks Java syntax, pure-core logic and sm
 adapter contracts against test stubs. It **does not compile against Minecraft**.
 CI runs these checks and then performs actual Gradle builds for each family.
 
-See [SOURCE_FAMILIES.md](SOURCE_FAMILIES.md) for ownership rules, resource templates and loader boundaries. 
+See [SOURCE_FAMILIES.md](SOURCE_FAMILIES.md) for ownership rules, resource templates and loader boundaries. See [REFACTOR_VERIFICATION.md](REFACTOR_VERIFICATION.md)
+for the checks and limitations of this refactoring delivery.
 
 ## License
 

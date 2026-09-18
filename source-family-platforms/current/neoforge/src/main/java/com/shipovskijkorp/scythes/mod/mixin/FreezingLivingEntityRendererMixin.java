@@ -15,10 +15,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * NeoForge 26.1.2 uses the same direct LivingEntityRenderer injection as the
- * working Fabric 26.1.2 target. The frozen flag is derived from data that is
- * already synchronized by vanilla/NeoForge; no foreign SynchedEntityData is
- * attached to LivingEntity.
+ * Current-generation NeoForge uses explicit S2C freezing-state synchronization
+ * instead of attaching foreign SynchedEntityData to vanilla LivingEntity.
  */
 @Mixin(LivingEntityRenderer.class)
 public abstract class FreezingLivingEntityRendererMixin {

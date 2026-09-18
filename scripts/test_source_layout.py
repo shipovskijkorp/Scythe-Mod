@@ -307,6 +307,7 @@ class ForgeRuntimeSafetyTests(unittest.TestCase):
             '26.1.2-fabric': 'DataComponents.POTION_CONTENTS',
             '26.1.2-neoforge': 'DataComponents.POTION_CONTENTS',
             '26.2-fabric': 'DataComponents.POTION_CONTENTS',
+            '26.2-neoforge': 'DataComponents.POTION_CONTENTS',
             '26.3-fabric': 'DataComponents.POTION_CONTENTS',
         }
         with tempfile.TemporaryDirectory() as tmp:
@@ -367,67 +368,75 @@ class ForgeRuntimeSafetyTests(unittest.TestCase):
         self.assertIn('loom.platform=neoforge', gradle_props)
         self.assertFalse((sl.ROOT / 'builds/modern-neoforge-12111').exists())
 
-    def test_current_neoforge_2612_port_is_isolated_and_uses_safe_freezing_render_state(self):
+    def test_current_neoforge_ports_are_isolated_and_use_safe_freezing_render_state(self):
         props = sl.load_properties()
-        self.assertIn('26.1.2-neoforge', sl.target_ids(props))
-        layout = sl.target_layout('26.1.2-neoforge', props)
-        self.assertEqual('current-neoforge', layout.generation)
-        self.assertEqual('current', layout.family)
-        self.assertEqual('neoforge', layout.platform)
-        self.assertEqual('26.1.2.109', props['target.26.1.2-neoforge.deps.neoforge'])
+        targets = {
+            '26.1.2-neoforge': ('26.1.2-fabric', '26.1.2.109', '[26.1.2.109,)', '[26.1.2]'),
+            '26.2-neoforge': ('26.2-fabric', '26.2.0.88', '[26.2.0.88,)', '[26.2]'),
+        }
+        for target, (fabric_target, neoforge_version, neoforge_range, minecraft_range) in targets.items():
+            with self.subTest(target=target):
+                self.assertIn(target, sl.target_ids(props))
+                layout = sl.target_layout(target, props)
+                self.assertEqual('current-neoforge', layout.generation)
+                self.assertEqual('current', layout.family)
+                self.assertEqual('neoforge', layout.platform)
+                self.assertEqual(neoforge_version, props[f'target.{target}.deps.neoforge'])
 
-        with tempfile.TemporaryDirectory() as tmp:
-            out = sl.materialize_target('26.1.2-neoforge', Path(tmp) / 'neoforge-2612', props)
-            fabric_out = sl.materialize_target('26.1.2-fabric', Path(tmp) / 'fabric-2612', props)
-            java = '\n'.join(path.read_text(encoding='utf-8') for path in out.rglob('*.java'))
-            neo_java_paths = {path.relative_to(out).as_posix() for path in out.rglob('*.java')}
-            fabric_java_paths = {path.relative_to(fabric_out).as_posix() for path in fabric_out.rglob('*.java')}
-            self.assertEqual(
-                {
-                    'src/main/java/com/shipovskijkorp/scythes/mod/platform/fabric/FabricHudTransport.java',
-                    'src/main/java/com/shipovskijkorp/scythes/mod/platform/fabric/FabricServerHooks.java',
-                },
-                fabric_java_paths - neo_java_paths,
-            )
-            self.assertEqual(
-                {
-                    'src/main/java/com/shipovskijkorp/scythes/mod/client/FreezingVisualClientState.java',
-                    'src/main/java/com/shipovskijkorp/scythes/mod/platform/neoforge/NeoForgeHudTransport.java',
-                    'src/main/java/com/shipovskijkorp/scythes/mod/platform/neoforge/NeoForgeServerHooks.java',
-                },
-                neo_java_paths - fabric_java_paths,
-            )
-            self.assertIn(
-                'src/main/java/com/shipovskijkorp/scythes/mod/ability/GoldenRainDimensionDayTracker.java',
-                neo_java_paths,
-            )
-            self.assertNotIn('net.fabricmc', java)
-            self.assertNotIn('platform.fabric', java)
-            self.assertNotIn('defineId(LivingEntity.class', java)
-            self.assertNotIn('SCYTHES_FROZEN_FOR_RENDERING', java)
-            client_java = (out / 'src/main/java/com/shipovskijkorp/scythes/mod/client/ScytheModClient.java').read_text(encoding='utf-8')
-            renderer_mixin_java = (out / 'src/main/java/com/shipovskijkorp/scythes/mod/mixin/FreezingLivingEntityRendererMixin.java').read_text(encoding='utf-8')
-            self.assertNotIn('RegisterRenderStateModifiersEvent', client_java)
-            self.assertNotIn('RenderLivingEvent.Post', client_java)
-            self.assertIn('FreezingOverlayRenderer.render(state, poseStack, collector)', renderer_mixin_java)
-            self.assertIn('FreezingVisualClientState.isFrozen(entity.getUUID())', renderer_mixin_java)
-            self.assertIn('FreezingVisualPayload', java)
-            self.assertIn('event.registrar("2")', java)
-            self.assertIn('sendToPlayersTrackingEntityAndSelf', java)
-            self.assertIn('onStartTracking(PlayerEvent.StartTracking event)', java)
-            self.assertIn('RegisterClientPayloadHandlersEvent', java)
-            self.assertIn('ClientPacketDistributor.sendToServer', java)
+                with tempfile.TemporaryDirectory() as tmp:
+                    out = sl.materialize_target(target, Path(tmp) / target, props)
+                    fabric_out = sl.materialize_target(fabric_target, Path(tmp) / fabric_target, props)
+                    java = '\n'.join(path.read_text(encoding='utf-8') for path in out.rglob('*.java'))
+                    neo_java_paths = {path.relative_to(out).as_posix() for path in out.rglob('*.java')}
+                    fabric_java_paths = {path.relative_to(fabric_out).as_posix() for path in fabric_out.rglob('*.java')}
+                    self.assertEqual(
+                        {
+                            'src/main/java/com/shipovskijkorp/scythes/mod/platform/fabric/FabricHudTransport.java',
+                            'src/main/java/com/shipovskijkorp/scythes/mod/platform/fabric/FabricServerHooks.java',
+                        },
+                        fabric_java_paths - neo_java_paths,
+                    )
+                    self.assertEqual(
+                        {
+                            'src/main/java/com/shipovskijkorp/scythes/mod/client/FreezingVisualClientState.java',
+                            'src/main/java/com/shipovskijkorp/scythes/mod/platform/neoforge/NeoForgeHudTransport.java',
+                            'src/main/java/com/shipovskijkorp/scythes/mod/platform/neoforge/NeoForgeServerHooks.java',
+                        },
+                        neo_java_paths - fabric_java_paths,
+                    )
+                    tracker_path = 'src/main/java/com/shipovskijkorp/scythes/mod/ability/GoldenRainDimensionDayTracker.java'
+                    self.assertIn(tracker_path, neo_java_paths)
+                    self.assertEqual(
+                        (fabric_out / tracker_path).read_text(encoding='utf-8'),
+                        (out / tracker_path).read_text(encoding='utf-8'),
+                    )
+                    self.assertNotIn('net.fabricmc', java)
+                    self.assertNotIn('platform.fabric', java)
+                    self.assertNotIn('defineId(LivingEntity.class', java)
+                    self.assertNotIn('SCYTHES_FROZEN_FOR_RENDERING', java)
+                    client_java = (out / 'src/main/java/com/shipovskijkorp/scythes/mod/client/ScytheModClient.java').read_text(encoding='utf-8')
+                    renderer_mixin_java = (out / 'src/main/java/com/shipovskijkorp/scythes/mod/mixin/FreezingLivingEntityRendererMixin.java').read_text(encoding='utf-8')
+                    self.assertNotIn('RegisterRenderStateModifiersEvent', client_java)
+                    self.assertNotIn('RenderLivingEvent.Post', client_java)
+                    self.assertIn('FreezingOverlayRenderer.render(state, poseStack, collector)', renderer_mixin_java)
+                    self.assertIn('FreezingVisualClientState.isFrozen(entity.getUUID())', renderer_mixin_java)
+                    self.assertIn('FreezingVisualPayload', java)
+                    self.assertIn('event.registrar("2")', java)
+                    self.assertIn('sendToPlayersTrackingEntityAndSelf', java)
+                    self.assertIn('onStartTracking(PlayerEvent.StartTracking event)', java)
+                    self.assertIn('RegisterClientPayloadHandlersEvent', java)
+                    self.assertIn('ClientPacketDistributor.sendToServer', java)
 
-            mixins = (out / 'src/main/resources/scythes.mixins.json').read_text(encoding='utf-8')
-            self.assertIn('FreezingLivingEntityRendererMixin', mixins)
-            self.assertIn('FreezingLivingEntityRenderStateMixin', mixins)
+                    mixins = (out / 'src/main/resources/scythes.mixins.json').read_text(encoding='utf-8')
+                    self.assertIn('FreezingLivingEntityRendererMixin', mixins)
+                    self.assertIn('FreezingLivingEntityRenderStateMixin', mixins)
 
-            metadata = (out / 'src/main/resources/META-INF/neoforge.mods.toml').read_text(encoding='utf-8')
-            self.assertIn('modId="scythes"', metadata)
-            self.assertIn('versionRange="[26.1.2.109,)"', metadata)
-            self.assertIn('versionRange="[26.1.2]"', metadata)
-            self.assertNotIn('@meta.', metadata)
-            self.assertNotIn('@mod.', metadata)
+                    metadata = (out / 'src/main/resources/META-INF/neoforge.mods.toml').read_text(encoding='utf-8')
+                    self.assertIn('modId="scythes"', metadata)
+                    self.assertIn(f'versionRange="{neoforge_range}"', metadata)
+                    self.assertIn(f'versionRange="{minecraft_range}"', metadata)
+                    self.assertNotIn('@meta.', metadata)
+                    self.assertNotIn('@mod.', metadata)
 
     def test_neoforge_12111_effective_source_has_no_fabric_loader_references(self):
         props = sl.load_properties()

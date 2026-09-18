@@ -106,7 +106,7 @@ public class ScytheMod {
         modBus.addListener(this::registerAttributes);
         modBus.addListener(ModPackets::register);
         NeoForgeServerHooks.register();
-        LOGGER.info("ScytheMod 5.1 initialized successfully for Minecraft 26.1.2 NeoForge");
+        LOGGER.info("ScytheMod 5.1 initialized successfully for current-generation NeoForge");
     }
 
     private void registerContent(RegisterEvent event) {
