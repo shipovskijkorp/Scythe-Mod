@@ -495,6 +495,64 @@ def ci_matrix(properties=None) -> dict:
     return {"include": include}
 
 
+def publish_matrix(properties=None) -> dict:
+    """Return one publication row per configured Minecraft/loader target."""
+    props = properties if properties is not None else load_properties()
+    targets = target_ids(props)
+    changelog_target = props.get("publish.modrinth.changelog_target", "")
+    if changelog_target not in targets:
+        raise ValueError(
+            "publish.modrinth.changelog_target must name a configured target: "
+            f"{changelog_target!r}"
+        )
+
+    modrinth_id = props.get("publish.modrinth.project_id", "")
+    curseforge_id = props.get("publish.curseforge.project_id", "")
+    if not modrinth_id or not curseforge_id:
+        raise ValueError("Publishing project IDs must be configured")
+
+    fabric_api_modrinth = props.get("publish.fabric_api.modrinth_id", "")
+    fabric_api_curseforge = props.get("publish.fabric_api.curseforge_id", "")
+    extra_fabric_loaders = _ids(props.get("publish.fabric.additional_loaders", ""))
+
+    include = []
+    for target in targets:
+        prefix = f"target.{target}."
+        platform = props[prefix + "source.platform"]
+        minecraft = props[prefix + "deps.minecraft"]
+        version = props[prefix + "artifact.version"]
+        loaders = [platform]
+        if platform == "fabric":
+            for loader in extra_fabric_loaders:
+                if loader not in loaders:
+                    loaders.append(loader)
+            if not fabric_api_modrinth or not fabric_api_curseforge:
+                raise ValueError("Fabric API publication IDs must be configured")
+            dependencies = (
+                "fabric-api(required)"
+                f"{{modrinth:{fabric_api_modrinth}}}"
+                f"{{curseforge:{fabric_api_curseforge}}}"
+            )
+        else:
+            dependencies = ""
+
+        include.append({
+            "target": target,
+            "generation": props[prefix + "build.generation"],
+            "minecraft": minecraft,
+            "loader": platform,
+            "loaders": "\n".join(loaders),
+            "java": props[prefix + "java.version"],
+            "version": version,
+            "artifact": f"{props[prefix + 'mod.archive_name']}-{platform}-{version}.jar",
+            "dependencies": dependencies,
+            "modrinth_changelog": target == changelog_target,
+            "modrinth_id": modrinth_id,
+            "curseforge_id": curseforge_id,
+        })
+    return {"include": include}
+
+
 def main() -> None:
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
@@ -507,11 +565,14 @@ def main() -> None:
     parser.add_argument("--list-targets", action="store_true")
     parser.add_argument("--describe", action="store_true")
     parser.add_argument("--ci-matrix", action="store_true")
+    parser.add_argument("--publish-matrix", action="store_true")
     args = parser.parse_args()
     try:
         props = load_properties(args.config)
         if args.ci_matrix:
             print(json.dumps(ci_matrix(props), separators=(",", ":")))
+        elif args.publish_matrix:
+            print(json.dumps(publish_matrix(props), separators=(",", ":")))
         elif args.describe:
             print(json.dumps(describe(props), indent=2))
         elif args.list_targets:
@@ -522,7 +583,7 @@ def main() -> None:
         elif args.target:
             print(materialize_target(args.target, args.output, props, preprocess=not args.no_preprocess, if_stale=args.if_stale))
         else:
-            parser.error("Specify target, --describe, --list-targets, or --validate-directives")
+            parser.error("Specify target, --describe, --list-targets, --ci-matrix, --publish-matrix, or --validate-directives")
     except (ValueError, KeyError) as exc:
         parser.exit(1, f"Source layout error: {exc}\n")
 

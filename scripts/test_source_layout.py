@@ -26,6 +26,43 @@ class MatrixTests(unittest.TestCase):
         self.assertEqual(set(sl.generation_config_paths()), {row['family'] for row in matrix['include']})
         self.assertTrue(all(int(row['java']) >= 21 for row in matrix['include']))
 
+    def test_publish_matrix_matches_every_target(self):
+        props = sl.load_properties()
+        rows = sl.publish_matrix(props)['include']
+        by_target = {row['target']: row for row in rows}
+        self.assertEqual(set(sl.target_ids(props)), set(by_target))
+        self.assertEqual(len(rows), len(by_target))
+
+        changelog_targets = [row['target'] for row in rows if row['modrinth_changelog']]
+        self.assertEqual(['1.20.1-fabric'], changelog_targets)
+
+        for target, row in by_target.items():
+            with self.subTest(target=target):
+                prefix = f'target.{target}.'
+                platform = props[prefix + 'source.platform']
+                self.assertEqual(props[prefix + 'build.generation'], row['generation'])
+                self.assertEqual(props[prefix + 'deps.minecraft'], row['minecraft'])
+                self.assertEqual(props[prefix + 'artifact.version'], row['version'])
+                self.assertEqual(
+                    f"{props[prefix + 'mod.archive_name']}-{platform}-{row['version']}.jar",
+                    row['artifact'],
+                )
+                self.assertEqual('x9i4tLyb', row['modrinth_id'])
+                self.assertEqual('1576581', row['curseforge_id'])
+                if platform == 'fabric':
+                    self.assertEqual('fabric\nquilt', row['loaders'])
+                    self.assertIn('{modrinth:P7dR8mSH}', row['dependencies'])
+                    self.assertIn('{curseforge:306612}', row['dependencies'])
+                else:
+                    self.assertEqual(platform, row['loaders'])
+                    self.assertEqual('', row['dependencies'])
+
+    def test_publish_matrix_rejects_unknown_changelog_target(self):
+        props = sl.load_properties()
+        props['publish.modrinth.changelog_target'] = '999-fabric'
+        with self.assertRaises(ValueError):
+            sl.publish_matrix(props)
+
     def test_derived_layers_and_coordinates(self):
         props = sl.load_properties()
         for target in sl.target_ids(props):

@@ -105,6 +105,28 @@ cd ../current-neoforge
 
 Use `gradlew.bat` on Windows. Each target has its own build and runtime directories.
 
+## Publishing
+
+Publishing is automatic when a GitHub Release is published. The release tag must
+match `common.mod.version` (for example, tag `5.2` for
+`common.mod.version=5.2`). GitHub Actions builds all configured targets, attaches
+the JARs to the GitHub Release, and publishes every target to Modrinth and
+CurseForge.
+
+Publication metadata is derived from the same target matrix as the builds. Fabric
+files are marked as Fabric + Quilt and declare Fabric API as a required dependency.
+The full Modrinth changelog is attached only to the configured
+`publish.modrinth.changelog_target` (currently `1.20.1-fabric`); other
+Modrinth files are published with an empty changelog. CurseForge files all receive
+the GitHub Release body as their changelog.
+
+Repository Actions secrets `MODRINTH_TOKEN` and `CURSEFORGE_TOKEN` are required.
+The publication matrix can be inspected locally with:
+
+```text
+python scripts/source_layout.py --publish-matrix
+```
+
 ## Checks
 
 ```text
