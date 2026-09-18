@@ -1,0 +1,27 @@
+{
+  "parent": "scythes:bloody_essence",
+  "display": {
+    "icon": {
+      "id": "scythes:bloody_scythe",
+      "count": 1
+    },
+    "title": {
+      "translate": "advancement.scythes.craft_bloody.title"
+    },
+    "description": {
+      "translate": "advancement.scythes.craft_bloody.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "craft": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipes": "scythes:craft_bloody_scythe"
+      }
+    }
+  }
+}

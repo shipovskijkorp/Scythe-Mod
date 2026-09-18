@@ -308,6 +308,7 @@ class ForgeRuntimeSafetyTests(unittest.TestCase):
             '26.1.2-neoforge': 'DataComponents.POTION_CONTENTS',
             '26.2-fabric': 'DataComponents.POTION_CONTENTS',
             '26.2-neoforge': 'DataComponents.POTION_CONTENTS',
+            '26.3-neoforge': 'DataComponents.POTION_CONTENTS',
             '26.3-fabric': 'DataComponents.POTION_CONTENTS',
         }
         with tempfile.TemporaryDirectory() as tmp:
@@ -373,6 +374,7 @@ class ForgeRuntimeSafetyTests(unittest.TestCase):
         targets = {
             '26.1.2-neoforge': ('26.1.2-fabric', '26.1.2.109', '[26.1.2.109,)', '[26.1.2]'),
             '26.2-neoforge': ('26.2-fabric', '26.2.0.88', '[26.2.0.88,)', '[26.2]'),
+            '26.3-neoforge': ('26.3-fabric', '26.3.0.1-beta', '[26.3.0.1-beta,)', '[26.3]'),
         }
         for target, (fabric_target, neoforge_version, neoforge_range, minecraft_range) in targets.items():
             with self.subTest(target=target):
@@ -426,6 +428,21 @@ class ForgeRuntimeSafetyTests(unittest.TestCase):
                     self.assertIn('onStartTracking(PlayerEvent.StartTracking event)', java)
                     self.assertIn('RegisterClientPayloadHandlersEvent', java)
                     self.assertIn('ClientPacketDistributor.sendToServer', java)
+
+                    if target == '26.3-neoforge':
+                        farmer = (out / 'src/main/java/com/shipovskijkorp/scythes/mod/ability/FarmerHarvestHandler.java').read_text(encoding='utf-8')
+                        welcome = (out / 'src/main/java/com/shipovskijkorp/scythes/mod/ability/WelcomeAdvancementHandler.java').read_text(encoding='utf-8')
+                        frozen_heart = (out / 'src/main/java/com/shipovskijkorp/scythes/mod/ability/FrozenHeartDropHandler.java').read_text(encoding='utf-8')
+                        farmer_item = (out / 'src/main/java/com/shipovskijkorp/scythes/mod/item/FarmerScytheItem.java').read_text(encoding='utf-8')
+                        self.assertIn('Prediction.SERVER_ONLY', farmer)
+                        self.assertIn('Prediction.SERVER_ONLY', welcome)
+                        self.assertIn('ContextIntProviders.exactly', frozen_heart)
+                        self.assertNotIn('ConstantValue.exactly', frozen_heart)
+                        self.assertIn('public class FarmerScytheItem extends Item', farmer_item)
+                        self.assertIn('super(settings.hoe(', farmer_item)
+                        self.assertIn('InputConstants.Type.KEYBOARD', client_java)
+                        self.assertIn('InputConstants.KEY_R', client_java)
+                        self.assertNotIn('GLFW.GLFW_KEY_R', client_java)
 
                     mixins = (out / 'src/main/resources/scythes.mixins.json').read_text(encoding='utf-8')
                     self.assertIn('FreezingLivingEntityRendererMixin', mixins)

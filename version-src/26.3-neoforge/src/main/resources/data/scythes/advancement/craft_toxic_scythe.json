@@ -1,0 +1,27 @@
+{
+  "parent": "scythes:toxic_essence",
+  "display": {
+    "icon": {
+      "id": "scythes:toxic_scythe",
+      "count": 1
+    },
+    "title": {
+      "translate": "advancement.scythes.craft_toxic.title"
+    },
+    "description": {
+      "translate": "advancement.scythes.craft_toxic.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "craft": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipes": "scythes:craft_toxic_scythe"
+      }
+    }
+  }
+}

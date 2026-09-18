@@ -164,7 +164,7 @@ build-logic/forge-target.gradle            Forge/Architectury-Loom dependencies/
 build-logic/neoforge-target.gradle         NeoForge Loom or ModDevGradle dependencies/tasks
 ```
 
-Every build generation has the same multi-project shape. `legacy` remains Fabric-only, while `legacy-forge` points back to the same `legacy` source family. `modern-neoforge` contains both 1.21.1 and 1.21.11 NeoForge targets and points to the same `modern` family used by the 1.21.x Fabric targets. `current-neoforge` contains 26.1.2 and 26.2 NeoForge, uses ModDevGradle, and points to the same `current` family as the matching Fabric targets. There is no
+Every build generation has the same multi-project shape. `legacy` remains Fabric-only, while `legacy-forge` points back to the same `legacy` source family. `modern-neoforge` contains both 1.21.1 and 1.21.11 NeoForge targets and points to the same `modern` family used by the 1.21.x Fabric targets. `current-neoforge` contains 26.1.2, 26.2 and 26.3 NeoForge, uses ModDevGradle, and points to the same `current` family as the matching Fabric targets. There is no
 hand-maintained `build.gradle` in each target directory. Settings creates those
 directories as needed and the root applies the common logic to every target.
 
@@ -206,7 +206,7 @@ client shell script, descriptor or target `build.gradle` is needed.
 
 Forge 1.20.1 is implemented in the isolated `builds/legacy-forge` generation. It uses Architectury Loom 1.7.x with Yarn mappings, while `builds/legacy` keeps its original Fabric Loom. Both targets resolve the same `legacy` gameplay/family sources, while Forge-specific registration, entity attributes, loot/lifecycle hooks, networking, keybinds, HUD and render registration live under the Forge platform layers.
 
-NeoForge 1.21.1 and 1.21.11 are both implemented in `builds/modern-neoforge`. The family uses Architectury Loom 1.13 with target-specific NeoForge Yarn patches and dependencies, while gameplay stays in the shared `modern` family. NeoForge 26.1.2 and 26.2 are implemented in `builds/current-neoforge` with ModDevGradle 2 and Java 25, while gameplay stays in the shared `current` family. NeoForge-specific registry timing, events, payload networking, HUD/keybind/render registration and metadata live in loader layers. If a future loader/build changes mappings, treat that as a deliberate mapping migration or family/loader adaptation rather than a folder rename.
+NeoForge 1.21.1 and 1.21.11 are both implemented in `builds/modern-neoforge`. The family uses Architectury Loom 1.13 with target-specific NeoForge Yarn patches and dependencies, while gameplay stays in the shared `modern` family. NeoForge 26.1.2, 26.2 and 26.3 are implemented in `builds/current-neoforge` with ModDevGradle 2 and Java 25, while gameplay stays in the shared `current` family. NeoForge-specific registry timing, events, payload networking, HUD/keybind/render registration and metadata live in loader layers. If a future loader/build changes mappings, treat that as a deliberate mapping migration or family/loader adaptation rather than a folder rename.
 
 Reuse `ScytheBalance`, pure cooldown storage, ability rules and HUD contracts.
 Implement the loader boundary instead of copying balance and event registration
