@@ -195,6 +195,7 @@ class MaterializationTests(unittest.TestCase):
                     expected_transport = {
                         'fabric': 'FabricHudTransport.java',
                         'forge': 'ForgeHudTransport.java',
+                        'neoforge': 'NeoForgeHudTransport.java',
                     }.get(platform)
                     if expected_transport is not None:
                         self.assertTrue(list(out.rglob(expected_transport)))
@@ -263,6 +264,26 @@ class ForgeRuntimeSafetyTests(unittest.TestCase):
         self.assertIn('context.drawItem(icon, x + 2, y + 2);', text)
         self.assertNotIn('textures/item/" + parts[1] + ".png', text)
 
+
+    def test_modern_guides_do_not_blur_book_background_and_use_item_models(self):
+        path = sl.ROOT / 'source-families/modern/src/main/java/com/shipovskijkorp/scythes/mod/client/guide/GuideScreen.java'
+        text = path.read_text(encoding='utf-8')
+        self.assertIn('renderBackground(context, mouseX, mouseY, delta);', text)
+        self.assertIn('public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta)', text)
+        self.assertNotIn('0x90000000', text)
+        self.assertIn('protected void applyBlur(float delta)', text)
+        self.assertIn('protected void applyBlur(DrawContext context)', text)
+        self.assertIn('ItemStack icon = recipeStack(entry.item());', text)
+        self.assertIn('context.drawItem(icon, x + 2, y + 2);', text)
+        self.assertNotIn('textures/item/" + parts[1] + ".png', text)
+
+    def test_current_guides_use_item_models_for_index_icons(self):
+        path = sl.ROOT / 'source-families/current/src/main/java/com/shipovskijkorp/scythes/mod/client/guide/GuideScreen.java'
+        text = path.read_text(encoding='utf-8')
+        self.assertIn('ItemStack icon = recipeStack(entry.item());', text)
+        self.assertIn('graphics.item(icon, x + 2, y + 2);', text)
+        self.assertNotIn('textures/item/" + parts[1] + ".png', text)
+
     def test_legacy_minion_uses_land_movement_without_idle_wandering(self):
         path = sl.ROOT / 'source-families/legacy/src/main/java/com/shipovskijkorp/scythes/mod/entity/WitheringMinionEntity.java'
         text = path.read_text(encoding='utf-8')
@@ -280,7 +301,9 @@ class ForgeRuntimeSafetyTests(unittest.TestCase):
             '1.20.1-fabric': 'PotionUtil.setPotion',
             '1.20.1-forge': 'PotionUtil.setPotion',
             '1.21.1-fabric': 'PotionContentsComponent.createStack',
+            '1.21.1-neoforge': 'PotionContentsComponent.createStack',
             '1.21.11-fabric': 'DataComponentTypes.POTION_CONTENTS',
+            '1.21.11-neoforge': 'DataComponentTypes.POTION_CONTENTS',
             '26.1.2-fabric': 'DataComponents.POTION_CONTENTS',
             '26.2-fabric': 'DataComponents.POTION_CONTENTS',
             '26.3-fabric': 'DataComponents.POTION_CONTENTS',
@@ -324,6 +347,73 @@ class ForgeRuntimeSafetyTests(unittest.TestCase):
                     self.assertNotIn('Control.MOVE, Control.LOOK', text)
                     self.assertNotIn('Flag.MOVE, Flag.LOOK', text)
 
+
+    def test_modern_neoforge_targets_share_one_build_family(self):
+        props = sl.load_properties()
+        self.assertIn('1.21.1-neoforge', sl.target_ids(props))
+        self.assertIn('1.21.11-neoforge', sl.target_ids(props))
+        self.assertEqual('modern-neoforge', sl.target_layout('1.21.1-neoforge', props).generation)
+        self.assertEqual('modern-neoforge', sl.target_layout('1.21.11-neoforge', props).generation)
+        self.assertEqual('modern', props['target.1.21.1-neoforge.source.family'])
+        self.assertEqual('modern', props['target.1.21.11-neoforge.source.family'])
+        self.assertEqual('21.1.211', props['target.1.21.1-neoforge.deps.neoforge'])
+        self.assertEqual('21.11.21-beta', props['target.1.21.11-neoforge.deps.neoforge'])
+        self.assertEqual('1.21.11+build.5', props['target.1.21.11-neoforge.deps.yarn'])
+        self.assertEqual('false', props['target.1.21.1-neoforge.runtime.jei'])
+        self.assertEqual('false', props['target.1.21.11-neoforge.runtime.jei'])
+        gradle_props = (sl.ROOT / 'builds/modern-neoforge/gradle.properties').read_text(encoding='utf-8')
+        self.assertIn('architectury_loom_version=1.13.469', gradle_props)
+        self.assertIn('loom.platform=neoforge', gradle_props)
+        self.assertFalse((sl.ROOT / 'builds/modern-neoforge-12111').exists())
+
+    def test_neoforge_12111_effective_source_has_no_fabric_loader_references(self):
+        props = sl.load_properties()
+        with tempfile.TemporaryDirectory() as tmp:
+            out = sl.materialize_target('1.21.11-neoforge', Path(tmp) / 'neoforge-12111', props)
+            java = '\n'.join(path.read_text(encoding='utf-8') for path in out.rglob('*.java'))
+            self.assertNotIn('net.fabricmc', java)
+            self.assertNotIn('platform.fabric', java)
+            self.assertIn('NeoForgeHudTransport', java)
+            self.assertIn('RegisterPayloadHandlersEvent', java)
+            self.assertIn('registryKey(itemKey(name))', java)
+            self.assertIn('.build(entityTypeKey("toxic_orb"))', java)
+            client_text = (out / 'src/main/java/com/shipovskijkorp/scythes/mod/client/ScytheModClient.java').read_text(encoding='utf-8')
+            self.assertIn('event.registerCategory(category);', client_text)
+            c2s_text = (out / 'src/main/java/com/shipovskijkorp/scythes/mod/network/ScytheAbilityC2SPacket.java').read_text(encoding='utf-8')
+            self.assertIn('ClientPacketDistributor.sendToServer', c2s_text)
+            self.assertNotIn('import net.neoforged.neoforge.network.PacketDistributor;', c2s_text)
+
+    def test_neoforge_1211_effective_source_has_no_fabric_loader_references(self):
+        props = sl.load_properties()
+        with tempfile.TemporaryDirectory() as tmp:
+            out = sl.materialize_target('1.21.1-neoforge', Path(tmp) / 'neoforge', props)
+            java = '\n'.join(path.read_text(encoding='utf-8') for path in out.rglob('*.java'))
+            self.assertNotIn('net.fabricmc', java)
+            self.assertNotIn('platform.fabric', java)
+            self.assertIn('NeoForgeHudTransport', java)
+            self.assertIn('RegisterPayloadHandlersEvent', java)
+
+    def test_neoforge_1211_registrables_are_deferred(self):
+        path = sl.ROOT / 'version-src/1.21.1-neoforge/src/main/java/com/shipovskijkorp/scythes/mod/ScytheMod.java'
+        text = path.read_text(encoding='utf-8')
+        self.assertNotIn('public static final Item BLOODY_SCYTHE =', text)
+        self.assertNotIn('public static final EntityType<ToxicOrbEntity> TOXIC_ORB =', text)
+        self.assertIn('event.register(RegistryKeys.ITEM, id("bloody_scythe"),', text)
+        self.assertIn('event.register(RegistryKeys.ENTITY_TYPE, id("toxic_orb"),', text)
+        self.assertIn('event.register(RegistryKeys.STATUS_EFFECT, helper ->', text)
+
+    def test_neoforge_metadata_materializes_without_placeholders(self):
+        props = sl.load_properties()
+        with tempfile.TemporaryDirectory() as tmp:
+            for target in ('1.21.1-neoforge', '1.21.11-neoforge'):
+                with self.subTest(target=target):
+                    out = sl.materialize_target(target, Path(tmp) / target, props)
+                    path = out / 'src/main/resources/META-INF/neoforge.mods.toml'
+                    text = path.read_text(encoding='utf-8')
+                    self.assertIn('modId="scythes"', text)
+                    self.assertIn('modId="neoforge"', text)
+                    self.assertNotIn('@meta.', text)
+                    self.assertNotIn('@mod.', text)
 
 
 class IdeaTests(unittest.TestCase):

@@ -97,6 +97,24 @@ public final class GuideScreen extends Screen {
         super.render(context, mouseX, mouseY, delta);
     }
 
+
+    @Override
+    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+        // Keep the world visible behind the guide without vanilla blur or darkening.
+    }
+
+//? if >=1.21.11 {
+    @Override
+    protected void applyBlur(DrawContext context) {
+        // Disable the vanilla in-world menu blur for the guide screen.
+    }
+//? } else {
+    @Override
+    protected void applyBlur(float delta) {
+        // Disable the vanilla in-world menu blur for the guide screen.
+    }
+//? }
+
     private void renderTabs(DrawContext context, int mouseX, int mouseY) {
         renderTab(context, mouseX, mouseY, 0, "Welcome", view.index() == 0, view::welcome);
         List<GuideResources.Entry> entries = view.resources().entries();
@@ -250,10 +268,9 @@ public final class GuideScreen extends Screen {
             boolean hovered = inside(mouseX, mouseY, x, y, GuideUi.PAGE_TEXT_WIDTH, INDEX_ROW_HEIGHT);
             if (hovered) context.fill(x, y, x + GuideUi.PAGE_TEXT_WIDTH, y + INDEX_ROW_HEIGHT, GuideUi.HOVER);
 
-            Identifier texture = itemTexture(entry.item());
-            if (texture != null) {
-                drawTexture(context, texture, x + 2, y + 2, 0, 0, INDEX_ICON_SIZE, INDEX_ICON_SIZE,
-                    INDEX_ICON_SIZE, INDEX_ICON_SIZE);
+            ItemStack icon = recipeStack(entry.item());
+            if (!icon.isEmpty()) {
+                context.drawItem(icon, x + 2, y + 2);
             }
 
             String label = view.resources().document(entry.page()).title();
@@ -276,13 +293,6 @@ public final class GuideScreen extends Screen {
             textX + Math.min(textRenderer.getWidth(title), GuideUi.PAGE_TEXT_WIDTH - 34), y + 10,
             GuideUi.opaque(GuideUi.TEXT));
         return y + 17;
-    }
-
-    private static Identifier itemTexture(String itemId) {
-        if (itemId == null || itemId.isBlank()) return null;
-        String[] parts = itemId.split(":", 2);
-        if (parts.length != 2 || parts[0].isBlank() || parts[1].isBlank()) return null;
-        return Identifier.of(parts[0], "textures/item/" + parts[1] + ".png");
     }
 
     private static void drawTexture(DrawContext context, Identifier texture, int x, int y, float u, float v,

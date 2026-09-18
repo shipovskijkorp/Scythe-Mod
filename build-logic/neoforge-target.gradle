@@ -1,0 +1,33 @@
+// Only this adapter knows NeoForge/Architectury Loom dependency configurations.
+apply plugin: 'dev.architectury.loom'
+apply plugin: 'maven-publish'
+
+def cfg = ext.scytheTarget
+ext.scytheReleaseTask = 'remapJar'
+
+repositories {
+    maven { name = 'NeoForge'; url = 'https://maven.neoforged.net/releases/' }
+    maven { name = 'Fabric'; url = 'https://maven.fabricmc.net/' }
+    maven { name = 'Architectury'; url = 'https://maven.architectury.dev/' }
+    maven { name = 'JEI'; url = 'https://maven.blamejared.com/' }
+}
+
+dependencies {
+    add('minecraft', "com.mojang:minecraft:${cfg['deps.minecraft']}")
+    mappings loom.layered {
+        mappings "net.fabricmc:yarn:${cfg['deps.yarn']}:v2"
+        mappings "dev.architectury:yarn-mappings-patch-neoforge:${cfg['deps.yarn_patch_neoforge']}"
+    }
+    add('neoForge', "net.neoforged:neoforge:${cfg['deps.neoforge']}")
+
+    add('modCompileOnly', "mezz.jei:jei-${cfg['deps.minecraft']}-neoforge-api:${cfg['deps.jei']}")
+    if (!cfg.containsKey('runtime.jei') || cfg['runtime.jei'].toBoolean()) {
+        add('modRuntimeOnly', "mezz.jei:jei-${cfg['deps.minecraft']}-neoforge:${cfg['deps.jei']}")
+    }
+}
+
+loom {
+    runs {
+        configureEach { ideConfigGenerated = false }
+    }
+}

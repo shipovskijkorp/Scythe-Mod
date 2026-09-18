@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "scythes:essences",
+  "pattern": [
+    "BIB",
+    "IHI",
+    "BIB"
+  ],
+  "key": {
+    "B": {
+      "item": "minecraft:powder_snow_bucket"
+    },
+    "I": {
+      "item": "minecraft:blue_ice"
+    },
+    "H": {
+      "item": "scythes:frozen_heart"
+    }
+  },
+  "result": {
+    "id": "scythes:frozen_essence",
+    "count": 1
+  },
+  "category": "misc"
+}

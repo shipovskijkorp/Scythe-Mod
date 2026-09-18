@@ -241,10 +241,9 @@ public final class GuideScreen extends Screen {
             boolean hovered = inside(mouseX, mouseY, x, y, GuideUi.PAGE_TEXT_WIDTH, INDEX_ROW_HEIGHT);
             if (hovered) graphics.fill(x, y, x + GuideUi.PAGE_TEXT_WIDTH, y + INDEX_ROW_HEIGHT, GuideUi.HOVER);
 
-            Identifier texture = itemTexture(entry.item());
-            if (texture != null) {
-                drawTexture(graphics, texture, x + 2, y + 2, 0, 0, INDEX_ICON_SIZE, INDEX_ICON_SIZE,
-                    INDEX_ICON_SIZE, INDEX_ICON_SIZE);
+            ItemStack icon = recipeStack(entry.item());
+            if (!icon.isEmpty()) {
+                graphics.item(icon, x + 2, y + 2);
             }
 
             String label = view.resources().document(entry.page()).title();
@@ -267,13 +266,6 @@ public final class GuideScreen extends Screen {
             textX + Math.min(font.width(title), GuideUi.PAGE_TEXT_WIDTH - 34), y + 10,
             GuideUi.opaque(GuideUi.TEXT));
         return y + 17;
-    }
-
-    private static Identifier itemTexture(String itemId) {
-        if (itemId == null || itemId.isBlank()) return null;
-        String[] parts = itemId.split(":", 2);
-        if (parts.length != 2 || parts[0].isBlank() || parts[1].isBlank()) return null;
-        return Identifier.fromNamespaceAndPath(parts[0], "textures/item/" + parts[1] + ".png");
     }
 
     private static void drawTexture(GuiGraphicsExtractor graphics, Identifier texture, int x, int y,

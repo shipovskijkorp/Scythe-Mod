@@ -1,0 +1,240 @@
+{
+  "parent": "scythes:root",
+  "display": {
+    "icon": {
+      "id": "scythes:bloody_scythe",
+      "count": 1
+    },
+    "title": {
+      "translate": "advancement.scythes.money_cards_god_scythe.title"
+    },
+    "description": {
+      "translate": "advancement.scythes.money_cards_god_scythe.desc"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "has_bloody_scythe": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "scythes:bloody_scythe"
+          }
+        ]
+      }
+    },
+    "has_toxic_scythe": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "scythes:toxic_scythe"
+          }
+        ]
+      }
+    },
+    "has_withering_scythe": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "scythes:withering_scythe"
+          }
+        ]
+      }
+    },
+    "blood_passive": {
+      "trigger": "minecraft:impossible"
+    },
+    "blood_active": {
+      "trigger": "minecraft:impossible"
+    },
+    "blood_special": {
+      "trigger": "minecraft:impossible"
+    },
+    "toxic_passive": {
+      "trigger": "minecraft:impossible"
+    },
+    "toxic_active": {
+      "trigger": "minecraft:impossible"
+    },
+    "toxic_special": {
+      "trigger": "minecraft:impossible"
+    },
+    "withering_passive": {
+      "trigger": "minecraft:impossible"
+    },
+    "withering_active": {
+      "trigger": "minecraft:impossible"
+    },
+    "withering_special": {
+      "trigger": "minecraft:impossible"
+    },
+    "has_golden_scythe": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "scythes:golden_scythe"
+          }
+        ]
+      }
+    },
+    "golden_passive": {
+      "trigger": "minecraft:impossible"
+    },
+    "golden_active": {
+      "trigger": "minecraft:impossible"
+    },
+    "golden_special": {
+      "trigger": "minecraft:impossible"
+    },
+    "has_frozen_scythe": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "scythes:frozen_scythe"
+          }
+        ]
+      }
+    },
+    "frozen_passive": {
+      "trigger": "minecraft:impossible"
+    },
+    "frozen_active": {
+      "trigger": "minecraft:impossible"
+    },
+    "frozen_special": {
+      "trigger": "minecraft:impossible"
+    },
+    "has_fire_scythe": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "scythes:fire_scythe"
+          }
+        ]
+      }
+    },
+    "fire_passive": {
+      "trigger": "minecraft:impossible"
+    },
+    "fire_active": {
+      "trigger": "minecraft:impossible"
+    },
+    "fire_special": {
+      "trigger": "minecraft:impossible"
+    },
+    "has_farmer_scythe": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "scythes:farmer_scythe"
+          }
+        ]
+      }
+    },
+    "farmer_passive": {
+      "trigger": "minecraft:impossible"
+    },
+    "farmer_active": {
+      "trigger": "minecraft:impossible"
+    },
+    "farmer_special": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "has_bloody_scythe"
+    ],
+    [
+      "has_toxic_scythe"
+    ],
+    [
+      "has_withering_scythe"
+    ],
+    [
+      "blood_passive"
+    ],
+    [
+      "blood_active"
+    ],
+    [
+      "blood_special"
+    ],
+    [
+      "toxic_passive"
+    ],
+    [
+      "toxic_active"
+    ],
+    [
+      "toxic_special"
+    ],
+    [
+      "withering_passive"
+    ],
+    [
+      "withering_active"
+    ],
+    [
+      "withering_special"
+    ],
+    [
+      "has_golden_scythe"
+    ],
+    [
+      "golden_passive"
+    ],
+    [
+      "golden_active"
+    ],
+    [
+      "golden_special"
+    ],
+    [
+      "has_frozen_scythe"
+    ],
+    [
+      "frozen_passive"
+    ],
+    [
+      "frozen_active"
+    ],
+    [
+      "frozen_special"
+    ],
+    [
+      "has_fire_scythe"
+    ],
+    [
+      "fire_passive"
+    ],
+    [
+      "fire_active"
+    ],
+    [
+      "fire_special"
+    ],
+    [
+      "has_farmer_scythe"
+    ],
+    [
+      "farmer_passive"
+    ],
+    [
+      "farmer_active"
+    ],
+    [
+      "farmer_special"
+    ]
+  ]
+}

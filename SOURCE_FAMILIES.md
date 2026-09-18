@@ -161,10 +161,10 @@ build-logic/family-root.gradle             apply loader adapters and aggregate t
 build-logic/common-target.gradle           sources, Java, packaging, publication
 build-logic/fabric-target.gradle           Fabric/Loom-specific dependencies/tasks
 build-logic/forge-target.gradle            Forge/Architectury-Loom dependencies/tasks
+build-logic/neoforge-target.gradle         NeoForge/Architectury-Loom dependencies/tasks
 ```
 
-Every build generation has the same multi-project shape. `legacy` remains Fabric-only, while
-`legacy-forge` is a separate Gradle build that points back to the same `legacy` source family. There is no
+Every build generation has the same multi-project shape. `legacy` remains Fabric-only, while `legacy-forge` points back to the same `legacy` source family. `modern-neoforge` contains both 1.21.1 and 1.21.11 NeoForge targets and points to the same `modern` family used by the 1.21.x Fabric targets. There is no
 hand-maintained `build.gradle` in each target directory. Settings creates those
 directories as needed and the root applies the common logic to every target.
 
@@ -175,8 +175,7 @@ from the target ID. `java.version` is the mod bytecode/toolchain; `build.java` i
 the Gradle JVM used by CI. Do not change the former to 21 merely because Loom
 requires a Java 21 build process for the 1.20.1 target.
 
-There is one descriptor template per implemented loader under `source-platforms`:
-`fabric/fabric.mod.json` and `forge/META-INF/mods.toml`. Authors, license, name,
+There is one descriptor template per implemented loader under `source-platforms`: `fabric/fabric.mod.json`, `forge/META-INF/mods.toml` and `neoforge/META-INF/neoforge.mods.toml`. Authors, license, name,
 version and contact links come from common properties; Minecraft, Java and
 loader/API constraints come from the resolved target. The
 previous 1.21.11 MIT/single-author descriptor is normalized to the common
@@ -205,17 +204,9 @@ layer can contain `.gitkeep`), add only genuine source deltas, then run the layo
 validator and IDEA generator. Build and launch it before publishing. No copied
 client shell script, descriptor or target `build.gradle` is needed.
 
-Forge 1.20.1 is implemented in the isolated `builds/legacy-forge` generation. It uses
-Architectury Loom 1.7.x with Yarn mappings, while `builds/legacy` keeps its original Fabric Loom.
-Both targets resolve the same `legacy` gameplay/family sources, while Forge-specific
-registration, entity attributes, loot/lifecycle hooks, networking, keybinds, HUD
-and render registration live under the Forge platform layers.
+Forge 1.20.1 is implemented in the isolated `builds/legacy-forge` generation. It uses Architectury Loom 1.7.x with Yarn mappings, while `builds/legacy` keeps its original Fabric Loom. Both targets resolve the same `legacy` gameplay/family sources, while Forge-specific registration, entity attributes, loot/lifecycle hooks, networking, keybinds, HUD and render registration live under the Forge platform layers.
 
-NeoForge 1.21+ still needs its own loader adapter. Add real build logic, metadata,
-entrypoints and platform/family-platform sources, and adapt registry timing, events,
-networking and client registration rather than copying another loader's bootstrap.
-If a future loader/build changes mappings, treat that as a deliberate mapping
-migration or family/loader adaptation rather than a folder rename.
+NeoForge 1.21.1 and 1.21.11 are both implemented in `builds/modern-neoforge`. The family uses Architectury Loom 1.13 with target-specific NeoForge Yarn patches and dependencies, while gameplay stays in the shared `modern` family. NeoForge-specific registry timing, events, payload networking, HUD/keybind/render registration and metadata live in loader layers. If a future loader/build changes mappings, treat that as a deliberate mapping migration or family/loader adaptation rather than a folder rename.
 
 Reuse `ScytheBalance`, pure cooldown storage, ability rules and HUD contracts.
 Implement the loader boundary instead of copying balance and event registration

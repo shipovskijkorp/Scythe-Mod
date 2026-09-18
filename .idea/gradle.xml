@@ -32,7 +32,7 @@
       <GradleProjectSettings>
         <option name="distributionType" value="WRAPPED" />
         <option name="externalProjectPath" value="$PROJECT_DIR$/builds/legacy-forge" />
-        <option name="gradleJvm" value="21" />
+        <option name="gradleJvm" value="ms-21" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$/builds/legacy-forge" />
@@ -50,6 +50,19 @@
             <option value="$PROJECT_DIR$/builds/modern" />
             <option value="$PROJECT_DIR$/builds/modern/targets/1.21.1-fabric" />
             <option value="$PROJECT_DIR$/builds/modern/targets/1.21.11-fabric" />
+          </set>
+        </option>
+        <option name="resolveExternalAnnotations" value="true" />
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="distributionType" value="WRAPPED" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/builds/modern-neoforge" />
+        <option name="gradleJvm" value="ms-21" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/builds/modern-neoforge" />
+            <option value="$PROJECT_DIR$/builds/modern-neoforge/targets/1.21.1-neoforge" />
+            <option value="$PROJECT_DIR$/builds/modern-neoforge/targets/1.21.11-neoforge" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="true" />

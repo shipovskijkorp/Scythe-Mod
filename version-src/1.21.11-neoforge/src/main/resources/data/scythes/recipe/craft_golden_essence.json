@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "scythes:essences",
+  "key": {
+    "B": "minecraft:gold_block",
+    "G": "minecraft:gold_nugget",
+    "S": "minecraft:nether_star"
+  },
+  "pattern": [
+    "GBG",
+    "BSB",
+    "GBG"
+  ],
+  "result": {
+    "count": 1,
+    "id": "scythes:golden_essence"
+  }
+}

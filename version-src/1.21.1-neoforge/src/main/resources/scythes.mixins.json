@@ -1,0 +1,23 @@
+{
+  "required": true,
+  "package": "com.shipovskijkorp.scythes.mod.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "EnchantmentMixin",
+    "EnchantmentHelperMixin",
+    "LivingEntityMixin",
+    "PiglinBrainMixin",
+    "FreezingEntityLookMixin",
+    "FreezingLivingEntityMixin",
+    "PowderSnowBlockMixin"
+  ],
+  "client": [
+    "ItemGroupMixin",
+    "FireScytheGlowMixin",
+    "FreezingLivingEntityRendererMixin",
+    "AdvancementWidgetMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

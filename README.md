@@ -1,29 +1,26 @@
 # Scythe Mod
 
-Seven targets, one balance definition, independent Gradle build families.
+Nine targets, one balance definition, five independent Gradle build families.
 
 | Family | Minecraft / loader | Mod bytecode | Gradle JVM used by CI |
 | --- | --- | --- | --- |
 | `legacy` | 1.20.1 Fabric | Java 17 | Java 21 |
 | `legacy-forge` | 1.20.1 Forge | Java 17 | Java 21 |
 | `modern` | 1.21.1, 1.21.11 Fabric | Java 21 | Java 21 |
+| `modern-neoforge` | 1.21.1, 1.21.11 NeoForge | Java 21 | Java 21 |
 | `current` | 26.1.2, 26.2, 26.3 Fabric | Java 25 | Java 25 |
 
-Forge 1.20.1 is implemented as an isolated Gradle build that reuses the same `legacy` gameplay
-sources. Keeping Fabric Loom and Architectury Loom in separate builds prevents plugin/toolchain collisions. NeoForge is **not implemented yet**; the source ownership rules keep future
-loader ports from duplicating balance or embedding loader callbacks in gameplay classes.
+Forge 1.20.1 remains an isolated Gradle build because it must coexist with the legacy Fabric toolchain. Both modern NeoForge targets live together in `builds/modern-neoforge`, use Architectury Loom 1.13, and reuse the same `modern` gameplay sources as their Fabric siblings.
 
 ## IntelliJ IDEA
 
-Open this repository root. `.idea/gradle.xml` links `builds/legacy`, `builds/legacy-forge`, `builds/modern`
-and `builds/current` as independent Gradle builds. Select the appropriate **Gradle
+Open this repository root. `.idea/gradle.xml` links `builds/legacy`, `builds/legacy-forge`, `builds/modern`, `builds/modern-neoforge` and `builds/current` as independent Gradle builds. Select the appropriate **Gradle
 JVM** from the table for each build, and synchronize Gradle. A JDK and **Python
 3.10+** are required; `SCYTHE_PYTHON` can point to the Python executable.
 
 Every target, including legacy, is a Gradle subproject. Shared `.run` configurations
 appear as `ScytheMod <version> <Loader> Client`. They call the corresponding target's
-`runClient`, not the currently active development target. **JEI remains a development
-runtime dependency** for every configured target.
+`runClient`, not the currently active development target. JEI compile integration is configured for every target; development runtime loading is target-specific where remapped loader environments require it to be disabled.
 
 Run configurations are generated from `targets.properties` during Gradle settings
 loading. They can also be refreshed without Gradle:
@@ -89,6 +86,12 @@ A direct target build or launch remains available:
 cd builds/modern
 ./gradlew :1.21.11-fabric:build
 ./gradlew :1.21.11-fabric:runClient
+
+cd ../modern-neoforge
+./gradlew :1.21.1-neoforge:build
+./gradlew :1.21.1-neoforge:runClient
+./gradlew :1.21.11-neoforge:build
+./gradlew :1.21.11-neoforge:runClient
 ```
 
 Use `gradlew.bat` on Windows. Each target has its own build and runtime directories.
@@ -105,11 +108,10 @@ The last command requires JDK 21+ and checks Java syntax, pure-core logic and sm
 adapter contracts against test stubs. It **does not compile against Minecraft**.
 CI runs these checks and then performs actual Gradle builds for each family.
 
-See [SOURCE_FAMILIES.md](SOURCE_FAMILIES.md) for ownership rules, resource templates
-and the remaining work for additional loaders such as NeoForge. See [REFACTOR_VERIFICATION.md](REFACTOR_VERIFICATION.md)
+See [SOURCE_FAMILIES.md](SOURCE_FAMILIES.md) for ownership rules, resource templates and loader boundaries. See [REFACTOR_VERIFICATION.md](REFACTOR_VERIFICATION.md)
 for the checks and limitations of this refactoring delivery.
 
 ## License
 
 All Rights Reserved. Shared metadata in `build-config/common.properties` is the
-single source for generated Fabric and Forge descriptors.
+single source for generated Fabric, Forge and NeoForge descriptors.

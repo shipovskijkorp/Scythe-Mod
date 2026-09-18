@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "scythes:spiked_blade",
+    "scythes:additional_slot",
+    "scythes:soul_siphon",
+    "scythes:acidity"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "group": "scythes:scythes",
+  "key": {
+    "E": "scythes:fire_essence",
+    "N": "minecraft:netherite_ingot",
+    "P": "minecraft:stick"
+  },
+  "pattern": [
+    "NN ",
+    "P E",
+    "P  "
+  ],
+  "result": {
+    "count": 1,
+    "id": "scythes:fire_scythe"
+  }
+}
