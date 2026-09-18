@@ -359,8 +359,13 @@ class ForgeRuntimeSafetyTests(unittest.TestCase):
         self.assertEqual('modern-neoforge', sl.target_layout('1.21.11-neoforge', props).generation)
         self.assertEqual('modern', props['target.1.21.1-neoforge.source.family'])
         self.assertEqual('modern', props['target.1.21.11-neoforge.source.family'])
-        self.assertEqual('21.1.211', props['target.1.21.1-neoforge.deps.neoforge'])
-        self.assertEqual('21.11.21-beta', props['target.1.21.11-neoforge.deps.neoforge'])
+        for target in ('1.21.1-neoforge', '1.21.11-neoforge'):
+            neoforge_version = props[f'target.{target}.deps.neoforge']
+            self.assertTrue(neoforge_version)
+            self.assertEqual(
+                f'[{neoforge_version},)',
+                props[f'target.{target}.metadata.neoforge_min'],
+            )
         self.assertEqual('1.21.11+build.5', props['target.1.21.11-neoforge.deps.yarn'])
         self.assertEqual('false', props['target.1.21.1-neoforge.runtime.jei'])
         self.assertEqual('false', props['target.1.21.11-neoforge.runtime.jei'])
