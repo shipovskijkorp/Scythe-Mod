@@ -35,14 +35,19 @@ public final class FrozenHeartDropHandler {
 
     /** Add loot only to builtin tables; called by a loader loot hook. */
     public static void modifyLoot(ResourceKey<LootTable> key, LootTable.Builder tableBuilder, boolean builtin) {
-        if (!builtin) return;
-        if (!STRAY_LOOT_TABLE.equals(key) && !IGLOO_CHEST_LOOT_TABLE.equals(key)) return;
+        LootPool.Builder pool = createLootPool(key, builtin);
+        if (pool != null) tableBuilder.withPool(pool);
+    }
 
-        LootPool.Builder pool = LootPool.lootPool()
+    /** Shared pool factory for loaders whose loot event exposes an already-built table. */
+    public static LootPool.Builder createLootPool(ResourceKey<LootTable> key, boolean builtin) {
+        if (!builtin) return null;
+        if (!STRAY_LOOT_TABLE.equals(key) && !IGLOO_CHEST_LOOT_TABLE.equals(key)) return null;
+
+        return LootPool.lootPool()
                 .setRolls(ConstantValue.exactly(ScytheBalance.Drops.FROZEN_HEART_LOOT_ROLLS))
                 .add(LootItem.lootTableItem(ScytheMod.FROZEN_HEART)
                         .when(LootItemRandomChanceCondition.randomChance(ScytheBalance.Drops.HEART_CHANCE)));
-        tableBuilder.withPool(pool);
     }
 
     public static void onDeath(LivingEntity entity, DamageSource damageSource) {

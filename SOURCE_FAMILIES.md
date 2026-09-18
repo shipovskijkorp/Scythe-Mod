@@ -119,7 +119,7 @@ Mixin targets have not been converted into a speculative generic resource DSL.
 
 ## Server and client boundaries
 
-`FabricServerHooks` and `ForgeServerHooks` own loader event subscriptions. They call
+`FabricServerHooks`, `ForgeServerHooks` and `NeoForgeServerHooks` own loader event subscriptions. They call
 plain gameplay handlers for kills, loot, death, join, disconnect and server ticks.
 `ScytheLifecycle` contains the tick and disconnect logic. Do not subscribe to loader
 events from an ability, item, entity or effect implementation.
@@ -130,7 +130,7 @@ an arbitrary damage amount, target list or cooldown. The main hand retains
 priority, with an offhand fallback only when the main hand is not a scythe.
 
 HUD trackers use `HudSync`, whose implementation is installed by the loader
-bootstrap. `HudTransport<P>` is a tiny loader-independent contract; Fabric and Forge
+bootstrap. `HudTransport<P>` is a tiny loader-independent contract; Fabric, Forge and NeoForge
 implementations own their S2C calls while preserving the same timer semantics. A
 second installation or use before installation fails explicitly. This is an
 intentional bootstrap error, not a silently dropped HUD.
@@ -154,17 +154,17 @@ Forge APIs into shared gameplay classes.
 build-config/common.properties             shared metadata, default build JVM
 build-config/generations.properties        independent build roots
 builds/<family>/targets.properties         targets and dependency overrides
-builds/<family>/gradle.properties          family-specific Loom bootstrap
+builds/<family>/gradle.properties          family-specific Loom/ModDev bootstrap
 builds/<family>/gradle/wrapper/             independent wrapper
 build-logic/family-settings.gradle         resolve matrix, include target projects
 build-logic/family-root.gradle             apply loader adapters and aggregate tasks
 build-logic/common-target.gradle           sources, Java, packaging, publication
 build-logic/fabric-target.gradle           Fabric/Loom-specific dependencies/tasks
 build-logic/forge-target.gradle            Forge/Architectury-Loom dependencies/tasks
-build-logic/neoforge-target.gradle         NeoForge/Architectury-Loom dependencies/tasks
+build-logic/neoforge-target.gradle         NeoForge Loom or ModDevGradle dependencies/tasks
 ```
 
-Every build generation has the same multi-project shape. `legacy` remains Fabric-only, while `legacy-forge` points back to the same `legacy` source family. `modern-neoforge` contains both 1.21.1 and 1.21.11 NeoForge targets and points to the same `modern` family used by the 1.21.x Fabric targets. There is no
+Every build generation has the same multi-project shape. `legacy` remains Fabric-only, while `legacy-forge` points back to the same `legacy` source family. `modern-neoforge` contains both 1.21.1 and 1.21.11 NeoForge targets and points to the same `modern` family used by the 1.21.x Fabric targets. `current-neoforge` contains 26.1.2 NeoForge, uses ModDevGradle, and points to the same `current` family as 26.1.2 Fabric. There is no
 hand-maintained `build.gradle` in each target directory. Settings creates those
 directories as needed and the root applies the common logic to every target.
 
@@ -206,7 +206,7 @@ client shell script, descriptor or target `build.gradle` is needed.
 
 Forge 1.20.1 is implemented in the isolated `builds/legacy-forge` generation. It uses Architectury Loom 1.7.x with Yarn mappings, while `builds/legacy` keeps its original Fabric Loom. Both targets resolve the same `legacy` gameplay/family sources, while Forge-specific registration, entity attributes, loot/lifecycle hooks, networking, keybinds, HUD and render registration live under the Forge platform layers.
 
-NeoForge 1.21.1 and 1.21.11 are both implemented in `builds/modern-neoforge`. The family uses Architectury Loom 1.13 with target-specific NeoForge Yarn patches and dependencies, while gameplay stays in the shared `modern` family. NeoForge-specific registry timing, events, payload networking, HUD/keybind/render registration and metadata live in loader layers. If a future loader/build changes mappings, treat that as a deliberate mapping migration or family/loader adaptation rather than a folder rename.
+NeoForge 1.21.1 and 1.21.11 are both implemented in `builds/modern-neoforge`. The family uses Architectury Loom 1.13 with target-specific NeoForge Yarn patches and dependencies, while gameplay stays in the shared `modern` family. NeoForge 26.1.2 is implemented in `builds/current-neoforge` with ModDevGradle 2 and Java 25, while gameplay stays in the shared `current` family. NeoForge-specific registry timing, events, payload networking, HUD/keybind/render registration and metadata live in loader layers. If a future loader/build changes mappings, treat that as a deliberate mapping migration or family/loader adaptation rather than a folder rename.
 
 Reuse `ScytheBalance`, pure cooldown storage, ability rules and HUD contracts.
 Implement the loader boundary instead of copying balance and event registration

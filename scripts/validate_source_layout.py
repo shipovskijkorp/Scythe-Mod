@@ -118,6 +118,22 @@ def validate() -> list[str]:
                 entrypoint = output / 'src/main/java/com/shipovskijkorp/scythes/mod/ScytheMod.java'
                 if not entrypoint.is_file() or '@Mod(ScytheMod.MOD_ID)' not in entrypoint.read_text(encoding="utf-8"):
                     problems.append(f'{target}: missing Forge @Mod entrypoint')
+            elif layout.platform == 'neoforge':
+                metadata_path = output / 'src/main/resources/META-INF/neoforge.mods.toml'
+                if not metadata_path.is_file():
+                    problems.append(f'{target}: missing META-INF/neoforge.mods.toml')
+                else:
+                    metadata = metadata_path.read_text(encoding="utf-8")
+                    expected_version = props[f'target.{target}.artifact.version']
+                    if f'version="{expected_version}"' not in metadata:
+                        problems.append(f'{target}: generated metadata version mismatch')
+                    if 'modId="scythes"' not in metadata:
+                        problems.append(f'{target}: NeoForge metadata has the wrong modId')
+                    if '@meta.' in metadata or '@mod.' in metadata:
+                        problems.append(f'{target}: unresolved NeoForge metadata placeholders')
+                entrypoint = output / 'src/main/java/com/shipovskijkorp/scythes/mod/ScytheMod.java'
+                if not entrypoint.is_file() or '@Mod(ScytheMod.MOD_ID)' not in entrypoint.read_text(encoding="utf-8"):
+                    problems.append(f'{target}: missing NeoForge @Mod entrypoint')
     problems.extend(sync(check=True))
     return problems
 

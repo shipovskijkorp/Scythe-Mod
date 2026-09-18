@@ -1,33 +1,79 @@
-// Only this adapter knows NeoForge/Architectury Loom dependency configurations.
-apply plugin: 'dev.architectury.loom'
-apply plugin: 'maven-publish'
-
+// NeoForge adapter. 1.21.x stays on Architectury Loom/Yarn patches;
+// 26.1+ uses the official deobfuscated ModDevGradle toolchain.
 def cfg = ext.scytheTarget
-ext.scytheReleaseTask = 'remapJar'
+def moddev = (rootProject.findProperty('scythe_neoforge_toolchain') ?: '') == 'moddev'
 
-repositories {
-    maven { name = 'NeoForge'; url = 'https://maven.neoforged.net/releases/' }
-    maven { name = 'Fabric'; url = 'https://maven.fabricmc.net/' }
-    maven { name = 'Architectury'; url = 'https://maven.architectury.dev/' }
-    maven { name = 'JEI'; url = 'https://maven.blamejared.com/' }
-}
+if (moddev) {
+    apply plugin: 'java-library'
+    apply plugin: 'net.neoforged.moddev'
+    apply plugin: 'maven-publish'
+    ext.scytheReleaseTask = 'jar'
 
-dependencies {
-    add('minecraft', "com.mojang:minecraft:${cfg['deps.minecraft']}")
-    mappings loom.layered {
-        mappings "net.fabricmc:yarn:${cfg['deps.yarn']}:v2"
-        mappings "dev.architectury:yarn-mappings-patch-neoforge:${cfg['deps.yarn_patch_neoforge']}"
+    repositories {
+        maven { name = 'JEI'; url = 'https://maven.blamejared.com/' }
+        mavenCentral()
     }
-    add('neoForge', "net.neoforged:neoforge:${cfg['deps.neoforge']}")
 
-    add('modCompileOnly', "mezz.jei:jei-${cfg['deps.minecraft']}-neoforge-api:${cfg['deps.jei']}")
-    if (!cfg.containsKey('runtime.jei') || cfg['runtime.jei'].toBoolean()) {
-        add('modRuntimeOnly', "mezz.jei:jei-${cfg['deps.minecraft']}-neoforge:${cfg['deps.jei']}")
+    neoForge {
+        version = cfg['deps.neoforge']
+        runs {
+            client { client() }
+            server {
+                server()
+                programArgument '--nogui'
+            }
+            data { clientData() }
+            configureEach {
+                systemProperty 'neoforge.enabledGameTestNamespaces', cfg['mod.id']
+            }
+        }
+        mods {
+            "${cfg['mod.id']}" {
+                sourceSet(sourceSets.main)
+            }
+        }
     }
-}
 
-loom {
-    runs {
-        configureEach { ideConfigGenerated = false }
+    configurations {
+        runtimeClasspath.extendsFrom localRuntime
+    }
+
+    dependencies {
+        compileOnly "mezz.jei:jei-${cfg['deps.minecraft']}-common-api:${cfg['deps.jei']}"
+        compileOnly "mezz.jei:jei-${cfg['deps.minecraft']}-neoforge-api:${cfg['deps.jei']}"
+        if (!cfg.containsKey('runtime.jei') || cfg['runtime.jei'].toBoolean()) {
+            localRuntime "mezz.jei:jei-${cfg['deps.minecraft']}-neoforge:${cfg['deps.jei']}"
+        }
+    }
+} else {
+    apply plugin: 'dev.architectury.loom'
+    apply plugin: 'maven-publish'
+    ext.scytheReleaseTask = 'remapJar'
+
+    repositories {
+        maven { name = 'NeoForge'; url = 'https://maven.neoforged.net/releases/' }
+        maven { name = 'Fabric'; url = 'https://maven.fabricmc.net/' }
+        maven { name = 'Architectury'; url = 'https://maven.architectury.dev/' }
+        maven { name = 'JEI'; url = 'https://maven.blamejared.com/' }
+    }
+
+    dependencies {
+        add('minecraft', "com.mojang:minecraft:${cfg['deps.minecraft']}")
+        mappings loom.layered {
+            mappings "net.fabricmc:yarn:${cfg['deps.yarn']}:v2"
+            mappings "dev.architectury:yarn-mappings-patch-neoforge:${cfg['deps.yarn_patch_neoforge']}"
+        }
+        add('neoForge', "net.neoforged:neoforge:${cfg['deps.neoforge']}")
+
+        add('modCompileOnly', "mezz.jei:jei-${cfg['deps.minecraft']}-neoforge-api:${cfg['deps.jei']}")
+        if (!cfg.containsKey('runtime.jei') || cfg['runtime.jei'].toBoolean()) {
+            add('modRuntimeOnly', "mezz.jei:jei-${cfg['deps.minecraft']}-neoforge:${cfg['deps.jei']}")
+        }
+    }
+
+    loom {
+        runs {
+            configureEach { ideConfigGenerated = false }
+        }
     }
 }

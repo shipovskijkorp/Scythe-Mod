@@ -19,6 +19,18 @@
       </GradleProjectSettings>
       <GradleProjectSettings>
         <option name="distributionType" value="WRAPPED" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/builds/current-neoforge" />
+        <option name="gradleJvm" value="ms-25" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/builds/current-neoforge" />
+            <option value="$PROJECT_DIR$/builds/current-neoforge/targets/26.1.2-neoforge" />
+          </set>
+        </option>
+        <option name="resolveExternalAnnotations" value="true" />
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="distributionType" value="WRAPPED" />
         <option name="externalProjectPath" value="$PROJECT_DIR$/builds/legacy" />
         <option name="gradleJvm" value="21" />
         <option name="modules">

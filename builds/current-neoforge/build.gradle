@@ -1,0 +1,6 @@
+plugins {
+    id 'base'
+    id 'net.neoforged.moddev' version "${moddev_version}" apply false
+}
+
+apply from: file('../../build-logic/family-root.gradle')

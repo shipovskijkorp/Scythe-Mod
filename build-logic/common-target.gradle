@@ -51,7 +51,7 @@ tasks.withType(JavaCompile).configureEach {
 tasks.named('compileJava') { dependsOn prepareSource }
 tasks.named('processResources') { dependsOn prepareSource }
 tasks.named('sourcesJar') { dependsOn prepareSource }
-tasks.matching { it.name in ['runClient', 'runServer', 'runDatagen'] }.configureEach {
+tasks.matching { it.name in ['runClient', 'runServer', 'runDatagen', 'runData'] }.configureEach {
     dependsOn prepareSource
 }
 tasks.named('jar') {

@@ -1,6 +1,6 @@
 # Scythe Mod
 
-Nine targets, one balance definition, five independent Gradle build families.
+Ten targets, one balance definition, six independent Gradle build families.
 
 | Family | Minecraft / loader | Mod bytecode | Gradle JVM used by CI |
 | --- | --- | --- | --- |
@@ -9,12 +9,13 @@ Nine targets, one balance definition, five independent Gradle build families.
 | `modern` | 1.21.1, 1.21.11 Fabric | Java 21 | Java 21 |
 | `modern-neoforge` | 1.21.1, 1.21.11 NeoForge | Java 21 | Java 21 |
 | `current` | 26.1.2, 26.2, 26.3 Fabric | Java 25 | Java 25 |
+| `current-neoforge` | 26.1.2 NeoForge | Java 25 | Java 25 |
 
-Forge 1.20.1 remains an isolated Gradle build because it must coexist with the legacy Fabric toolchain. Both modern NeoForge targets live together in `builds/modern-neoforge`, use Architectury Loom 1.13, and reuse the same `modern` gameplay sources as their Fabric siblings.
+Forge 1.20.1 remains an isolated Gradle build because it must coexist with the legacy Fabric toolchain. Both modern NeoForge targets live together in `builds/modern-neoforge`, use Architectury Loom 1.13, and reuse the same `modern` gameplay sources as their Fabric siblings. NeoForge 26.1.2 lives in `builds/current-neoforge`, uses ModDevGradle with the official named 26.1.2 API, and reuses the same `current` gameplay sources as Fabric 26.1.2.
 
 ## IntelliJ IDEA
 
-Open this repository root. `.idea/gradle.xml` links `builds/legacy`, `builds/legacy-forge`, `builds/modern`, `builds/modern-neoforge` and `builds/current` as independent Gradle builds. Select the appropriate **Gradle
+Open this repository root. `.idea/gradle.xml` links `builds/legacy`, `builds/legacy-forge`, `builds/modern`, `builds/modern-neoforge`, `builds/current` and `builds/current-neoforge` as independent Gradle builds. Select the appropriate **Gradle
 JVM** from the table for each build, and synchronize Gradle. A JDK and **Python
 3.10+** are required; `SCYTHE_PYTHON` can point to the Python executable.
 
@@ -92,6 +93,10 @@ cd ../modern-neoforge
 ./gradlew :1.21.1-neoforge:runClient
 ./gradlew :1.21.11-neoforge:build
 ./gradlew :1.21.11-neoforge:runClient
+
+cd ../current-neoforge
+./gradlew :26.1.2-neoforge:build
+./gradlew :26.1.2-neoforge:runClient
 ```
 
 Use `gradlew.bat` on Windows. Each target has its own build and runtime directories.
@@ -108,8 +113,7 @@ The last command requires JDK 21+ and checks Java syntax, pure-core logic and sm
 adapter contracts against test stubs. It **does not compile against Minecraft**.
 CI runs these checks and then performs actual Gradle builds for each family.
 
-See [SOURCE_FAMILIES.md](SOURCE_FAMILIES.md) for ownership rules, resource templates and loader boundaries. See [REFACTOR_VERIFICATION.md](REFACTOR_VERIFICATION.md)
-for the checks and limitations of this refactoring delivery.
+See [SOURCE_FAMILIES.md](SOURCE_FAMILIES.md) for ownership rules, resource templates and loader boundaries. 
 
 ## License
 
