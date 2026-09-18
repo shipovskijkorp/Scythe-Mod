@@ -1,6 +1,10 @@
 package com.shipovskijkorp.scythes.mod.client;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+//? if >=1.21.11 {
+import com.google.common.reflect.TypeToken;
+import com.shipovskijkorp.scythes.mod.util.FreezingRenderState;
+//? }
 import com.shipovskijkorp.scythes.mod.client.guide.GuideScreen;
 import com.shipovskijkorp.scythes.mod.item.FarmerScytheItem;
 import com.shipovskijkorp.scythes.mod.item.GuideBookItem;
@@ -10,6 +14,11 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.entity.FlyingItemEntityRenderer;
 import net.minecraft.client.render.entity.WitherSkeletonEntityRenderer;
+//? if >=1.21.11 {
+import net.minecraft.client.render.entity.LivingEntityRenderer;
+import net.minecraft.client.render.entity.state.LivingEntityRenderState;
+import net.minecraft.entity.LivingEntity;
+//? }
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
 //? if >=1.21.11 {
@@ -27,6 +36,7 @@ import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 //? if >=1.21.11 {
 import net.neoforged.neoforge.client.event.RenderLivingEvent;
+import net.neoforged.neoforge.client.renderstate.RegisterRenderStateModifiersEvent;
 //? }
 import org.lwjgl.glfw.GLFW;
 
@@ -41,6 +51,9 @@ public final class ScytheModClient {
         modBus.addListener(this::registerKeyMappings);
         modBus.addListener(this::registerEntityRenderers);
         modBus.addListener(this::registerGuiLayers);
+//? if >=1.21.11 {
+        modBus.addListener(this::registerRenderStateModifiers);
+//? }
     }
 
     private void onClientSetup(FMLClientSetupEvent event) {
@@ -83,6 +96,15 @@ public final class ScytheModClient {
     }
 
 //? if >=1.21.11 {
+    private void registerRenderStateModifiers(RegisterRenderStateModifiersEvent event) {
+        event.registerEntityModifier(
+                new TypeToken<LivingEntityRenderer<LivingEntity, LivingEntityRenderState, ?>>() {},
+                (entity, state) -> ((FreezingRenderState) state).scythes$setFrozenForRendering(
+                        FreezingOverlayRenderer.shouldRenderFor(entity)
+                )
+        );
+    }
+
     @SubscribeEvent
     public static void onRenderLivingPost(RenderLivingEvent.Post<?, ?, ?> event) {
         FreezingOverlayRenderer.render(

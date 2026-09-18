@@ -13,7 +13,6 @@
   "client": [
     "ItemGroupMixin",
     "FireScytheGlowMixin",
-    "FreezingLivingEntityRendererMixin",
     "FreezingLivingEntityRenderStateMixin",
     "AdvancementWidgetMixin"
   ],

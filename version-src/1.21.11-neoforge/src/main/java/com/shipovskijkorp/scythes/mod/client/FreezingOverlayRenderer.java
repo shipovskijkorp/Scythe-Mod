@@ -1,5 +1,6 @@
 package com.shipovskijkorp.scythes.mod.client;
 
+import com.shipovskijkorp.scythes.mod.ScytheMod;
 import com.shipovskijkorp.scythes.mod.util.FreezingRenderState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.OverlayTexture;
@@ -13,6 +14,7 @@ import net.minecraft.client.texture.SpriteAtlasTexture;
 import net.minecraft.client.util.SpriteIdentifier;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
+import net.minecraft.entity.LivingEntity;
 
 /** Draws a translucent ice shell around the complete hitbox of a frozen entity. */
 public final class FreezingOverlayRenderer {
@@ -37,6 +39,31 @@ public final class FreezingOverlayRenderer {
     private static final int FULL_BRIGHT_LIGHT = 0x00F000F0;
 
     private FreezingOverlayRenderer() {
+    }
+
+    /**
+     * Resolves the client-visible freezing state without registering foreign
+     * SynchedEntityData on LivingEntity. The status effect is the primary signal.
+     * FROZEN_TICKS is a vanilla tracked value and is used as a narrow fallback
+     * because the Freezing effect pins it immediately below the vanilla damage
+     * threshold on the server.
+     */
+    public static boolean shouldRenderFor(LivingEntity entity) {
+        if (!entity.isAlive()) {
+            return false;
+        }
+        if (entity.hasStatusEffect(ScytheMod.FREEZING)) {
+            return true;
+        }
+
+        int threshold = entity.getMinFreezeDamageTicks();
+        if (threshold <= 0) {
+            return false;
+        }
+
+        int frozenTicks = entity.getFrozenTicks();
+        int fallbackFloor = Math.max(1, threshold - 4);
+        return frozenTicks >= fallbackFloor && frozenTicks < threshold;
     }
 
     public static void render(
