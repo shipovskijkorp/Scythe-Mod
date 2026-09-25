@@ -109,12 +109,20 @@ Use `gradlew.bat` on Windows. Each target has its own build and runtime director
 
 Publishing is automatic when a GitHub Release is published. The release tag must
 match `common.mod.version` (for example, tag `5.2` for
-`common.mod.version=5.2`). GitHub Actions builds all configured targets, attaches
-the JARs to the GitHub Release, and publishes every target to Modrinth and
-CurseForge.
+`common.mod.version=5.2`). GitHub Actions validates and builds all configured
+targets, attaches the JARs to the GitHub Release, and then publishes them in a
+stable order: every Fabric target from the oldest Minecraft version to the newest,
+then Forge targets in version order, then NeoForge targets in version order.
+Publication is serialized inside each loader group so versions are not uploaded
+out of order.
 
 Publication metadata is derived from the same target matrix as the builds. Fabric
-files are marked as Fabric + Quilt and declare Fabric API as a required dependency.
+files are marked as Fabric + Quilt and automatically declare Fabric API as a
+required dependency. Forge and NeoForge publication steps do not receive Fabric
+API dependency metadata. Tag pushes are excluded from the ordinary build workflow
+because the release workflow already performs the same source checks and Gradle
+builds before publishing.
+
 The full Modrinth changelog is attached only to the configured
 `publish.modrinth.changelog_target` (currently `1.20.1-fabric`); other
 Modrinth files are published with an empty changelog. CurseForge files all receive

@@ -15,8 +15,10 @@ jobs:
   metadata:
     runs-on: ubuntu-24.04
     outputs:
-      build-matrix: ${{ steps.matrix.outputs.build }}
-      publish-matrix: ${{ steps.matrix.outputs.publish }}
+      build_matrix: ${{ steps.matrix.outputs.build }}
+      modrinth_id: ${{ steps.publish_meta.outputs.modrinth_id }}
+      curseforge_id: ${{ steps.publish_meta.outputs.curseforge_id }}
+      fabric_dependencies: ${{ steps.publish_meta.outputs.fabric_dependencies }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,12 +32,22 @@ jobs:
         with:
           java-version: '21'
           distribution: microsoft
-      - name: Resolve build and publication matrices
+      - name: Resolve build matrix
         id: matrix
         shell: bash
+        run: echo "build=$(python scripts/source_layout.py --ci-matrix)" >> "$GITHUB_OUTPUT"
+      - name: Resolve publication metadata
+        id: publish_meta
+        shell: bash
         run: |
-          echo "build=$(python scripts/source_layout.py --ci-matrix)" >> "$GITHUB_OUTPUT"
-          echo "publish=$(python scripts/source_layout.py --publish-matrix)" >> "$GITHUB_OUTPUT"
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import source_layout as sl
+          props = sl.load_properties()
+          fabric = sl.publish_matrix(props, "fabric")["include"][0]
+          print("modrinth_id=" + fabric["modrinth_id"])
+          print("curseforge_id=" + fabric["curseforge_id"])
+          print("fabric_dependencies=" + fabric["dependencies"])
+          PY
       - name: Validate release tag
         shell: bash
         run: |
@@ -72,7 +84,7 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.metadata.outputs.build-matrix) }}
+      matrix: ${{ fromJson(needs.metadata.outputs.build_matrix) }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -94,41 +106,356 @@ jobs:
           path: build/release/*.jar
           if-no-files-found: error
 
-  publish:
+  publish_fabric:
+    name: Publish Fabric targets
     needs: [metadata, build]
     runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      max-parallel: 3
-      matrix: ${{ fromJson(needs.metadata.outputs.publish-matrix) }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.release.tag_name }}
-      - name: Download target family artifacts
+      - name: Download legacy Fabric artifacts
         uses: actions/download-artifact@v4
         with:
-          name: scythe-release-${{ matrix.generation }}
-          path: release
-      - name: Publish ${{ matrix.target }}
+          name: scythe-release-legacy
+          path: release/legacy
+      - name: Download modern Fabric artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: scythe-release-modern
+          path: release/modern
+      - name: Download current Fabric artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: scythe-release-current
+          path: release/current
+      - name: Publish 1.20.1 Fabric
         uses: Kira-NT/mc-publish@v3
         with:
-          files: release/${{ matrix.artifact }}
-
-          name: ${{ matrix.version }}
-          version: ${{ matrix.version }}
+          files: release/legacy/scythe-mod-fabric-${{ github.event.release.tag_name }}+1.20.1.jar
+          name: ${{ github.event.release.tag_name }}+1.20.1
+          version: ${{ github.event.release.tag_name }}+1.20.1
           version-type: release
-          loaders: ${{ matrix.loaders }}
-          game-versions: ${{ matrix.minecraft }}
+          loaders: |
+            fabric
+            quilt
+          game-versions: 1.20.1
           game-version-filter: none
           environment: client | server
-          dependencies: ${{ matrix.dependencies }}
+          dependencies: ${{ needs.metadata.outputs.fabric_dependencies }}
 
-          modrinth-id: ${{ matrix.modrinth_id }}
+          modrinth-id: ${{ needs.metadata.outputs.modrinth_id }}
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-          modrinth-changelog: ${{ matrix.modrinth_changelog && github.event.release.body || '' }}
+          modrinth-changelog: ${{ github.event.release.body }}
 
-          curseforge-id: ${{ matrix.curseforge_id }}
+          curseforge-id: ${{ needs.metadata.outputs.curseforge_id }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          curseforge-changelog: ${{ github.event.release.body }}
+
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-tag: ${{ github.event.release.tag_name }}
+          github-changelog: ''
+
+      - name: Publish 1.21.1 Fabric
+        uses: Kira-NT/mc-publish@v3
+        with:
+          files: release/modern/scythe-mod-fabric-${{ github.event.release.tag_name }}+1.21.1.jar
+          name: ${{ github.event.release.tag_name }}+1.21.1
+          version: ${{ github.event.release.tag_name }}+1.21.1
+          version-type: release
+          loaders: |
+            fabric
+            quilt
+          game-versions: 1.21.1
+          game-version-filter: none
+          environment: client | server
+          dependencies: ${{ needs.metadata.outputs.fabric_dependencies }}
+
+          modrinth-id: ${{ needs.metadata.outputs.modrinth_id }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          modrinth-changelog: ''
+
+          curseforge-id: ${{ needs.metadata.outputs.curseforge_id }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          curseforge-changelog: ${{ github.event.release.body }}
+
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-tag: ${{ github.event.release.tag_name }}
+          github-changelog: ''
+
+      - name: Publish 1.21.11 Fabric
+        uses: Kira-NT/mc-publish@v3
+        with:
+          files: release/modern/scythe-mod-fabric-${{ github.event.release.tag_name }}+1.21.11.jar
+          name: ${{ github.event.release.tag_name }}+1.21.11
+          version: ${{ github.event.release.tag_name }}+1.21.11
+          version-type: release
+          loaders: |
+            fabric
+            quilt
+          game-versions: 1.21.11
+          game-version-filter: none
+          environment: client | server
+          dependencies: ${{ needs.metadata.outputs.fabric_dependencies }}
+
+          modrinth-id: ${{ needs.metadata.outputs.modrinth_id }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          modrinth-changelog: ''
+
+          curseforge-id: ${{ needs.metadata.outputs.curseforge_id }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          curseforge-changelog: ${{ github.event.release.body }}
+
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-tag: ${{ github.event.release.tag_name }}
+          github-changelog: ''
+
+      - name: Publish 26.1.2 Fabric
+        uses: Kira-NT/mc-publish@v3
+        with:
+          files: release/current/scythe-mod-fabric-${{ github.event.release.tag_name }}+26.1.2.jar
+          name: ${{ github.event.release.tag_name }}+26.1.2
+          version: ${{ github.event.release.tag_name }}+26.1.2
+          version-type: release
+          loaders: |
+            fabric
+            quilt
+          game-versions: 26.1.2
+          game-version-filter: none
+          environment: client | server
+          dependencies: ${{ needs.metadata.outputs.fabric_dependencies }}
+
+          modrinth-id: ${{ needs.metadata.outputs.modrinth_id }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          modrinth-changelog: ''
+
+          curseforge-id: ${{ needs.metadata.outputs.curseforge_id }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          curseforge-changelog: ${{ github.event.release.body }}
+
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-tag: ${{ github.event.release.tag_name }}
+          github-changelog: ''
+
+      - name: Publish 26.2 Fabric
+        uses: Kira-NT/mc-publish@v3
+        with:
+          files: release/current/scythe-mod-fabric-${{ github.event.release.tag_name }}+26.2.jar
+          name: ${{ github.event.release.tag_name }}+26.2
+          version: ${{ github.event.release.tag_name }}+26.2
+          version-type: release
+          loaders: |
+            fabric
+            quilt
+          game-versions: 26.2
+          game-version-filter: none
+          environment: client | server
+          dependencies: ${{ needs.metadata.outputs.fabric_dependencies }}
+
+          modrinth-id: ${{ needs.metadata.outputs.modrinth_id }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          modrinth-changelog: ''
+
+          curseforge-id: ${{ needs.metadata.outputs.curseforge_id }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          curseforge-changelog: ${{ github.event.release.body }}
+
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-tag: ${{ github.event.release.tag_name }}
+          github-changelog: ''
+
+      - name: Publish 26.3 Fabric
+        uses: Kira-NT/mc-publish@v3
+        with:
+          files: release/current/scythe-mod-fabric-${{ github.event.release.tag_name }}+26.3.jar
+          name: ${{ github.event.release.tag_name }}+26.3
+          version: ${{ github.event.release.tag_name }}+26.3
+          version-type: release
+          loaders: |
+            fabric
+            quilt
+          game-versions: 26.3
+          game-version-filter: none
+          environment: client | server
+          dependencies: ${{ needs.metadata.outputs.fabric_dependencies }}
+
+          modrinth-id: ${{ needs.metadata.outputs.modrinth_id }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          modrinth-changelog: ''
+
+          curseforge-id: ${{ needs.metadata.outputs.curseforge_id }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          curseforge-changelog: ${{ github.event.release.body }}
+
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-tag: ${{ github.event.release.tag_name }}
+          github-changelog: ''
+
+  publish_forge:
+    name: Publish Forge targets
+    needs: [metadata, build, publish_fabric]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download Forge artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: scythe-release-legacy-forge
+          path: release/legacy-forge
+      - name: Publish 1.20.1 Forge
+        uses: Kira-NT/mc-publish@v3
+        with:
+          files: release/legacy-forge/scythe-mod-forge-${{ github.event.release.tag_name }}+1.20.1.jar
+          name: ${{ github.event.release.tag_name }}+1.20.1
+          version: ${{ github.event.release.tag_name }}+1.20.1
+          version-type: release
+          loaders: |
+            forge
+          game-versions: 1.20.1
+          game-version-filter: none
+          environment: client | server
+
+          modrinth-id: ${{ needs.metadata.outputs.modrinth_id }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          modrinth-changelog: ''
+
+          curseforge-id: ${{ needs.metadata.outputs.curseforge_id }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          curseforge-changelog: ${{ github.event.release.body }}
+
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-tag: ${{ github.event.release.tag_name }}
+          github-changelog: ''
+
+  publish_neoforge:
+    name: Publish NeoForge targets
+    needs: [metadata, build, publish_forge]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download modern NeoForge artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: scythe-release-modern-neoforge
+          path: release/modern-neoforge
+      - name: Download current NeoForge artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: scythe-release-current-neoforge
+          path: release/current-neoforge
+      - name: Publish 1.21.1 NeoForge
+        uses: Kira-NT/mc-publish@v3
+        with:
+          files: release/modern-neoforge/scythe-mod-neoforge-${{ github.event.release.tag_name }}+1.21.1.jar
+          name: ${{ github.event.release.tag_name }}+1.21.1
+          version: ${{ github.event.release.tag_name }}+1.21.1
+          version-type: release
+          loaders: |
+            neoforge
+          game-versions: 1.21.1
+          game-version-filter: none
+          environment: client | server
+
+          modrinth-id: ${{ needs.metadata.outputs.modrinth_id }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          modrinth-changelog: ''
+
+          curseforge-id: ${{ needs.metadata.outputs.curseforge_id }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          curseforge-changelog: ${{ github.event.release.body }}
+
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-tag: ${{ github.event.release.tag_name }}
+          github-changelog: ''
+
+      - name: Publish 1.21.11 NeoForge
+        uses: Kira-NT/mc-publish@v3
+        with:
+          files: release/modern-neoforge/scythe-mod-neoforge-${{ github.event.release.tag_name }}+1.21.11.jar
+          name: ${{ github.event.release.tag_name }}+1.21.11
+          version: ${{ github.event.release.tag_name }}+1.21.11
+          version-type: release
+          loaders: |
+            neoforge
+          game-versions: 1.21.11
+          game-version-filter: none
+          environment: client | server
+
+          modrinth-id: ${{ needs.metadata.outputs.modrinth_id }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          modrinth-changelog: ''
+
+          curseforge-id: ${{ needs.metadata.outputs.curseforge_id }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          curseforge-changelog: ${{ github.event.release.body }}
+
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-tag: ${{ github.event.release.tag_name }}
+          github-changelog: ''
+
+      - name: Publish 26.1.2 NeoForge
+        uses: Kira-NT/mc-publish@v3
+        with:
+          files: release/current-neoforge/scythe-mod-neoforge-${{ github.event.release.tag_name }}+26.1.2.jar
+          name: ${{ github.event.release.tag_name }}+26.1.2
+          version: ${{ github.event.release.tag_name }}+26.1.2
+          version-type: release
+          loaders: |
+            neoforge
+          game-versions: 26.1.2
+          game-version-filter: none
+          environment: client | server
+
+          modrinth-id: ${{ needs.metadata.outputs.modrinth_id }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          modrinth-changelog: ''
+
+          curseforge-id: ${{ needs.metadata.outputs.curseforge_id }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          curseforge-changelog: ${{ github.event.release.body }}
+
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-tag: ${{ github.event.release.tag_name }}
+          github-changelog: ''
+
+      - name: Publish 26.2 NeoForge
+        uses: Kira-NT/mc-publish@v3
+        with:
+          files: release/current-neoforge/scythe-mod-neoforge-${{ github.event.release.tag_name }}+26.2.jar
+          name: ${{ github.event.release.tag_name }}+26.2
+          version: ${{ github.event.release.tag_name }}+26.2
+          version-type: release
+          loaders: |
+            neoforge
+          game-versions: 26.2
+          game-version-filter: none
+          environment: client | server
+
+          modrinth-id: ${{ needs.metadata.outputs.modrinth_id }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          modrinth-changelog: ''
+
+          curseforge-id: ${{ needs.metadata.outputs.curseforge_id }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          curseforge-changelog: ${{ github.event.release.body }}
+
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-tag: ${{ github.event.release.tag_name }}
+          github-changelog: ''
+
+      - name: Publish 26.3 NeoForge
+        uses: Kira-NT/mc-publish@v3
+        with:
+          files: release/current-neoforge/scythe-mod-neoforge-${{ github.event.release.tag_name }}+26.3.jar
+          name: ${{ github.event.release.tag_name }}+26.3
+          version: ${{ github.event.release.tag_name }}+26.3
+          version-type: release
+          loaders: |
+            neoforge
+          game-versions: 26.3
+          game-version-filter: none
+          environment: client | server
+
+          modrinth-id: ${{ needs.metadata.outputs.modrinth_id }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          modrinth-changelog: ''
+
+          curseforge-id: ${{ needs.metadata.outputs.curseforge_id }}
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
           curseforge-changelog: ${{ github.event.release.body }}
 

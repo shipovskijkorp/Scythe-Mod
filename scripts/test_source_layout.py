@@ -33,6 +33,29 @@ class MatrixTests(unittest.TestCase):
         self.assertEqual(set(sl.target_ids(props)), set(by_target))
         self.assertEqual(len(rows), len(by_target))
 
+        expected_order = [
+            '1.20.1-fabric',
+            '1.21.1-fabric',
+            '1.21.11-fabric',
+            '26.1.2-fabric',
+            '26.2-fabric',
+            '26.3-fabric',
+            '1.20.1-forge',
+            '1.21.1-neoforge',
+            '1.21.11-neoforge',
+            '26.1.2-neoforge',
+            '26.2-neoforge',
+            '26.3-neoforge',
+        ]
+        self.assertEqual(expected_order, [row['target'] for row in rows])
+        for platform in ('fabric', 'forge', 'neoforge'):
+            platform_rows = sl.publish_matrix(props, platform)['include']
+            self.assertEqual(
+                [target for target in expected_order if target.endswith('-' + platform)],
+                [row['target'] for row in platform_rows],
+            )
+            self.assertTrue(all(row['loader'] == platform for row in platform_rows))
+
         changelog_targets = [row['target'] for row in rows if row['modrinth_changelog']]
         self.assertEqual(['1.20.1-fabric'], changelog_targets)
 
@@ -56,6 +79,7 @@ class MatrixTests(unittest.TestCase):
                 else:
                     self.assertEqual(platform, row['loaders'])
                     self.assertEqual('', row['dependencies'])
+                    self.assertNotIn('fabric-api', row['dependencies'])
 
     def test_publish_matrix_rejects_unknown_changelog_target(self):
         props = sl.load_properties()
@@ -63,6 +87,45 @@ class MatrixTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             sl.publish_matrix(props)
 
+    def test_release_workflow_publishes_in_strict_loader_and_version_order(self):
+        publish = (sl.ROOT / '.github/workflows/publish.yml').read_text(encoding='utf-8')
+        expected_steps = [
+            'Publish 1.20.1 Fabric',
+            'Publish 1.21.1 Fabric',
+            'Publish 1.21.11 Fabric',
+            'Publish 26.1.2 Fabric',
+            'Publish 26.2 Fabric',
+            'Publish 26.3 Fabric',
+            'Publish 1.20.1 Forge',
+            'Publish 1.21.1 NeoForge',
+            'Publish 1.21.11 NeoForge',
+            'Publish 26.1.2 NeoForge',
+            'Publish 26.2 NeoForge',
+            'Publish 26.3 NeoForge',
+        ]
+        positions = [publish.index('- name: ' + name) for name in expected_steps]
+        self.assertEqual(sorted(positions), positions)
+
+        fabric_start = publish.index('  publish_fabric:')
+        forge_start = publish.index('  publish_forge:')
+        neoforge_start = publish.index('  publish_neoforge:')
+        fabric_section = publish[fabric_start:forge_start]
+        forge_section = publish[forge_start:neoforge_start]
+        neoforge_section = publish[neoforge_start:]
+
+        self.assertIn('needs: [metadata, build, publish_fabric]', forge_section)
+        self.assertIn('needs: [metadata, build, publish_forge]', neoforge_section)
+        dependency_input = 'dependencies: ' + '${{ needs.metadata.outputs.fabric_dependencies }}'
+        self.assertEqual(6, fabric_section.count(dependency_input))
+        self.assertNotIn('dependencies:', forge_section)
+        self.assertNotIn('dependencies:', neoforge_section)
+
+    def test_build_workflow_does_not_run_for_release_tag_pushes(self):
+        workflow = (sl.ROOT / '.github/workflows/build.yml').read_text(encoding='utf-8')
+        self.assertIn('pull_request:', workflow)
+        self.assertIn('push:', workflow)
+        self.assertIn('branches:', workflow)
+        self.assertNotIn('tags:', workflow)
     def test_derived_layers_and_coordinates(self):
         props = sl.load_properties()
         for target in sl.target_ids(props):

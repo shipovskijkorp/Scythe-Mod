@@ -495,12 +495,48 @@ def ci_matrix(properties=None) -> dict:
     return {"include": include}
 
 
-def publish_matrix(properties=None) -> dict:
-    """Return one publication row per configured Minecraft/loader target."""
+_PUBLISH_PLATFORM_ORDER = {"fabric": 0, "forge": 1, "neoforge": 2}
+
+
+def _publish_target_sort_key(target: str, props: dict[str, str]):
+    prefix = f"target.{target}."
+    platform = props[prefix + "source.platform"]
+    if platform not in _PUBLISH_PLATFORM_ORDER:
+        raise ValueError(f"Unsupported publication platform: {platform!r}")
+    return (_PUBLISH_PLATFORM_ORDER[platform], _version_tuple(props[prefix + "deps.minecraft"]), target)
+
+
+def _publish_dependencies(platform: str, props: dict[str, str]) -> str:
+    if platform != "fabric":
+        return ""
+
+    fabric_api_modrinth = props.get("publish.fabric_api.modrinth_id", "")
+    fabric_api_curseforge = props.get("publish.fabric_api.curseforge_id", "")
+    if not fabric_api_modrinth or not fabric_api_curseforge:
+        raise ValueError("Fabric API publication IDs must be configured")
+    return (
+        "fabric-api(required)"
+        f"{{modrinth:{fabric_api_modrinth}}}"
+        f"{{curseforge:{fabric_api_curseforge}}}"
+    )
+
+
+def publish_matrix(properties=None, platform: str | None = None) -> dict:
+    """Return publication rows in stable loader/version order, optionally filtered by loader."""
     props = properties if properties is not None else load_properties()
-    targets = target_ids(props)
+    all_targets = target_ids(props)
+    if platform is not None and platform not in _PUBLISH_PLATFORM_ORDER:
+        raise ValueError(f"Unsupported publication platform: {platform!r}")
+
+    targets = sorted(all_targets, key=lambda target: _publish_target_sort_key(target, props))
+    if platform is not None:
+        targets = [
+            target for target in targets
+            if props[f"target.{target}.source.platform"] == platform
+        ]
+
     changelog_target = props.get("publish.modrinth.changelog_target", "")
-    if changelog_target not in targets:
+    if changelog_target not in all_targets:
         raise ValueError(
             "publish.modrinth.changelog_target must name a configured target: "
             f"{changelog_target!r}"
@@ -511,41 +547,30 @@ def publish_matrix(properties=None) -> dict:
     if not modrinth_id or not curseforge_id:
         raise ValueError("Publishing project IDs must be configured")
 
-    fabric_api_modrinth = props.get("publish.fabric_api.modrinth_id", "")
-    fabric_api_curseforge = props.get("publish.fabric_api.curseforge_id", "")
     extra_fabric_loaders = _ids(props.get("publish.fabric.additional_loaders", ""))
 
     include = []
     for target in targets:
         prefix = f"target.{target}."
-        platform = props[prefix + "source.platform"]
+        target_platform = props[prefix + "source.platform"]
         minecraft = props[prefix + "deps.minecraft"]
         version = props[prefix + "artifact.version"]
-        loaders = [platform]
-        if platform == "fabric":
+        loaders = [target_platform]
+        if target_platform == "fabric":
             for loader in extra_fabric_loaders:
                 if loader not in loaders:
                     loaders.append(loader)
-            if not fabric_api_modrinth or not fabric_api_curseforge:
-                raise ValueError("Fabric API publication IDs must be configured")
-            dependencies = (
-                "fabric-api(required)"
-                f"{{modrinth:{fabric_api_modrinth}}}"
-                f"{{curseforge:{fabric_api_curseforge}}}"
-            )
-        else:
-            dependencies = ""
 
         include.append({
             "target": target,
             "generation": props[prefix + "build.generation"],
             "minecraft": minecraft,
-            "loader": platform,
+            "loader": target_platform,
             "loaders": "\n".join(loaders),
             "java": props[prefix + "java.version"],
             "version": version,
-            "artifact": f"{props[prefix + 'mod.archive_name']}-{platform}-{version}.jar",
-            "dependencies": dependencies,
+            "artifact": f"{props[prefix + 'mod.archive_name']}-{target_platform}-{version}.jar",
+            "dependencies": _publish_dependencies(target_platform, props),
             "modrinth_changelog": target == changelog_target,
             "modrinth_id": modrinth_id,
             "curseforge_id": curseforge_id,
@@ -566,13 +591,14 @@ def main() -> None:
     parser.add_argument("--describe", action="store_true")
     parser.add_argument("--ci-matrix", action="store_true")
     parser.add_argument("--publish-matrix", action="store_true")
+    parser.add_argument("--publish-platform", choices=("fabric", "forge", "neoforge"))
     args = parser.parse_args()
     try:
         props = load_properties(args.config)
         if args.ci_matrix:
             print(json.dumps(ci_matrix(props), separators=(",", ":")))
         elif args.publish_matrix:
-            print(json.dumps(publish_matrix(props), separators=(",", ":")))
+            print(json.dumps(publish_matrix(props, args.publish_platform), separators=(",", ":")))
         elif args.describe:
             print(json.dumps(describe(props), indent=2))
         elif args.list_targets:
