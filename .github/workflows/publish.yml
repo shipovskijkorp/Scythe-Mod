@@ -36,14 +36,17 @@ jobs:
         id: matrix
         shell: bash
         run: echo "build=$(python scripts/source_layout.py --ci-matrix)" >> "$GITHUB_OUTPUT"
-      - name: Resolve publication metadata
+      - name: Resolve loader-specific publication metadata
         id: publish_meta
         shell: bash
         run: |
           python - <<'PY' >> "$GITHUB_OUTPUT"
           import source_layout as sl
           props = sl.load_properties()
-          fabric = sl.publish_matrix(props, "fabric")["include"][0]
+          fabric = next(
+              row for row in sl.publish_matrix(props)["include"]
+              if row["loader"] == "fabric"
+          )
           print("modrinth_id=" + fabric["modrinth_id"])
           print("curseforge_id=" + fabric["curseforge_id"])
           print("fabric_dependencies=" + fabric["dependencies"])
@@ -107,7 +110,7 @@ jobs:
           if-no-files-found: error
 
   publish_fabric:
-    name: Publish Fabric targets
+    name: Publish Fabric and Quilt targets
     needs: [metadata, build]
     runs-on: ubuntu-24.04
     steps:
@@ -126,7 +129,8 @@ jobs:
         with:
           name: scythe-release-current
           path: release/current
-      - name: Publish 1.20.1 Fabric
+
+      - name: Publish 1.20.1 Fabric and Quilt
         uses: Kira-NT/mc-publish@v3
         with:
           files: release/legacy/scythe-mod-fabric-${{ github.event.release.tag_name }}+1.20.1.jar
@@ -153,7 +157,7 @@ jobs:
           github-tag: ${{ github.event.release.tag_name }}
           github-changelog: ''
 
-      - name: Publish 1.21.1 Fabric
+      - name: Publish 1.21.1 Fabric and Quilt
         uses: Kira-NT/mc-publish@v3
         with:
           files: release/modern/scythe-mod-fabric-${{ github.event.release.tag_name }}+1.21.1.jar
@@ -180,7 +184,7 @@ jobs:
           github-tag: ${{ github.event.release.tag_name }}
           github-changelog: ''
 
-      - name: Publish 1.21.11 Fabric
+      - name: Publish 1.21.11 Fabric and Quilt
         uses: Kira-NT/mc-publish@v3
         with:
           files: release/modern/scythe-mod-fabric-${{ github.event.release.tag_name }}+1.21.11.jar
@@ -207,7 +211,7 @@ jobs:
           github-tag: ${{ github.event.release.tag_name }}
           github-changelog: ''
 
-      - name: Publish 26.1.2 Fabric
+      - name: Publish 26.1.2 Fabric and Quilt
         uses: Kira-NT/mc-publish@v3
         with:
           files: release/current/scythe-mod-fabric-${{ github.event.release.tag_name }}+26.1.2.jar
@@ -234,7 +238,7 @@ jobs:
           github-tag: ${{ github.event.release.tag_name }}
           github-changelog: ''
 
-      - name: Publish 26.2 Fabric
+      - name: Publish 26.2 Fabric and Quilt
         uses: Kira-NT/mc-publish@v3
         with:
           files: release/current/scythe-mod-fabric-${{ github.event.release.tag_name }}+26.2.jar
@@ -261,7 +265,7 @@ jobs:
           github-tag: ${{ github.event.release.tag_name }}
           github-changelog: ''
 
-      - name: Publish 26.3 Fabric
+      - name: Publish 26.3 Fabric and Quilt
         uses: Kira-NT/mc-publish@v3
         with:
           files: release/current/scythe-mod-fabric-${{ github.event.release.tag_name }}+26.3.jar
@@ -288,9 +292,17 @@ jobs:
           github-tag: ${{ github.event.release.tag_name }}
           github-changelog: ''
 
+  wait_after_fabric:
+    name: Wait for CurseForge Fabric processing
+    needs: publish_fabric
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Wait 5 minutes before publishing other loaders
+        run: sleep 300
+
   publish_forge:
     name: Publish Forge targets
-    needs: [metadata, build, publish_fabric]
+    needs: [metadata, wait_after_fabric]
     runs-on: ubuntu-24.04
     steps:
       - name: Download Forge artifacts
@@ -298,6 +310,7 @@ jobs:
         with:
           name: scythe-release-legacy-forge
           path: release/legacy-forge
+
       - name: Publish 1.20.1 Forge
         uses: Kira-NT/mc-publish@v3
         with:
@@ -305,8 +318,7 @@ jobs:
           name: ${{ github.event.release.tag_name }}+1.20.1
           version: ${{ github.event.release.tag_name }}+1.20.1
           version-type: release
-          loaders: |
-            forge
+          loaders: forge
           game-versions: 1.20.1
           game-version-filter: none
           environment: client | server
@@ -325,7 +337,7 @@ jobs:
 
   publish_neoforge:
     name: Publish NeoForge targets
-    needs: [metadata, build, publish_forge]
+    needs: [metadata, publish_forge]
     runs-on: ubuntu-24.04
     steps:
       - name: Download modern NeoForge artifacts
@@ -338,6 +350,7 @@ jobs:
         with:
           name: scythe-release-current-neoforge
           path: release/current-neoforge
+
       - name: Publish 1.21.1 NeoForge
         uses: Kira-NT/mc-publish@v3
         with:
@@ -345,8 +358,7 @@ jobs:
           name: ${{ github.event.release.tag_name }}+1.21.1
           version: ${{ github.event.release.tag_name }}+1.21.1
           version-type: release
-          loaders: |
-            neoforge
+          loaders: neoforge
           game-versions: 1.21.1
           game-version-filter: none
           environment: client | server
@@ -370,8 +382,7 @@ jobs:
           name: ${{ github.event.release.tag_name }}+1.21.11
           version: ${{ github.event.release.tag_name }}+1.21.11
           version-type: release
-          loaders: |
-            neoforge
+          loaders: neoforge
           game-versions: 1.21.11
           game-version-filter: none
           environment: client | server
@@ -395,8 +406,7 @@ jobs:
           name: ${{ github.event.release.tag_name }}+26.1.2
           version: ${{ github.event.release.tag_name }}+26.1.2
           version-type: release
-          loaders: |
-            neoforge
+          loaders: neoforge
           game-versions: 26.1.2
           game-version-filter: none
           environment: client | server
@@ -420,8 +430,7 @@ jobs:
           name: ${{ github.event.release.tag_name }}+26.2
           version: ${{ github.event.release.tag_name }}+26.2
           version-type: release
-          loaders: |
-            neoforge
+          loaders: neoforge
           game-versions: 26.2
           game-version-filter: none
           environment: client | server
@@ -445,8 +454,7 @@ jobs:
           name: ${{ github.event.release.tag_name }}+26.3
           version: ${{ github.event.release.tag_name }}+26.3
           version-type: release
-          loaders: |
-            neoforge
+          loaders: neoforge
           game-versions: 26.3
           game-version-filter: none
           environment: client | server
