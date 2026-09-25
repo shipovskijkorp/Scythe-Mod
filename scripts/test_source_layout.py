@@ -107,14 +107,19 @@ class MatrixTests(unittest.TestCase):
         self.assertEqual(sorted(positions), positions)
 
         fabric_start = publish.index('  publish_fabric:')
+        wait_start = publish.index('  wait_after_fabric:')
         forge_start = publish.index('  publish_forge:')
         neoforge_start = publish.index('  publish_neoforge:')
-        fabric_section = publish[fabric_start:forge_start]
+        fabric_section = publish[fabric_start:wait_start]
+        wait_section = publish[wait_start:forge_start]
         forge_section = publish[forge_start:neoforge_start]
         neoforge_section = publish[neoforge_start:]
 
-        self.assertIn('needs: [metadata, build, publish_fabric]', forge_section)
-        self.assertIn('needs: [metadata, build, publish_forge]', neoforge_section)
+        self.assertIn('needs: [metadata, build]', fabric_section)
+        self.assertIn('needs: publish_fabric', wait_section)
+        self.assertIn('run: sleep 300', wait_section)
+        self.assertIn('needs: [metadata, wait_after_fabric]', forge_section)
+        self.assertIn('needs: [metadata, publish_forge]', neoforge_section)
         dependency_input = 'dependencies: ' + '${{ needs.metadata.outputs.fabric_dependencies }}'
         self.assertEqual(6, fabric_section.count(dependency_input))
         self.assertNotIn('dependencies:', forge_section)
