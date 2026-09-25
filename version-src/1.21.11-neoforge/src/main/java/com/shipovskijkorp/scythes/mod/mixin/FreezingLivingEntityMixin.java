@@ -44,11 +44,13 @@ public abstract class FreezingLivingEntityMixin {
 
         scythes$freezingDamageTicks = 0;
         if (self.getRandom().nextFloat() < ScytheBalance.Freezing.DAMAGE_CHANCE) {
-            ServerPlayerEntity freezingOwner = self instanceof SnowGolemEntity
-                    ? DamageAttributionTracker.getFreezingOwner(self)
-                    : null;
-            self.damage(world, ScytheDamageTypes.freezing(world), ScytheBalance.Freezing.DAMAGE_PER_PROC);
-            if (!self.isAlive() && freezingOwner != null) {
+            ServerPlayerEntity freezingOwner = DamageAttributionTracker.getFreezingOwner(self);
+            self.damage(
+                    world,
+                    freezingOwner != null ? ScytheDamageTypes.freezing(world, freezingOwner) : ScytheDamageTypes.freezing(world),
+                    ScytheBalance.Freezing.DAMAGE_PER_PROC
+            );
+            if (!self.isAlive() && self instanceof SnowGolemEntity && freezingOwner != null) {
                 ScytheAdvancementTracker.tryGrantSupercooledSnow(freezingOwner);
             }
         }

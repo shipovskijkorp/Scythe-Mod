@@ -24,6 +24,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 public class GoldenScytheItem extends ScytheSwordItem {
@@ -99,6 +100,10 @@ public class GoldenScytheItem extends ScytheSwordItem {
         Vec3 direction = player.getLookAngle().normalize();
         Vec3 end = start.add(direction.scale(ScytheBalance.Golden.MIDAS_REACH));
         AABB searchBox = player.getBoundingBox().expandTowards(direction.scale(ScytheBalance.Golden.MIDAS_REACH)).inflate(ScytheBalance.Golden.MIDAS_SEARCH_PADDING);
+        HitResult blockHit = player.pick(ScytheBalance.Golden.MIDAS_REACH, 1.0F, false);
+        double maxHitDistanceSquared = blockHit.getType() == HitResult.Type.MISS
+                ? ScytheBalance.Golden.MIDAS_REACH * ScytheBalance.Golden.MIDAS_REACH
+                : blockHit.getLocation().distanceToSqr(start);
 
         return player.level().getEntitiesOfClass(
                         LivingEntity.class,
@@ -107,7 +112,8 @@ public class GoldenScytheItem extends ScytheSwordItem {
                 )
                 .stream()
                 .map(target -> new MidasCandidate(target, getHitDistance(start, end, target)))
-                .filter(candidate -> candidate.hitDistance().isPresent())
+                .filter(candidate -> candidate.hitDistance().isPresent()
+                        && candidate.hitDistance().orElse(Double.MAX_VALUE) <= maxHitDistanceSquared + 1.0E-6D)
                 .min(Comparator.comparingDouble(candidate -> candidate.hitDistance().orElse(Double.MAX_VALUE)))
                 .map(MidasCandidate::target)
                 .orElse(null);

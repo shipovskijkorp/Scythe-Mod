@@ -39,6 +39,13 @@ public final class FarmerTillingHandler {
                 if (origin.getStack().isEmpty()) break outer;
 
                 BlockPos pos = center.add(dx, 0, dz);
+                if (player instanceof ServerPlayerEntity serverPlayer) {
+//? if >=1.21.11 {
+                    if (!serverPlayer.canModifyAt(world, pos)) continue;
+//? } else {
+                    if (!world.canPlayerModifyAt(serverPlayer, pos)) continue;
+//? }
+                }
                 ItemUsageContext areaContext = new ItemUsageContext(
                         player,
                         origin.getHand(),

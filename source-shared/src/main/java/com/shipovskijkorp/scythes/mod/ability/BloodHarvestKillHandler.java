@@ -17,6 +17,7 @@ public class BloodHarvestKillHandler {
         if (killer.isTeammate(victim)) return;
 
         if (!BloodHarvestTracker.isActive(killer)) return;
+        if (!BloodHarvestTracker.isMarked(killer, victim)) return;
 
         boolean holdingScythe =
                 killer.getMainHandStack().getItem() instanceof BloodScytheItem

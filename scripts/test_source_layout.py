@@ -269,6 +269,238 @@ class MaterializationTests(unittest.TestCase):
 
 
 class ForgeRuntimeSafetyTests(unittest.TestCase):
+    def test_persistent_gameplay_state_and_minion_lifecycle_guards_materialize_for_all_targets(self):
+        props = sl.load_properties()
+        with tempfile.TemporaryDirectory() as tmp:
+            for target in sl.target_ids(props):
+                with self.subTest(target=target):
+                    out = sl.materialize_target(target, Path(tmp) / target, props)
+                    base = out / 'src/main/java/com/shipovskijkorp/scythes/mod'
+
+                    cooldowns = (base / 'ability/ScytheCooldowns.java').read_text(encoding='utf-8')
+                    self.assertIn('ScythePersistentStore.remainingCooldown', cooldowns)
+                    self.assertIn('ScythePersistentStore.startCooldown', cooldowns)
+                    self.assertIn('BLOOD_HARVEST', cooldowns)
+
+                    harvest_kill = (base / 'ability/BloodHarvestKillHandler.java').read_text(encoding='utf-8')
+                    harvest_tracker = (base / 'ability/BloodHarvestTracker.java').read_text(encoding='utf-8')
+                    self.assertIn('BloodHarvestTracker.isMarked', harvest_kill)
+                    self.assertIn('queueBloodFailure', harvest_tracker)
+                    self.assertIn('consumeBloodFailure', harvest_tracker)
+                    self.assertIn('Set<UUID> markedTargets', harvest_tracker)
+
+                    manager = (base / 'ability/WitheringMinionManager.java').read_text(encoding='utf-8')
+                    minion = (base / 'entity/WitheringMinionEntity.java').read_text(encoding='utf-8')
+                    self.assertIn('ScythePersistentStore.minionCount', manager)
+                    self.assertIn('storeDormantMinion', manager)
+                    self.assertIn('restoreMinions', manager)
+                    self.assertIn('addPendingSoulRefund', manager)
+                    self.assertIn('WitheringMinionManager.suspendOffline(this)', minion)
+                    self.assertIn('WitheringMinionManager.returnMinion(owner, this)', minion)
+                    self.assertIn('ScytheBalance.Minion.SEARCH_RADIUS', minion)
+
+                    attribution = (base / 'ability/DamageAttributionTracker.java').read_text(encoding='utf-8')
+                    lifecycle = (base / 'ability/ScytheLifecycle.java').read_text(encoding='utf-8')
+                    self.assertIn('record TrackedSource(UUID ownerUuid, long expiresAt)', attribution)
+                    self.assertIn('entrySet().removeIf', attribution)
+                    self.assertIn('DamageAttributionTracker.cleanup(server)', lifecycle)
+
+                    farmer = (base / 'ability/FarmerHarvestHandler.java').read_text(encoding='utf-8')
+                    tilling = (base / 'ability/FarmerTillingHandler.java').read_text(encoding='utf-8')
+                    self.assertTrue('canPlayerModifyAt(player, pos)' in farmer or 'player.canModifyAt(world, pos)' in farmer or 'mayInteract(player, pos)' in farmer)
+                    self.assertTrue('canPlayerModifyAt(serverPlayer, pos)' in tilling or 'serverPlayer.canModifyAt(world, pos)' in tilling or 'mayInteract(serverPlayer, pos)' in tilling)
+
+    def test_12111_entity_and_permission_api_migrations_materialize(self):
+        props = sl.load_properties()
+        with tempfile.TemporaryDirectory() as tmp:
+            for target in ('1.21.11-fabric', '1.21.11-neoforge'):
+                with self.subTest(target=target):
+                    out = sl.materialize_target(target, Path(tmp) / target, props)
+                    base = out / 'src/main/java/com/shipovskijkorp/scythes/mod'
+
+                    farmer = (base / 'ability/FarmerHarvestHandler.java').read_text(encoding='utf-8')
+                    tilling = (base / 'ability/FarmerTillingHandler.java').read_text(encoding='utf-8')
+                    fireball = (base / 'entity/FireballEntity.java').read_text(encoding='utf-8')
+                    living = (base / 'mixin/LivingEntityMixin.java').read_text(encoding='utf-8')
+
+                    self.assertIn('player.canModifyAt(world, pos)', farmer)
+                    self.assertNotIn('world.canPlayerModifyAt(player, pos)', farmer)
+                    self.assertIn('serverPlayer.canModifyAt(world, pos)', tilling)
+                    self.assertNotIn('world.canPlayerModifyAt(serverPlayer, pos)', tilling)
+                    self.assertNotIn('lockedTarget.getPos()', fireball)
+                    self.assertNotIn('.subtract(getPos())', fireball)
+                    self.assertIn('lockedTarget.getX()', fireball)
+                    self.assertIn('ScytheDamageTypes.withering(self.getEntityWorld(), owner)', living)
+                    self.assertNotIn('ScytheDamageTypes.withering(self.getWorld(), owner)', living)
+
+    def test_current_dimension_key_api_materializes_for_all_targets(self):
+        props = sl.load_properties()
+        with tempfile.TemporaryDirectory() as tmp:
+            for target in ('26.1.2-fabric', '26.1.2-neoforge', '26.2-fabric', '26.2-neoforge', '26.3-fabric', '26.3-neoforge'):
+                with self.subTest(target=target):
+                    out = sl.materialize_target(target, Path(tmp) / target, props)
+                    farmer = (out / 'src/main/java/com/shipovskijkorp/scythes/mod/ability/FarmerHarvestHandler.java').read_text(encoding='utf-8')
+                    self.assertIn('level.dimension().identifier().toString()', farmer)
+                    self.assertNotIn('level.dimension().location().toString()', farmer)
+
+    def test_combat_targeting_serialization_and_safe_spawn_guards_materialize_for_all_targets(self):
+        props = sl.load_properties()
+        with tempfile.TemporaryDirectory() as tmp:
+            for target in sl.target_ids(props):
+                with self.subTest(target=target):
+                    out = sl.materialize_target(target, Path(tmp) / target, props)
+                    base = out / 'src/main/java/com/shipovskijkorp/scythes/mod'
+
+                    golden = (base / 'ability/GoldenLootMarkTracker.java').read_text(encoding='utf-8')
+                    store = (base / 'ability/ScythePersistentStore.java').read_text(encoding='utf-8')
+                    self.assertIn('ScythePersistentStore.markGoldenTarget', golden)
+                    self.assertIn('if (mark(target, owner)) marked++', golden)
+                    self.assertIn('case "G"', store)
+                    self.assertIn('GOLDEN_MARK_OWNERS_BY_TARGET', store)
+
+                    toxic = (base / 'entity/ToxicOrbEntity.java').read_text(encoding='utf-8')
+                    fireball = (base / 'entity/FireballEntity.java').read_text(encoding='utf-8')
+                    self.assertIn('ACIDITY_LEVEL_KEY', toxic)
+                    self.assertIn('lockedTargetId', fireball)
+                    self.assertIn('resolveLockedTarget()', fireball)
+
+                    combat = (base / 'util/ScytheCombatUtil.java').read_text(encoding='utf-8')
+                    toxic_aura = (base / 'ability/ToxicAuraTracker.java').read_text(encoding='utf-8')
+                    withering_aura = (base / 'ability/WitheringAuraTracker.java').read_text(encoding='utf-8')
+                    storm = (base / 'ability/FrozenStormAbility.java').read_text(encoding='utf-8')
+                    self.assertIn('isValidCombatTarget', combat)
+                    self.assertIn('isWithinRadius', combat)
+                    self.assertIn('isValidCombatTargetWithin', combat)
+                    self.assertIn('isValidCombatTargetWithin(player, target', toxic_aura)
+                    self.assertIn('isValidCombatTargetWithin(player, target', withering_aura)
+                    self.assertIn('isValidCombatTargetWithin(player, target', storm)
+                    harvest = (base / 'ability/BloodHarvestAbility.java').read_text(encoding='utf-8')
+                    self.assertIn('ScytheCombatUtil.isWithinRadius(player, p, ScytheBalance.BloodHarvest.RADIUS)', harvest)
+                    self.assertIn('isValidCombatTargetWithin(player, target, ScytheBalance.ToxicAura.RADIUS)', toxic_aura)
+
+                    targeting = (base / 'util/FireTargeting.java').read_text(encoding='utf-8')
+                    self.assertTrue('player.canSee(target)' in targeting or 'player.hasLineOfSight(target)' in targeting)
+                    golden_item = (base / 'item/GoldenScytheItem.java').read_text(encoding='utf-8')
+                    self.assertTrue('player.raycast(ScytheBalance.Golden.MIDAS_REACH' in golden_item or 'player.pick(ScytheBalance.Golden.MIDAS_REACH' in golden_item)
+
+                    damage_types = (base / 'util/ScytheDamageTypes.java').read_text(encoding='utf-8')
+                    living_mixin = (base / 'mixin/LivingEntityMixin.java').read_text(encoding='utf-8')
+                    self.assertGreaterEqual(damage_types.count('DamageSource freezing('), 2)
+                    self.assertIn('attacker', damage_types)
+                    self.assertIn('DamageSource withering(', damage_types)
+                    self.assertIn('attributeWitheringDamage', living_mixin)
+                    self.assertIn('DamageAttributionTracker.getWitheringOwner', living_mixin)
+                    self.assertIn('ScytheDamageTypes.withering(', living_mixin)
+                    self.assertNotIn('getDamageSources().create(DamageTypes.WITHER', living_mixin)
+                    self.assertNotIn('damageSources().source(DamageTypes.WITHER', living_mixin)
+                    self.assertIn('BloodScytheAttackContext.isActive', living_mixin)
+
+                    minions = (base / 'ability/WitheringMinionManager.java').read_text(encoding='utf-8')
+                    self.assertTrue('isSpaceEmpty(minion)' in minions or 'noCollision(minion)' in minions)
+                    self.assertIn('if (minion == null', minions)
+
+                    if target.endswith('-forge') or target.endswith('-neoforge'):
+                        platform = 'forge' if target.endswith('-forge') else 'neoforge'
+                        hooks = (base / f'platform/{platform}/{"ForgeServerHooks.java" if platform == "forge" else "NeoForgeServerHooks.java"}').read_text(encoding='utf-8')
+                        self.assertIn('getServer().execute', hooks)
+                        self.assertIn('isAlive()', hooks)
+                        self.assertIn('event.isCanceled()', hooks)
+
+    def test_p2_farmer_freezing_and_registry_guards_materialize_for_all_targets(self):
+        props = sl.load_properties()
+        with tempfile.TemporaryDirectory() as tmp:
+            for target in sl.target_ids(props):
+                with self.subTest(target=target):
+                    out = sl.materialize_target(target, Path(tmp) / target, props)
+                    base = out / 'src/main/java/com/shipovskijkorp/scythes/mod'
+
+                    store = (base / 'ability/ScythePersistentStore.java').read_text(encoding='utf-8')
+                    self.assertIn('ACCELERATED_CROPS', store)
+                    self.assertIn('case "F"', store)
+                    self.assertIn('CropAcceleration', store)
+                    self.assertIn('currentAge < stored.minimumAge()', store)
+
+                    farmer = (base / 'ability/FarmerHarvestHandler.java').read_text(encoding='utf-8')
+                    self.assertNotIn('WeakHashMap', farmer)
+                    self.assertIn('ScythePersistentStore.isCropAccelerated', farmer)
+                    self.assertIn('ScythePersistentStore.markCropAccelerated', farmer)
+                    self.assertIn('prepareCropBreak', farmer)
+
+                    freezing_effect = (base / 'effect/FreezingEffect.java').read_text(encoding='utf-8')
+                    freezing_mixin = (base / 'mixin/FreezingLivingEntityMixin.java').read_text(encoding='utf-8')
+                    self.assertNotIn('DAMAGE_INTERVAL_TICKS', freezing_effect)
+                    self.assertIn('freezingDamageTicks', freezing_mixin)
+                    self.assertIn('DAMAGE_INTERVAL_TICKS', freezing_mixin)
+
+                    combat = (base / 'util/ScytheCombatUtil.java').read_text(encoding='utf-8')
+                    self.assertIn('isWithinRadius', combat)
+                    self.assertIn('isValidCombatTargetWithin', combat)
+
+                    minions = (base / 'ability/WitheringMinionManager.java').read_text(encoding='utf-8')
+                    self.assertIn('ScythePersistentStore.minionCount', minions)
+                    self.assertIn('ScythePersistentStore.activeMinions', minions)
+
+                    if target.endswith('-fabric'):
+                        hooks = (base / 'platform/fabric/FabricServerHooks.java').read_text(encoding='utf-8')
+                        self.assertIn('PlayerBlockBreakEvents.BEFORE', hooks)
+                        self.assertIn('FarmerHarvestHandler.prepareCropBreak', hooks)
+                    elif target == '1.20.1-forge':
+                        hooks = (base / 'platform/forge/ForgeServerHooks.java').read_text(encoding='utf-8')
+                        self.assertIn('FarmerHarvestHandler.prepareCropBreak', hooks)
+                    elif target.endswith('-neoforge'):
+                        hooks = (base / 'platform/neoforge/NeoForgeServerHooks.java').read_text(encoding='utf-8')
+                        if target.startswith('26.'):
+                            self.assertIn('EventPriority.LOWEST', hooks)
+                            self.assertIn('FarmerHarvestHandler.doubleFinalDrops', hooks)
+                            self.assertIn('event.getDrops()', hooks)
+                        else:
+                            self.assertIn('FarmerHarvestHandler.prepareCropBreak', hooks)
+
+    def test_p3_runtime_resilience_and_scan_optimization_materialize_for_all_targets(self):
+        props = sl.load_properties()
+        with tempfile.TemporaryDirectory() as tmp:
+            for target in sl.target_ids(props):
+                with self.subTest(target=target):
+                    out = sl.materialize_target(target, Path(tmp) / target, props)
+                    base = out / 'src/main/java/com/shipovskijkorp/scythes/mod'
+
+                    farmer = (base / 'ability/FarmerHarvestHandler.java').read_text(encoding='utf-8')
+                    self.assertIn('ScytheSphereOffsets.forRadius', farmer)
+                    self.assertNotIn('for (int dx = -radius;', farmer)
+                    self.assertTrue('BlockPos.Mutable pos' in farmer or 'BlockPos.MutableBlockPos pos' in farmer)
+                    offsets = (base / 'ability/ScytheSphereOffsets.java').read_text(encoding='utf-8')
+                    self.assertIn('CACHE.computeIfAbsent', offsets)
+                    self.assertIn('int[] offsets', offsets)
+
+                    fireball = (base / 'entity/FireballEntity.java').read_text(encoding='utf-8')
+                    self.assertIn('FIREBALL_TARGET_REACQUIRE_TICKS', fireball)
+                    self.assertIn('FIREBALL_LOS_GRACE_TICKS', fireball)
+                    self.assertIn('unresolvedTargetTicks', fireball)
+                    self.assertIn('lostSightTicks', fireball)
+                    self.assertTrue('canSee(this)' in fireball or 'hasLineOfSight(this)' in fireball)
+
+                    manager = (base / 'ability/WitheringMinionManager.java').read_text(encoding='utf-8')
+                    lifecycle = (base / 'ability/ScytheLifecycle.java').read_text(encoding='utf-8')
+                    store = (base / 'ability/ScythePersistentStore.java').read_text(encoding='utf-8')
+                    self.assertIn('RESTORE_MAX_ATTEMPTS', manager)
+                    self.assertIn('tickRestore', manager)
+                    self.assertIn('refundDormantMinions', manager)
+                    self.assertIn('dormantMinions', store)
+                    self.assertIn('removeDormantMinion', store)
+                    self.assertIn('WitheringMinionManager.tickRestore(player)', lifecycle)
+
+                    attribution = (base / 'ability/DamageAttributionTracker.java').read_text(encoding='utf-8')
+                    self.assertIn('CLEANUP_INTERVAL_TICKS', attribution)
+                    self.assertIn('nextCleanupAt', attribution)
+
+                    if target.endswith('-fabric'):
+                        hooks = (base / 'platform/fabric/FabricServerHooks.java').read_text(encoding='utf-8')
+                    elif target.endswith('-forge'):
+                        hooks = (base / 'platform/forge/ForgeServerHooks.java').read_text(encoding='utf-8')
+                    else:
+                        hooks = (base / 'platform/neoforge/NeoForgeServerHooks.java').read_text(encoding='utf-8')
+                    self.assertIn('WitheringMinionManager.clearRuntime()', hooks)
+
     def test_forge_registrables_are_created_during_register_event(self):
         path = sl.ROOT / 'source-family-platforms/legacy/forge/src/main/java/com/shipovskijkorp/scythes/mod/ScytheMod.java'
         text = path.read_text(encoding='utf-8')

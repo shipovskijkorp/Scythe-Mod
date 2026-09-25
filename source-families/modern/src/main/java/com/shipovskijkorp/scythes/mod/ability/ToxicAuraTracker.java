@@ -74,7 +74,7 @@ public final class ToxicAuraTracker {
 //? }
                 LivingEntity.class,
                 box,
-                target -> !ScytheCombatUtil.isInvalidHostileTarget(player, target)
+                target -> ScytheCombatUtil.isValidCombatTargetWithin(player, target, ScytheBalance.ToxicAura.RADIUS)
         );
 
         for (LivingEntity target : targets) {

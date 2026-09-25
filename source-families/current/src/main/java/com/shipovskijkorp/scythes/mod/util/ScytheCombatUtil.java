@@ -9,8 +9,11 @@ import net.minecraft.world.effect.MobEffectInstance;
 //? } else {
 import net.minecraft.world.entity.EntityType;
 //? }
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.animal.equine.AbstractHorse;
 //? if >=26.2 {
@@ -36,6 +39,19 @@ public final class ScytheCombatUtil {
         if (source instanceof ServerPlayer player && minion.isOwner(player)) return true;
         ServerPlayer minionOwner = minion.getOwnerPlayer();
         return minionOwner != null && source.isAlliedTo(minionOwner);
+    }
+
+    public static boolean isValidCombatTarget(LivingEntity owner, LivingEntity target) {
+        if (isInvalidHostileTarget(owner, target)) return false;
+        return target instanceof Player || target instanceof Monster;
+    }
+
+    public static boolean isWithinRadius(Entity center, Entity target, double radius) {
+        return radius >= 0.0D && target.distanceToSqr(center) <= radius * radius;
+    }
+
+    public static boolean isValidCombatTargetWithin(LivingEntity owner, LivingEntity target, double radius) {
+        return isValidCombatTarget(owner, target) && isWithinRadius(owner, target, radius);
     }
 
     public static boolean isInvalidHostileTarget(LivingEntity owner, LivingEntity target) {

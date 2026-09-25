@@ -1,5 +1,6 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
+import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
 import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.item.BloodScytheItem;
 import com.shipovskijkorp.scythes.mod.platform.HudSync;
@@ -49,9 +50,11 @@ public class BloodHarvestAbility {
         }
 
 //? if >=1.21.11 {
-        if (player.getItemCooldownManager().isCoolingDown(stack)) {
+        if (ScytheCooldowns.remaining(player, ScytheCooldowns.Skill.BLOOD_HARVEST) > 0
+                || player.getItemCooldownManager().isCoolingDown(stack)) {
 //? } else {
-        if (player.getItemCooldownManager().isCoolingDown(item)) {
+        if (ScytheCooldowns.remaining(player, ScytheCooldowns.Skill.BLOOD_HARVEST) > 0
+                || player.getItemCooldownManager().isCoolingDown(item)) {
 //? }
             player.sendMessage(Text.translatable("message.scythes.blood_harvest.cooldown"), true);
             return;
@@ -67,6 +70,7 @@ public class BloodHarvestAbility {
                         ServerPlayerEntity.class,
                         box,
                         p -> p != player && p.isAlive() && !p.isSpectator() && !player.isTeammate(p)
+                                && ScytheCombatUtil.isWithinRadius(player, p, ScytheBalance.BloodHarvest.RADIUS)
                 );
 
         if (targets.isEmpty()) {
@@ -82,9 +86,9 @@ public class BloodHarvestAbility {
 //? if >=1.21.11 {
         player.getItemCooldownManager().set(stack, ScytheBalance.BloodHarvest.COOLDOWN_TICKS);
 //? } else {
-        // кулдаун по Item
         player.getItemCooldownManager().set(item, ScytheBalance.BloodHarvest.COOLDOWN_TICKS);
 //? }
+        ScytheCooldowns.start(player, ScytheCooldowns.Skill.BLOOD_HARVEST, ScytheBalance.BloodHarvest.COOLDOWN_TICKS);
 
         for (ServerPlayerEntity target : targets) {
             ScytheAdvancementTracker.markBloodActive(player, target);
@@ -94,7 +98,10 @@ public class BloodHarvestAbility {
             target.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, ScytheBalance.BloodHarvest.GLOWING_TICKS, ScytheBalance.BloodHarvest.GLOWING_AMPLIFIER));
         }
 
-        int windowTicks = BloodHarvestTracker.start(player);
+        int windowTicks = BloodHarvestTracker.start(
+                player,
+                targets.stream().map(ServerPlayerEntity::getUuid).toList()
+        );
         HudSync.start(player, HudTransport.Timer.BLOOD_HARVEST, windowTicks);
 
         player.sendMessage(Text.translatable("message.scythes.blood_harvest.success"), true);

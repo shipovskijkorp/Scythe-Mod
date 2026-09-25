@@ -119,14 +119,21 @@ public class WitheringMinionEntity extends WitherSkeleton {
 
         lifeTicks++;
         ServerPlayer owner = getOwnerPlayer();
+        if (owner == null) {
+            WitheringMinionManager.suspendOffline(this);
+            return;
+        }
+
+        WitheringMinionManager.ensureRegistered(this);
         if (lifeTicks >= ScytheBalance.Minion.LIFETIME_TICKS) {
-            if (owner != null) {
-                WitheringMinionManager.refundExpiredMinion(owner, this);
-            }
+            WitheringMinionManager.returnMinion(owner, this);
             discard();
             return;
         }
-        if (owner == null) {
+
+        double returnDistanceSquared = ScytheBalance.Minion.SEARCH_RADIUS * ScytheBalance.Minion.SEARCH_RADIUS;
+        if (owner.level() != this.level() || this.distanceToSqr(owner) > returnDistanceSquared) {
+            WitheringMinionManager.returnMinion(owner, this);
             discard();
             return;
         }
@@ -304,6 +311,20 @@ public class WitheringMinionEntity extends WitherSkeleton {
 
     public boolean isOwner(ServerPlayer player) {
         return ownerUuid != null && ownerUuid.equals(player.getUUID());
+    }
+
+    @Nullable
+    public UUID getOwnerUuid() {
+        return ownerUuid;
+    }
+
+    public int getLifeTicks() {
+        return lifeTicks;
+    }
+
+    public void restoreRuntimeState(float health, int restoredLifeTicks) {
+        lifeTicks = Math.max(0, restoredLifeTicks);
+        setHealth(Math.max(0.1F, Math.min(getMaxHealth(), health)));
     }
 
     private boolean shouldTeleportToOwner(ServerPlayer owner) {

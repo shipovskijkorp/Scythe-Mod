@@ -104,7 +104,8 @@ public class ToxicOrbEntity extends ThrownItemEntity {
         List<LivingEntity> targets = getWorld().getEntitiesByClass(
                 LivingEntity.class,
                 box,
-                target -> !ScytheCombatUtil.isInvalidHostileTarget(owner, target)
+                target -> ScytheCombatUtil.isValidCombatTarget(owner, target)
+                        && ScytheCombatUtil.isWithinRadius(this, target, ScytheBalance.ToxicOrb.DAMAGE_RADIUS)
         );
 
         for (LivingEntity target : targets) {

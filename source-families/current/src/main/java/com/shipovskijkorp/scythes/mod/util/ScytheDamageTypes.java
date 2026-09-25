@@ -5,6 +5,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 
@@ -35,5 +36,13 @@ public final class ScytheDamageTypes {
 
     public static DamageSource freezing(Level world) {
         return world.damageSources().source(FREEZING);
+    }
+
+    public static DamageSource freezing(Level world, Entity attacker) {
+        return world.damageSources().source(FREEZING, attacker, attacker);
+    }
+
+    public static DamageSource withering(Level world, Entity attacker) {
+        return world.damageSources().source(DamageTypes.WITHER, attacker, attacker);
     }
 }

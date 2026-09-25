@@ -1,6 +1,7 @@
 package com.shipovskijkorp.scythes.mod.platform.fabric;
 
 import com.shipovskijkorp.scythes.mod.ability.*;
+import com.shipovskijkorp.scythes.mod.entity.WitheringMinionEntity;
 import com.shipovskijkorp.scythes.mod.platform.HudSync;
 import com.shipovskijkorp.scythes.mod.util.BurnsUtil;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityCombatEvents;
@@ -19,10 +20,13 @@ public final class FabricServerHooks {
         HudSync.install(new FabricHudTransport());
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             ScytheCooldowns.clearAll();
+            DamageAttributionTracker.clearAll();
+            WitheringMinionManager.clearRuntime();
             BurnsUtil.clearAll();
             FireLaunchTracker.clearAll();
         });
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            server.execute(() -> ScytheLifecycle.connect(handler.player));
             server.execute(() -> PlagueScytheMigrationHandler.migratePlayer(handler.player));
             server.execute(() -> WelcomeAdvancementHandler.grantRoot(handler.player));
         });
@@ -33,14 +37,18 @@ public final class FabricServerHooks {
         });
         LootTableEvents.MODIFY.register((key, tableBuilder, source, registries) ->
                 FrozenHeartDropHandler.modifyLoot(key, tableBuilder, source.isBuiltin()));
-        ServerLivingEntityEvents.AFTER_DEATH.register(FrozenHeartDropHandler::onDeath);
+        ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
+            FrozenHeartDropHandler.onDeath(entity, source);
+            if (entity instanceof WitheringMinionEntity minion) WitheringMinionManager.onMinionDeath(minion);
+        });
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
                 server.execute(() -> ScytheLifecycle.disconnect(handler.player)));
-        PlayerBlockBreakEvents.AFTER.register((level, player, pos, state, blockEntity) -> {
+        PlayerBlockBreakEvents.BEFORE.register((level, player, pos, state, blockEntity) -> {
             if (level instanceof net.minecraft.server.level.ServerLevel serverLevel
                     && player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
-                FarmerHarvestHandler.afterCropBroken(serverLevel, serverPlayer, pos, state);
+                FarmerHarvestHandler.prepareCropBreak(serverLevel, serverPlayer, pos, state);
             }
+            return true;
         });
         ServerTickEvents.END_SERVER_TICK.register(ScytheLifecycle::tickServer);
     }

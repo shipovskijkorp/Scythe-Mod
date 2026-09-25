@@ -1,8 +1,15 @@
 package com.shipovskijkorp.scythes.mod.mixin;
 
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.ability.DamageAttributionTracker;
+import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
+import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
+import com.shipovskijkorp.scythes.mod.util.ScytheDamageTypes;
 import com.shipovskijkorp.scythes.mod.util.FreezingRenderState;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.passive.SnowGolemEntity;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
@@ -22,6 +29,9 @@ public abstract class FreezingLivingEntityMixin implements FreezingRenderState {
 
     @Unique
     private boolean scythes$wasFrozen;
+
+    @Unique
+    private int scythes$freezingDamageTicks;
 
     @Unique
     private float scythes$frozenYaw;
@@ -46,9 +56,27 @@ public abstract class FreezingLivingEntityMixin implements FreezingRenderState {
         LivingEntity self = (LivingEntity) (Object) this;
         if (self.getWorld().isClient) return;
 
-        boolean frozen = self.hasStatusEffect(ScytheMod.FREEZING);
+        boolean frozen = self.isAlive() && self.hasStatusEffect(ScytheMod.FREEZING);
         if (self.getDataTracker().get(SCYTHES_FROZEN_FOR_RENDERING) != frozen) {
             self.getDataTracker().set(SCYTHES_FROZEN_FOR_RENDERING, frozen);
+        }
+        if (!frozen) {
+            scythes$freezingDamageTicks = 0;
+            return;
+        }
+        if (++scythes$freezingDamageTicks < ScytheBalance.Freezing.DAMAGE_INTERVAL_TICKS) return;
+        scythes$freezingDamageTicks = 0;
+        if (self.getRandom().nextFloat() >= ScytheBalance.Freezing.DAMAGE_CHANCE) return;
+
+        ServerPlayerEntity freezingOwner = DamageAttributionTracker.getFreezingOwner(self);
+        self.damage(
+                freezingOwner != null
+                        ? ScytheDamageTypes.freezing(self.getWorld(), freezingOwner)
+                        : ScytheDamageTypes.freezing(self.getWorld()),
+                ScytheBalance.Freezing.DAMAGE_PER_PROC
+        );
+        if (!self.isAlive() && self instanceof SnowGolemEntity && freezingOwner != null) {
+            ScytheAdvancementTracker.tryGrantSupercooledSnow(freezingOwner);
         }
     }
 

@@ -62,8 +62,7 @@ public final class WitheringAuraTracker {
         List<LivingEntity> targets = world.getEntitiesOfClass(
                 LivingEntity.class,
                 witherBox,
-                target -> !ScytheCombatUtil.isProtectedWitheringMinion(player, target)
-                        && !ScytheCombatUtil.isInvalidHostileTarget(player, target)
+                target -> ScytheCombatUtil.isValidCombatTargetWithin(player, target, ScytheBalance.WitheringAura.WITHER_RADIUS)
         );
 
         for (LivingEntity target : targets) {
@@ -76,6 +75,7 @@ public final class WitheringAuraTracker {
                 WitheringMinionEntity.class,
                 buffBox,
                 minion -> minion.isAlive() && minion.isOwner(player)
+                        && ScytheCombatUtil.isWithinRadius(player, minion, ScytheBalance.WitheringAura.MINION_BUFF_RADIUS)
         );
 
         for (WitheringMinionEntity minion : minions) {

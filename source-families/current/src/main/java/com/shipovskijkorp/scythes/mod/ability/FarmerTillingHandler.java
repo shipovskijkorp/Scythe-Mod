@@ -39,6 +39,7 @@ public final class FarmerTillingHandler {
                 if (origin.getItemInHand().isEmpty()) break outer;
 
                 BlockPos pos = center.offset(dx, 0, dz);
+                if (player instanceof ServerPlayer serverPlayer && !level.mayInteract(serverPlayer, pos)) continue;
                 UseOnContext areaContext = new UseOnContext(
                         player,
                         origin.getHand(),

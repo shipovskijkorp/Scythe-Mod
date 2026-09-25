@@ -2,6 +2,7 @@ package com.shipovskijkorp.scythes.mod.item;
 
 import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.ability.BloodScytheAttackContext;
 import com.shipovskijkorp.scythes.mod.ability.DamageAttributionTracker;
 import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
 import com.shipovskijkorp.scythes.mod.ability.ScytheCooldowns;
@@ -68,7 +69,12 @@ public class BloodScytheItem extends ScytheSwordItem {
             ScytheAdvancementTracker.markBloodSpecial(player, target);
             pullTowardPlayer(player, target);
             float damage = calculateBlenderDamage(stack, target);
-            target.damage(player.getDamageSources().playerAttack(player), damage);
+            BloodScytheAttackContext.enter(player.getUuid());
+            try {
+                target.damage(player.getDamageSources().playerAttack(player), damage);
+            } finally {
+                BloodScytheAttackContext.exit();
+            }
             target.addStatusEffect(new StatusEffectInstance(
                     StatusEffects.SLOWNESS,
                     ScytheBalance.Blood.BLENDER_SLOWNESS_TICKS,

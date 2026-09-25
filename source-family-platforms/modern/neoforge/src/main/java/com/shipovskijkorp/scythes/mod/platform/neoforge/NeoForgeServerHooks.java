@@ -10,6 +10,9 @@ import com.shipovskijkorp.scythes.mod.ability.ScytheCooldowns;
 import com.shipovskijkorp.scythes.mod.ability.ScytheLifecycle;
 import com.shipovskijkorp.scythes.mod.ability.WelcomeAdvancementHandler;
 import com.shipovskijkorp.scythes.mod.ability.WitheringSoulHandler;
+import com.shipovskijkorp.scythes.mod.ability.DamageAttributionTracker;
+import com.shipovskijkorp.scythes.mod.ability.WitheringMinionManager;
+import com.shipovskijkorp.scythes.mod.entity.WitheringMinionEntity;
 import com.shipovskijkorp.scythes.mod.platform.HudSync;
 import com.shipovskijkorp.scythes.mod.util.BurnsUtil;
 import net.minecraft.entity.Entity;
@@ -43,6 +46,8 @@ public final class NeoForgeServerHooks {
     @SubscribeEvent
     public void onServerStopped(ServerStoppedEvent event) {
         ScytheCooldowns.clearAll();
+        DamageAttributionTracker.clearAll();
+        WitheringMinionManager.clearRuntime();
         BurnsUtil.clearAll();
         FireLaunchTracker.clearAll();
     }
@@ -50,6 +55,7 @@ public final class NeoForgeServerHooks {
     @SubscribeEvent
     public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         if (!(event.getEntity() instanceof ServerPlayerEntity player)) return;
+        ScytheLifecycle.connect(player);
         PlagueScytheMigrationHandler.migratePlayer(player);
         WelcomeAdvancementHandler.grantRoot(player);
     }
@@ -58,14 +64,17 @@ public final class NeoForgeServerHooks {
     public void onLivingDeath(LivingDeathEvent event) {
         LivingEntity killedEntity = event.getEntity();
         if (!(killedEntity.getEntityWorld() instanceof ServerWorld world)) return;
-
-        FrozenHeartDropHandler.onDeath(killedEntity, event.getSource());
-
-        Entity killer = event.getSource().getAttacker();
-        if (killer == null) return;
-        BloodHarvestKillHandler.onKill(world, killer, killedEntity);
-        WitheringSoulHandler.onKill(world, killer, killedEntity);
-        BloodyEssenceDropHandler.onKill(world, killer, killedEntity);
+        var source = event.getSource();
+        world.getServer().execute(() -> {
+            if (event.isCanceled() || killedEntity.isAlive()) return;
+            if (killedEntity instanceof WitheringMinionEntity minion) WitheringMinionManager.onMinionDeath(minion);
+            FrozenHeartDropHandler.onDeath(killedEntity, source);
+            Entity killer = source.getAttacker();
+            if (killer == null) return;
+            BloodHarvestKillHandler.onKill(world, killer, killedEntity);
+            WitheringSoulHandler.onKill(world, killer, killedEntity);
+            BloodyEssenceDropHandler.onKill(world, killer, killedEntity);
+        });
     }
 
     @SubscribeEvent
@@ -87,7 +96,7 @@ public final class NeoForgeServerHooks {
     public void onBlockBreak(BlockEvent.BreakEvent event) {
         if (!(event.getLevel() instanceof ServerWorld world)) return;
         if (!(event.getPlayer() instanceof ServerPlayerEntity player)) return;
-        FarmerHarvestHandler.afterCropBroken(world, player, event.getPos(), event.getState());
+        FarmerHarvestHandler.prepareCropBreak(world, player, event.getPos(), event.getState());
     }
 
     @SubscribeEvent

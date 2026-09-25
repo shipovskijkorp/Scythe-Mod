@@ -20,11 +20,14 @@ import net.minecraft.world.entity.projectile.ThrowableProjectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 
 public class ToxicOrbEntity extends ThrowableProjectile implements ItemSupplier {
 
+    private static final String ACIDITY_LEVEL_KEY = "AcidityLevel";
     private int acidityLevel = 0;
 
     public ToxicOrbEntity(EntityType<? extends ToxicOrbEntity> entityType, Level world) {
@@ -45,6 +48,18 @@ public class ToxicOrbEntity extends ThrowableProjectile implements ItemSupplier 
 
     public void setAcidityLevel(int acidityLevel) {
         this.acidityLevel = Math.max(0, Math.min(ScytheBalance.Enchantments.ACIDITY_MAX_LEVEL, acidityLevel));
+    }
+
+    @Override
+    protected void addAdditionalSaveData(ValueOutput output) {
+        super.addAdditionalSaveData(output);
+        output.putInt(ACIDITY_LEVEL_KEY, acidityLevel);
+    }
+
+    @Override
+    protected void readAdditionalSaveData(ValueInput input) {
+        super.readAdditionalSaveData(input);
+        acidityLevel = Math.max(0, Math.min(ScytheBalance.Enchantments.ACIDITY_MAX_LEVEL, input.getIntOr(ACIDITY_LEVEL_KEY, 0)));
     }
 
     @Override
@@ -103,7 +118,8 @@ public class ToxicOrbEntity extends ThrowableProjectile implements ItemSupplier 
         List<LivingEntity> targets = serverWorld.getEntitiesOfClass(
                 LivingEntity.class,
                 box,
-                target -> !ScytheCombatUtil.isInvalidHostileTarget(owner, target)
+                target -> ScytheCombatUtil.isValidCombatTarget(owner, target)
+                        && ScytheCombatUtil.isWithinRadius(this, target, ScytheBalance.ToxicOrb.DAMAGE_RADIUS)
         );
 
         for (LivingEntity target : targets) {

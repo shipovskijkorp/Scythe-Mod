@@ -6,6 +6,7 @@ import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
 import com.shipovskijkorp.scythes.mod.util.BurnsUtil;
 import com.shipovskijkorp.scythes.mod.util.FireTargeting;
 import java.util.List;
+import java.util.UUID;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
@@ -25,13 +26,19 @@ import net.minecraft.world.entity.projectile.ThrowableProjectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 /** Homing Fire Scythe projectile. It never modifies blocks. */
 public final class FireballEntity extends ThrowableProjectile implements ItemSupplier {
+    private static final String LOCKED_TARGET_KEY = "LockedTarget";
     private LivingEntity lockedTarget;
+    private UUID lockedTargetId;
+    private int unresolvedTargetTicks;
+    private int lostSightTicks;
 
     public FireballEntity(EntityType<? extends FireballEntity> type, Level level) {
         super(type, level);
@@ -42,11 +49,31 @@ public final class FireballEntity extends ThrowableProjectile implements ItemSup
         super(ScytheMod.FIREBALL, owner.getX(), owner.getEyeY() - ScytheBalance.Fire.FIREBALL_SPAWN_EYE_OFFSET, owner.getZ(), level);
         setOwner(owner);
         this.lockedTarget = lockedTarget;
+        this.lockedTargetId = lockedTarget == null ? null : lockedTarget.getUUID();
         setNoGravity(true);
     }
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {}
+
+    @Override
+    protected void addAdditionalSaveData(ValueOutput output) {
+        super.addAdditionalSaveData(output);
+        UUID targetId = lockedTarget != null ? lockedTarget.getUUID() : lockedTargetId;
+        if (targetId != null) output.putString(LOCKED_TARGET_KEY, targetId.toString());
+    }
+
+    @Override
+    protected void readAdditionalSaveData(ValueInput input) {
+        super.readAdditionalSaveData(input);
+        String value = input.getStringOr(LOCKED_TARGET_KEY, "");
+        try { lockedTargetId = value.isEmpty() ? null : UUID.fromString(value); }
+        catch (IllegalArgumentException ignored) { lockedTargetId = null; }
+        lockedTarget = null;
+        unresolvedTargetTicks = 0;
+        lostSightTicks = 0;
+    }
+
 
     @Override
     public ItemStack getItem() {
@@ -71,7 +98,19 @@ public final class FireballEntity extends ThrowableProjectile implements ItemSup
     }
 
     private void homeTowardsTarget() {
-        if (lockedTarget == null || !lockedTarget.isAlive() || lockedTarget.level() != level()) return;
+        refreshLockedTarget();
+        resolveLockedTarget();
+        if (lockedTarget == null) return;
+
+        if (!lockedTarget.hasLineOfSight(this)) {
+            if (++lostSightTicks > ScytheBalance.Fire.FIREBALL_LOS_GRACE_TICKS) {
+                clearLockedTarget();
+                return;
+            }
+        } else {
+            lostSightTicks = 0;
+        }
+
         Vec3 desired = lockedTarget.position().add(0.0D, lockedTarget.getBbHeight() * 0.5D, 0.0D).subtract(position());
         if (desired.lengthSqr() < 1.0E-6D) return;
         desired = desired.normalize().scale(ScytheBalance.Fire.FIREBALL_SPEED);
@@ -81,7 +120,36 @@ public final class FireballEntity extends ThrowableProjectile implements ItemSup
         if (blended.lengthSqr() > 1.0E-6D) setDeltaMovement(blended.normalize().scale(ScytheBalance.Fire.FIREBALL_SPEED));
     }
 
+    private void refreshLockedTarget() {
+        if (lockedTarget == null) return;
+        if (lockedTarget.isRemoved()) {
+            lockedTarget = null;
+            unresolvedTargetTicks = 0;
+            return;
+        }
+        if (!lockedTarget.isAlive() || lockedTarget.level() != level()) clearLockedTarget();
+    }
+
+    private void resolveLockedTarget() {
+        if (lockedTarget != null || lockedTargetId == null || !(level() instanceof ServerLevel serverLevel)) return;
+        Entity entity = serverLevel.getEntity(lockedTargetId);
+        if (entity instanceof LivingEntity living && living.isAlive()) {
+            lockedTarget = living;
+            unresolvedTargetTicks = 0;
+            return;
+        }
+        if (++unresolvedTargetTicks > ScytheBalance.Fire.FIREBALL_TARGET_REACQUIRE_TICKS) clearLockedTarget();
+    }
+
+    private void clearLockedTarget() {
+        lockedTarget = null;
+        lockedTargetId = null;
+        unresolvedTargetTicks = 0;
+        lostSightTicks = 0;
+    }
+
     private void explode() {
+        resolveLockedTarget();
         if (isRemoved()) return;
         if (!(level() instanceof ServerLevel serverLevel)) { discard(); return; }
         Entity ownerEntity = getOwner();

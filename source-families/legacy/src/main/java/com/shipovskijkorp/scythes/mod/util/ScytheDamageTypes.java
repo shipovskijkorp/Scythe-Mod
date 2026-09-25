@@ -4,6 +4,7 @@ import com.shipovskijkorp.scythes.mod.ScytheMod;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageType;
+import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Identifier;
@@ -52,5 +53,13 @@ public final class ScytheDamageTypes {
 
     public static DamageSource freezing(World world) {
         return world.getDamageSources().create(FREEZING);
+    }
+
+    public static DamageSource freezing(World world, Entity attacker) {
+        return world.getDamageSources().create(FREEZING, attacker, attacker);
+    }
+
+    public static DamageSource withering(World world, Entity attacker) {
+        return world.getDamageSources().create(DamageTypes.WITHER, attacker, attacker);
     }
 }

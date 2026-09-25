@@ -2,6 +2,8 @@ package com.shipovskijkorp.scythes.mod.mixin;
 
 import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.ability.BloodScytheAttackContext;
+import com.shipovskijkorp.scythes.mod.ability.DamageAttributionTracker;
 import com.shipovskijkorp.scythes.mod.ability.BloodScytheVampirism;
 import com.shipovskijkorp.scythes.mod.ability.GoldenLootMarkTracker;
 import com.shipovskijkorp.scythes.mod.ability.GoldenScytheLootingContext;
@@ -24,6 +26,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -62,6 +65,14 @@ public abstract class LivingEntityMixin {
         if (self instanceof Player player && FireScytheItem.isHeld(player) && fluidState.is(FluidTags.LAVA)) {
             cir.setReturnValue(true);
         }
+    }
+
+    @ModifyVariable(method = "hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z", at = @At("HEAD"), argsOnly = true)
+    private DamageSource scythes$attributeWitheringDamage(DamageSource source) {
+        if (!source.is(DamageTypes.WITHER)) return source;
+        LivingEntity self = (LivingEntity) (Object) this;
+        ServerPlayer owner = DamageAttributionTracker.getWitheringOwner(self);
+        return owner == null ? source : ScytheDamageTypes.withering(self.level(), owner);
     }
 
     @Inject(method = "hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z", at = @At("HEAD"), cancellable = true)
@@ -137,7 +148,8 @@ public abstract class LivingEntityMixin {
 
         Entity attacker = source.getEntity();
         if (!(attacker instanceof ServerPlayer player)) return null;
-        if (!(player.getMainHandItem().getItem() instanceof BloodScytheItem)) return null;
+        if (!(player.getMainHandItem().getItem() instanceof BloodScytheItem)
+                && !BloodScytheAttackContext.isActive(player.getUUID())) return null;
 
         return player;
     }

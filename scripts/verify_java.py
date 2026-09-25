@@ -137,7 +137,9 @@ public class ContractChecks {
         p.clock.now += 7;
         check(ScytheCooldowns.remaining(p, ScytheCooldowns.Skill.BLENDER) == 5, "MC clock bridge");
         ScytheCooldowns.clear(p);
-        check(ScytheCooldowns.remaining(p, ScytheCooldowns.Skill.BLENDER) == 0, "MC clear bridge");
+        check(ScytheCooldowns.remaining(p, ScytheCooldowns.Skill.BLENDER) == 5, "reconnect keeps cooldown");
+        ScytheCooldowns.clearAll();
+        check(ScytheCooldowns.remaining(p, ScytheCooldowns.Skill.BLENDER) == 5, "cache unload reloads persistent cooldown");
         check(ScytheBalance.Base.DURABILITY > 0 && ScytheBalance.Base.MAX_STACK_SIZE == 1, "material invariants");
         check(ScytheBalance.Base.ATTACK_DAMAGE == ScytheBalance.Base.PLAYER_ATTACK_DAMAGE
             + ScytheBalance.Base.MATERIAL_ATTACK_DAMAGE + ScytheBalance.Base.ATTACK_DAMAGE_BONUS, "damage derivation");
@@ -181,17 +183,52 @@ def main():
             fixture = temp / 'stubs' / target
             write_class(fixture, item, 'public class Item {}')
             write_class(fixture, stack, 'public class ItemStack { private final Item item; public ItemStack(Item item) {this.item=item;} public Item getItem() {return item;} }')
-            player_body = '''public class PLAYER_SHORT {
+            if current:
+                write_class(fixture, 'net.minecraft.world.level.storage.LevelResource',
+                            'public class LevelResource { public static final LevelResource ROOT = new LevelResource(); }')
+                write_class(fixture, 'net.minecraft.server.MinecraftServer',
+                            'public class MinecraftServer { public java.nio.file.Path getWorldPath(net.minecraft.world.level.storage.LevelResource r) {'
+                            ' return java.nio.file.Path.of(System.getProperty(\"java.io.tmpdir\"), \"scythe-contract-current\"); } }')
+                player_body = '''public class PLAYER_SHORT {
  public boolean alive = true;
  public STACK main = new STACK(new ITEM()), off = new STACK(new ITEM());
  public final java.util.UUID id = java.util.UUID.randomUUID();
  public final Clock clock = new Clock();
- public static class Clock { public long now; public long getTime(){return now;} public long getGameTime(){return now;} }
+ public static class Clock {
+   public long now; private final net.minecraft.server.MinecraftServer server = new net.minecraft.server.MinecraftServer();
+   public long getTime(){return now;} public long getGameTime(){return now;}
+   public net.minecraft.server.MinecraftServer getServer(){return server;}
+ }
  public boolean isAlive(){return alive;}
  public STACK getMainHandItem(){return main;} public STACK getOffhandItem(){return off;}
  public STACK getMainHandStack(){return main;} public STACK getOffHandStack(){return off;}
  public java.util.UUID getUUID(){return id;} public java.util.UUID getUuid(){return id;}
  public Clock level(){return clock;} public Clock getWorld(){return clock;} public Clock getEntityWorld(){return clock;}
+}'''.replace('PLAYER_SHORT', short_player).replace('STACK', stack).replace('ITEM', item)
+            else:
+                write_class(fixture, 'net.minecraft.util.WorldSavePath',
+                            'public class WorldSavePath { public static final WorldSavePath ROOT = new WorldSavePath(); }')
+                write_class(fixture, 'net.minecraft.server.MinecraftServer',
+                            'public class MinecraftServer { public java.nio.file.Path getSavePath(net.minecraft.util.WorldSavePath p) {'
+                            ' return java.nio.file.Path.of(System.getProperty(\"java.io.tmpdir\"), \"scythe-contract-legacy-modern\"); } }')
+                write_class(fixture, 'net.minecraft.server.world.ServerWorld', '''public class ServerWorld {
+ public long now; private final net.minecraft.server.MinecraftServer server = new net.minecraft.server.MinecraftServer();
+ public long getTime(){return now;} public long getGameTime(){return now;}
+ public net.minecraft.server.MinecraftServer getServer(){return server;}
+}''')
+                player_body = '''public class PLAYER_SHORT {
+ public boolean alive = true;
+ public STACK main = new STACK(new ITEM()), off = new STACK(new ITEM());
+ public final java.util.UUID id = java.util.UUID.randomUUID();
+ public final Clock clock = new Clock();
+ public static class Clock extends net.minecraft.server.world.ServerWorld {}
+ public boolean isAlive(){return alive;}
+ public STACK getMainHandItem(){return main;} public STACK getOffhandItem(){return off;}
+ public STACK getMainHandStack(){return main;} public STACK getOffHandStack(){return off;}
+ public java.util.UUID getUUID(){return id;} public java.util.UUID getUuid(){return id;}
+ public Clock level(){return clock;} public Clock getWorld(){return clock;} public Object getEntityWorld(){return clock;}
+ public net.minecraft.server.world.ServerWorld getServerWorld(){return clock;}
+ public net.minecraft.server.MinecraftServer getServer(){return clock.getServer();}
 }'''.replace('PLAYER_SHORT', short_player).replace('STACK', stack).replace('ITEM', item)
             write_class(fixture, player, player_body)
             for kind in ('Blood', 'Toxic', 'Withering', 'Golden', 'Frozen', 'Farmer', 'Fire'):
@@ -205,6 +242,7 @@ def main():
             write_class(fixture, 'ContractChecks', text)
             source = output / JAVA_ROOT
             real = [source / path for path in ('balance/ScytheBalance.java', 'ability/CooldownStore.java',
+                    'ability/ScythePersistentStore.java', 'ability/ScytheRuntimeState.java',
                     'platform/HudTransport.java', 'platform/HudSync.java',
                     'ability/ScytheCooldowns.java', 'ability/ScytheAbilityHandler.java')]
             classes = temp / 'classes' / target

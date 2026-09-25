@@ -39,6 +39,7 @@ public final class FireTargeting {
         double bestDistance = Double.MAX_VALUE;
 
         for (LivingEntity target : candidates) {
+            if (!player.canSee(target)) continue;
             Vec3d point = new Vec3d(target.getX(), target.getY() + target.getHeight() * 0.5D, target.getZ());
             Vec3d delta = point.subtract(eye);
             double distance = delta.lengthSquared();

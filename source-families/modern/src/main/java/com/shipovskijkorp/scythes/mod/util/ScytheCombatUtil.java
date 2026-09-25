@@ -2,8 +2,11 @@ package com.shipovskijkorp.scythes.mod.util;
 
 import net.minecraft.server.network.ServerPlayerEntity;
 import com.shipovskijkorp.scythes.mod.entity.WitheringMinionEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.mob.HostileEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.passive.AbstractHorseEntity;
@@ -29,6 +32,19 @@ public final class ScytheCombatUtil {
         if (source instanceof ServerPlayerEntity player && minion.isOwner(player)) return true;
         ServerPlayerEntity minionOwner = minion.getOwnerPlayer();
         return minionOwner != null && source.isTeammate(minionOwner);
+    }
+
+    public static boolean isValidCombatTarget(LivingEntity owner, LivingEntity target) {
+        if (isInvalidHostileTarget(owner, target)) return false;
+        return target instanceof PlayerEntity || target instanceof HostileEntity;
+    }
+
+    public static boolean isWithinRadius(Entity center, Entity target, double radius) {
+        return radius >= 0.0D && target.squaredDistanceTo(center) <= radius * radius;
+    }
+
+    public static boolean isValidCombatTargetWithin(LivingEntity owner, LivingEntity target, double radius) {
+        return isValidCombatTarget(owner, target) && isWithinRadius(owner, target, radius);
     }
 
     public static boolean isInvalidHostileTarget(LivingEntity owner, LivingEntity target) {

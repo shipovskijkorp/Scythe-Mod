@@ -338,6 +338,8 @@ public final class ScytheBalance {
         public static final double FIREBALL_LOCK_MIN_DOT = 0.965D;
         public static final float FIREBALL_SPEED = 1.45F;
         public static final double FIREBALL_HOMING_STRENGTH = 0.18D;
+        public static final int FIREBALL_TARGET_REACQUIRE_TICKS = TICKS_PER_SECOND * 2;
+        public static final int FIREBALL_LOS_GRACE_TICKS = TICKS_PER_SECOND;
         public static final int FIREBALL_MAX_LIFETIME_TICKS = TICKS_PER_SECOND * 15;
         public static final double FIREBALL_EXPLOSION_RADIUS = 4.0D;
         public static final float FIREBALL_MAX_DAMAGE = 10.0F;

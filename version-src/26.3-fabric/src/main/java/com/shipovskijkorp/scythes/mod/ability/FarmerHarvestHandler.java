@@ -5,9 +5,8 @@ import com.shipovskijkorp.scythes.mod.item.FarmerScytheItem;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.WeakHashMap;
+import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -21,13 +20,11 @@ import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.NetherWartBlock;
 import net.minecraft.world.level.block.SweetBerryBushBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 
 /** Minecraft-facing crop operations shared by the Farmer Scythe abilities. */
 public final class FarmerHarvestHandler {
     private FarmerHarvestHandler() {}
-
-    /** One activation per planted crop. Entries disappear with the world and are cleared on harvest/break. */
-    private static final Map<ServerLevel, Set<Long>> ACCELERATED_CROPS = new WeakHashMap<>();
 
     public static boolean isMatureCrop(BlockState state) {
         Block block = state.getBlock();
@@ -50,6 +47,7 @@ public final class FarmerHarvestHandler {
         ServerLevel level = (ServerLevel) player.level();
         BlockState state = level.getBlockState(pos);
         if (!isMatureCrop(state)) return false;
+        if (!level.mayInteract(player, pos)) return false;
 
         List<ItemStack> drops = new ArrayList<>(Block.getDrops(state, level, pos, null, player, tool));
         if (player.getRandom().nextDouble() < ScytheBalance.Farmer.DOUBLE_DROP_CHANCE) {
@@ -85,20 +83,13 @@ public final class FarmerHarvestHandler {
     public static int massHarvest(ServerPlayer player, ItemStack tool) {
         ServerLevel level = (ServerLevel) player.level();
         BlockPos origin = player.blockPosition();
-        int radius = (int) Math.ceil(ScytheBalance.Farmer.MASS_HARVEST_RADIUS);
-        double radiusSquared = ScytheBalance.Farmer.MASS_HARVEST_RADIUS * ScytheBalance.Farmer.MASS_HARVEST_RADIUS;
+        int[] offsets = ScytheSphereOffsets.forRadius(ScytheBalance.Farmer.MASS_HARVEST_RADIUS);
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         int harvested = 0;
 
-        for (int dx = -radius; dx <= radius; dx++) {
-            for (int dy = -radius; dy <= radius; dy++) {
-                for (int dz = -radius; dz <= radius; dz++) {
-                    if ((double) dx * dx + (double) dy * dy + (double) dz * dz > radiusSquared) continue;
-                    BlockPos pos = origin.offset(dx, dy, dz);
-                    if (isMatureCrop(level.getBlockState(pos)) && reapCrop(player, tool, pos, true)) {
-                        harvested++;
-                    }
-                }
-            }
+        for (int i = 0; i < offsets.length; i += 3) {
+            pos.set(origin.getX() + offsets[i], origin.getY() + offsets[i + 1], origin.getZ() + offsets[i + 2]);
+            if (isMatureCrop(level.getBlockState(pos)) && reapCrop(player, tool, pos, true)) harvested++;
         }
         return harvested;
     }
@@ -106,62 +97,115 @@ public final class FarmerHarvestHandler {
     public static int accelerateNearby(ServerPlayer player) {
         ServerLevel level = (ServerLevel) player.level();
         BlockPos origin = player.blockPosition();
-        int radius = (int) Math.ceil(ScytheBalance.Farmer.GROWTH_ACCELERATION_RADIUS);
-        double radiusSquared = ScytheBalance.Farmer.GROWTH_ACCELERATION_RADIUS * ScytheBalance.Farmer.GROWTH_ACCELERATION_RADIUS;
+        int[] offsets = ScytheSphereOffsets.forRadius(ScytheBalance.Farmer.GROWTH_ACCELERATION_RADIUS);
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         int affected = 0;
 
-        for (int dx = -radius; dx <= radius; dx++) {
-            for (int dy = -radius; dy <= radius; dy++) {
-                for (int dz = -radius; dz <= radius; dz++) {
-                    if ((double) dx * dx + (double) dy * dy + (double) dz * dz > radiusSquared) continue;
-                    BlockPos pos = origin.offset(dx, dy, dz);
-                    if (wasGrowthAccelerated(level, pos)) continue;
-                    BlockState state = level.getBlockState(pos);
-                    BlockState accelerated = accelerateCrop(state);
-                    if (!accelerated.equals(state)) {
-                        level.setBlock(pos, accelerated, Block.UPDATE_CLIENTS);
-                        markGrowthAccelerated(level, pos);
-                        affected++;
-                    }
-                }
+        for (int i = 0; i < offsets.length; i += 3) {
+            pos.set(origin.getX() + offsets[i], origin.getY() + offsets[i + 1], origin.getZ() + offsets[i + 2]);
+            if (!level.mayInteract(player, pos)) continue;
+            BlockState state = level.getBlockState(pos);
+            if (wasGrowthAccelerated(level, pos, state)) continue;
+            BlockState accelerated = accelerateCrop(state);
+            if (!accelerated.equals(state)) {
+                level.setBlock(pos, accelerated, Block.UPDATE_CLIENTS);
+                markGrowthAccelerated(level, pos, accelerated);
+                affected++;
             }
         }
         return affected;
     }
 
-    /** Adds the passive bonus roll after a normally mined mature crop. */
-    public static void afterCropBroken(ServerLevel level, ServerPlayer player, BlockPos pos, BlockState state) {
+    /**
+     * Captures a normal player crop break before the vanilla/loader drop pipeline runs.
+     * The actual bonus is duplicated from the item entities produced by that pipeline,
+     * so loot modifiers and other mods are preserved instead of recomputing loot here.
+     */
+    public static void prepareCropBreak(ServerLevel level, ServerPlayer player, BlockPos pos, BlockState state) {
+        if (!isMatureCrop(state)) return;
+
+        ItemStack tool = player.getMainHandItem();
+        boolean doubleDrops = tool.getItem() instanceof FarmerScytheItem
+                && player.getRandom().nextDouble() < ScytheBalance.Farmer.DOUBLE_DROP_CHANCE;
+        Set<UUID> existingDrops = doubleDrops ? nearbyItemIds(level, pos) : Set.of();
+
+        level.getServer().execute(() -> {
+            // If the break was cancelled, the exact mature state is still present.
+            if (level.getBlockState(pos).equals(state)) return;
+            clearGrowthAcceleration(level, pos);
+            if (doubleDrops) duplicateNewNearbyDrops(level, pos, existingDrops);
+        });
+    }
+
+    /** NeoForge exposes the final mutable drop list directly, which is even safer than deferred entity capture. */
+    public static void doubleFinalDrops(
+            ServerLevel level, ServerPlayer player, BlockPos pos, BlockState state, List<ItemEntity> drops) {
         clearGrowthAcceleration(level, pos);
         ItemStack tool = player.getMainHandItem();
-        if (!(tool.getItem() instanceof FarmerScytheItem)) return;
-        if (!isMatureCrop(state)) return;
+        if (!(tool.getItem() instanceof FarmerScytheItem) || !isMatureCrop(state)) return;
         if (player.getRandom().nextDouble() >= ScytheBalance.Farmer.DOUBLE_DROP_CHANCE) return;
 
-        for (ItemStack drop : Block.getDrops(state, level, pos, null, player, tool)) {
-            if (!drop.isEmpty()) {
-                level.addFreshEntity(new ItemEntity(
-                        level,
-                        pos.getX() + 0.5D,
-                        pos.getY() + 0.5D,
-                        pos.getZ() + 0.5D,
-                        drop.copy()
-                ));
-            }
+        int originalSize = drops.size();
+        for (int i = 0; i < originalSize; i++) {
+            ItemEntity original = drops.get(i);
+            ItemStack stack = original.getItem();
+            if (stack.isEmpty()) continue;
+            drops.add(new ItemEntity(level, original.getX(), original.getY(), original.getZ(), stack.copy()));
         }
     }
 
-    private static boolean wasGrowthAccelerated(ServerLevel level, BlockPos pos) {
-        Set<Long> positions = ACCELERATED_CROPS.get(level);
-        return positions != null && positions.contains(pos.asLong());
+    private static Set<UUID> nearbyItemIds(ServerLevel level, BlockPos pos) {
+        AABB box = new AABB(
+                pos.getX() - 1.5D, pos.getY() - 1.5D, pos.getZ() - 1.5D,
+                pos.getX() + 2.5D, pos.getY() + 2.5D, pos.getZ() + 2.5D);
+        Set<UUID> ids = new HashSet<>();
+        for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, box)) ids.add(item.getUUID());
+        return ids;
     }
 
-    private static void markGrowthAccelerated(ServerLevel level, BlockPos pos) {
-        ACCELERATED_CROPS.computeIfAbsent(level, ignored -> new HashSet<>()).add(pos.asLong());
+    private static void duplicateNewNearbyDrops(ServerLevel level, BlockPos pos, Set<UUID> existingDrops) {
+        AABB box = new AABB(
+                pos.getX() - 1.5D, pos.getY() - 1.5D, pos.getZ() - 1.5D,
+                pos.getX() + 2.5D, pos.getY() + 2.5D, pos.getZ() + 2.5D);
+        List<ItemEntity> produced = new ArrayList<>();
+        for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, box)) {
+            if (!existingDrops.contains(item.getUUID()) && !item.getItem().isEmpty()) produced.add(item);
+        }
+        for (ItemEntity item : produced) {
+            level.addFreshEntity(new ItemEntity(level, item.getX(), item.getY(), item.getZ(), item.getItem().copy()));
+        }
+    }
+
+    private static boolean wasGrowthAccelerated(ServerLevel level, BlockPos pos, BlockState state) {
+        return ScythePersistentStore.isCropAccelerated(
+                ScytheRuntimeState.worldRoot(level.getServer()), dimensionKey(level), pos.asLong(), cropKey(state), cropAge(state));
+    }
+
+    private static void markGrowthAccelerated(ServerLevel level, BlockPos pos, BlockState state) {
+        ScythePersistentStore.markCropAccelerated(
+                ScytheRuntimeState.worldRoot(level.getServer()), dimensionKey(level), pos.asLong(), cropKey(state), cropAge(state));
     }
 
     private static void clearGrowthAcceleration(ServerLevel level, BlockPos pos) {
-        Set<Long> positions = ACCELERATED_CROPS.get(level);
-        if (positions != null) positions.remove(pos.asLong());
+        ScythePersistentStore.clearCropAcceleration(
+                ScytheRuntimeState.worldRoot(level.getServer()), dimensionKey(level), pos.asLong());
+    }
+
+    private static String dimensionKey(ServerLevel level) {
+        return level.dimension().identifier().toString();
+    }
+
+    private static String cropKey(BlockState state) {
+        return state.getBlock().getDescriptionId();
+    }
+
+    private static int cropAge(BlockState state) {
+        Block block = state.getBlock();
+        if (block instanceof CropBlock crop) return crop.getAge(state);
+        if (block instanceof NetherWartBlock) return state.getValue(NetherWartBlock.AGE);
+        if (block instanceof CocoaBlock) return state.getValue(CocoaBlock.AGE);
+        if (block instanceof SweetBerryBushBlock) return state.getValue(SweetBerryBushBlock.AGE);
+        return -1;
     }
 
     public static boolean hasBoneMeal(ServerPlayer player, int amount) {

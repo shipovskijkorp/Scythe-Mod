@@ -1,29 +1,42 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 
-/** Small MC adapter: UUID and clock are the only version-dependent operations. */
+/** Persistent per-player ability cooldowns. */
 public final class ScytheCooldowns {
-    public enum Skill { BLENDER, TOXIC_ORB, TOXIC_AURA, WITHERING_AURA, MIDAS, RAIN, ICE_SPIKE, STORM, FARMER_HARVEST, FARMER_GROWTH, FIREBALL, FIRE_BURST }
-    private static final CooldownStore<Skill> STORE = new CooldownStore<>();
+    public enum Skill { BLOOD_HARVEST, BLENDER, TOXIC_ORB, TOXIC_AURA, WITHERING_AURA, MIDAS, RAIN, ICE_SPIKE, STORM, FARMER_HARVEST, FARMER_GROWTH, FIREBALL, FIRE_BURST }
     private ScytheCooldowns() {}
 
     public static int remaining(ServerPlayerEntity player, Skill skill) {
 //? if >=1.21.11 {
-        return STORE.remaining(player.getUuid(), skill, player.getEntityWorld().getTime());
+        if (!(player.getEntityWorld() instanceof ServerWorld world)) return 0;
+        MinecraftServer server = world.getServer();
+        long now = world.getTime();
 //? } else {
-        return STORE.remaining(player.getUuid(), skill, player.getWorld().getTime());
+        ServerWorld world = player.getServerWorld();
+        MinecraftServer server = world.getServer();
+        long now = world.getTime();
 //? }
+        return ScythePersistentStore.remainingCooldown(
+                ScytheRuntimeState.worldRoot(server), player.getUuid(), skill.name(), now);
     }
 
     public static void start(ServerPlayerEntity player, Skill skill, int ticks) {
 //? if >=1.21.11 {
-        STORE.start(player.getUuid(), skill, player.getEntityWorld().getTime(), ticks);
+        if (!(player.getEntityWorld() instanceof ServerWorld world)) return;
+        MinecraftServer server = world.getServer();
+        long now = world.getTime();
 //? } else {
-        STORE.start(player.getUuid(), skill, player.getWorld().getTime(), ticks);
+        ServerWorld world = player.getServerWorld();
+        MinecraftServer server = world.getServer();
+        long now = world.getTime();
 //? }
+        ScythePersistentStore.startCooldown(
+                ScytheRuntimeState.worldRoot(server), player.getUuid(), skill.name(), now, ticks);
     }
 
-    public static void clear(ServerPlayerEntity player) { STORE.clear(player.getUuid()); }
-    public static void clearAll() { STORE.clearAll(); }
+    public static void clear(ServerPlayerEntity player) {}
+    public static void clearAll() { ScythePersistentStore.unload(); }
 }

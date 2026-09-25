@@ -12,20 +12,27 @@ public final class ScytheLifecycle {
             BloodHarvestTracker.tick(player);
             ToxicAuraTracker.tick(player);
             WitheringAuraTracker.tick(player);
+            WitheringMinionManager.tickRestore(player);
+            WitheringMinionManager.flushPendingRefunds(player);
             PlagueScytheMigrationHandler.migratePlayer(player);
         }
+        DamageAttributionTracker.cleanup(server);
         FireLaunchTracker.tick();
         GoldenLootMarkTracker.tick(server);
     }
 
+    public static void connect(ServerPlayerEntity player) {
+        BloodHarvestTracker.connect(player);
+        WitheringMinionManager.restoreMinions(player);
+        WitheringMinionManager.flushPendingRefunds(player);
+    }
+
     public static void disconnect(ServerPlayerEntity player) {
-        BloodHarvestTracker.clear(player);
-        ScytheCooldowns.clear(player);
+        BloodHarvestTracker.disconnect(player);
+        WitheringMinionManager.suspendMinions(player);
         BloodScytheVampirism.clear(player);
         ToxicAuraTracker.clear(player);
-
         WitheringAuraTracker.clear(player);
-
         GoldenLootMarkTracker.clearOwner(player);
         ScytheAdvancementTracker.clear(player);
     }

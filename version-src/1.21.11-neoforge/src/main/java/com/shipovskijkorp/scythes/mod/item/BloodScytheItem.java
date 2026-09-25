@@ -2,6 +2,7 @@ package com.shipovskijkorp.scythes.mod.item;
 
 import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
 import com.shipovskijkorp.scythes.mod.ScytheMod;
+import com.shipovskijkorp.scythes.mod.ability.BloodScytheAttackContext;
 import com.shipovskijkorp.scythes.mod.ability.DamageAttributionTracker;
 import com.shipovskijkorp.scythes.mod.ability.ScytheAdvancementTracker;
 import com.shipovskijkorp.scythes.mod.ability.ScytheCooldowns;
@@ -79,7 +80,12 @@ public class BloodScytheItem extends ScytheSwordItem {
             pullTowardPlayer(player, target);
             DamageSource source = player.getDamageSources().playerAttack(player);
             float damage = calculateBlenderDamage(serverWorld, stack, target, source);
-            target.damage(serverWorld, source, damage);
+            BloodScytheAttackContext.enter(player.getUuid());
+            try {
+                target.damage(serverWorld, source, damage);
+            } finally {
+                BloodScytheAttackContext.exit();
+            }
             target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, ScytheBalance.Blood.BLENDER_SLOWNESS_TICKS, ScytheBalance.Blood.BLENDER_SLOWNESS_AMPLIFIER, false, true, true));
             target.addStatusEffect(new StatusEffectInstance(ScytheMod.BLEEDING, ScytheBalance.Blood.BLENDER_BLEEDING_TICKS, ScytheBalance.Blood.BLENDER_BLEEDING_AMPLIFIER, false, true, true));
             DamageAttributionTracker.recordBleeding(target, player, ScytheBalance.Blood.BLENDER_BLEEDING_TICKS);

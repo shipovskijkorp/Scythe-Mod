@@ -22,6 +22,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.EntityHitResult;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -104,13 +105,18 @@ public class GoldenScytheItem extends ScytheSwordItem {
         Vec3d end = start.add(direction.multiply(ScytheBalance.Golden.MIDAS_REACH));
         Box searchBox = player.getBoundingBox().stretch(direction.multiply(ScytheBalance.Golden.MIDAS_REACH)).expand(ScytheBalance.Golden.MIDAS_SEARCH_PADDING);
 
+        HitResult blockHit = player.raycast(ScytheBalance.Golden.MIDAS_REACH, 1.0F, false);
+        double maxHitDistanceSquared = blockHit.getType() == HitResult.Type.MISS
+                ? ScytheBalance.Golden.MIDAS_REACH * ScytheBalance.Golden.MIDAS_REACH
+                : blockHit.getPos().squaredDistanceTo(start);
+
         EntityHitResult hitResult = ProjectileUtil.raycast(
                 player,
                 start,
                 end,
                 searchBox,
                 entity -> entity instanceof LivingEntity living && isValidGoldenTarget(player, living),
-                ScytheBalance.Golden.MIDAS_REACH * ScytheBalance.Golden.MIDAS_REACH
+                maxHitDistanceSquared
         );
 
         Entity entity = hitResult == null ? null : hitResult.getEntity();

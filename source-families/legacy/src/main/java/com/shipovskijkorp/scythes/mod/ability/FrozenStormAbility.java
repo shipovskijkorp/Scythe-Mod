@@ -46,13 +46,11 @@ public final class FrozenStormAbility {
             return;
         }
 
-        double radiusSquared = ScytheBalance.FrozenStorm.RADIUS * ScytheBalance.FrozenStorm.RADIUS;
         Box searchBox = player.getBoundingBox().expand(ScytheBalance.FrozenStorm.RADIUS);
         List<LivingEntity> targets = player.getWorld().getEntitiesByClass(
                 LivingEntity.class,
                 searchBox,
-                target -> isValidTarget(player, target)
-                        && target.squaredDistanceTo(player) <= radiusSquared
+                target -> ScytheCombatUtil.isValidCombatTargetWithin(player, target, ScytheBalance.FrozenStorm.RADIUS)
         );
 
         if (targets.isEmpty()) {
@@ -105,13 +103,5 @@ public final class FrozenStormAbility {
         player.sendMessage(Text.translatable("message.scythes.frozen_storm.success", targets.size()), true);
     }
 
-    private static boolean isValidTarget(ServerPlayerEntity player, LivingEntity target) {
-        if (ScytheCombatUtil.isProtectedWitheringMinion(player, target)) return false;
-        if (target == player) return false;
-        if (!target.isAlive()) return false;
-        if (target.isSpectator()) return false;
-        if (player.isTeammate(target)) return false;
-        if (target instanceof TameableEntity tameable && tameable.isTamed()) return false;
-        return !(target instanceof AbstractHorseEntity horse) || !horse.isTame();
-    }
+
 }

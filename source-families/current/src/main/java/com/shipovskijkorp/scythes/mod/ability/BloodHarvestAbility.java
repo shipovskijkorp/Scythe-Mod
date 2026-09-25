@@ -1,5 +1,6 @@
 package com.shipovskijkorp.scythes.mod.ability;
 
+import com.shipovskijkorp.scythes.mod.util.ScytheCombatUtil;
 import com.shipovskijkorp.scythes.mod.balance.ScytheBalance;
 import com.shipovskijkorp.scythes.mod.item.BloodScytheItem;
 import com.shipovskijkorp.scythes.mod.platform.HudSync;
@@ -37,7 +38,8 @@ public class BloodHarvestAbility {
             }
         }
 
-        if (player.getCooldowns().isOnCooldown(stack)) {
+        if (ScytheCooldowns.remaining(player, ScytheCooldowns.Skill.BLOOD_HARVEST) > 0
+                || player.getCooldowns().isOnCooldown(stack)) {
             player.sendOverlayMessage(Component.translatable("message.scythes.blood_harvest.cooldown"));
             return;
         }
@@ -48,6 +50,7 @@ public class BloodHarvestAbility {
                         ServerPlayer.class,
                         box,
                         p -> p != player && p.isAlive() && !p.isSpectator() && !player.isAlliedTo(p)
+                                && ScytheCombatUtil.isWithinRadius(player, p, ScytheBalance.BloodHarvest.RADIUS)
                 );
 
         if (targets.isEmpty()) {
@@ -61,6 +64,7 @@ public class BloodHarvestAbility {
         }
 
         player.getCooldowns().addCooldown(stack, ScytheBalance.BloodHarvest.COOLDOWN_TICKS);
+        ScytheCooldowns.start(player, ScytheCooldowns.Skill.BLOOD_HARVEST, ScytheBalance.BloodHarvest.COOLDOWN_TICKS);
 
         for (ServerPlayer target : targets) {
             ScytheAdvancementTracker.markBloodActive(player, target);
@@ -70,7 +74,10 @@ public class BloodHarvestAbility {
             target.addEffect(new MobEffectInstance(MobEffects.GLOWING, ScytheBalance.BloodHarvest.GLOWING_TICKS, ScytheBalance.BloodHarvest.GLOWING_AMPLIFIER));
         }
 
-        int windowTicks = BloodHarvestTracker.start(player);
+        int windowTicks = BloodHarvestTracker.start(
+                player,
+                targets.stream().map(ServerPlayer::getUUID).toList()
+        );
         HudSync.start(player, HudTransport.Timer.BLOOD_HARVEST, windowTicks);
 
         player.sendOverlayMessage(Component.translatable("message.scythes.blood_harvest.success"));
